@@ -1,0 +1,50 @@
+\begin{tikzpicture}[scale=0.9, transform shape, node distance=1cm,
+  thick,main node/.style={circle,draw,font=\sffamily\small\bfseries, minimum size=1cm}]
+
+%definitions 
+ \def\nodesize{1.1}
+ %custom python palette
+\definecolor{myred}{HTML}{d62728}
+\definecolor{myblue}{HTML}{1f77b4}
+\definecolor{myolive}{HTML}{bcbd22}
+\definecolor{mypurple}{HTML}{9467bd}
+\definecolor{myorange}{HTML}{ff7f0e}
+\definecolor{mypink}{HTML}{e377c2}
+\definecolor{mygreen}{HTML}{2ca02c}
+\definecolor{mybrown}{HTML}{8c564b}
+\definecolor{mygray}{HTML}{7f7f7f}
+\definecolor{mycyan}{HTML}{17becf}
+
+
+ %antenna nodes
+ \node[main node, draw=lightgray] (1) [minimum size=\nodesize cm] {};
+  \node[main node, ] (2) [minimum size=\nodesize cm, below = 0.5cm of 1] {$m$};
+  \node[main node, draw=lightgray] (3) [minimum size=\nodesize cm, below = 1cm of 2] {};
+  \path (2) -- (3) node [minimum size=\nodesize cm, font=\Large, midway, sloped] {$\dots$};
+  \node[above=-0.9cm of 1] { \scriptsize$m=0$};
+    \node[below=-0.9cm of 3] { \scriptsize$M-1$};
+  %user nodes
+  \node[main node] (4) [minimum size=\nodesize cm, right = 2.5cm  of 2] {$u$};
+ % \node[main node, draw=lightgray] (5) [minimum size=\nodesize cm, below = 1cm of 4] {};
+  %\path (4) -- (5) node [thick, font=\Large, midway, sloped] {$\dots$};
+   %   \node[above=0cm of 4] { \scriptsize$k=0$};
+    %\node[below=0cm of 5] { \scriptsize$k=K-1$};
+
+% text
+
+
+
+ %edges
+  \path[every node/.style={font=\sffamily\small}]
+    (1) edge [dotted] node [sloped, left, above=0.05cm, pos=.5, fill=white, inner sep=0mm] {} (4)
+   % (1) edge [dotted] node [sloped, left, above=0.05cm, pos=.5, fill=white, inner sep=0mm] {} (5)
+
+    
+    (2) edge[draw=myred] node [sloped, left, above, pos=0.5, fill=white, inner sep=0mm] {$\vect{z}^{(i)}_{(m,u)}$} (4)
+   % (2) edge[dotted] node [sloped, left, above, pos=0.35, fill=white, inner sep=0mm] {} (5)
+
+    (3) edge[dotted]  node [sloped, left, above, pos=0.5, fill=white, inner sep=0mm] {} (4)    ;
+    %(3) edge[dotted]  node [sloped, left, above, pos=0.25, fill=white, inner sep=0mm] {} (5);
+
+
+\end{tikzpicture}

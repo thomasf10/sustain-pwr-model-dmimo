@@ -1,0 +1,176 @@
+% This file was created with matplot2tikz v0.3.3.
+\begin{tikzpicture}[scale=0.95]
+
+\definecolor{crimson2143940}{RGB}{214,39,40}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange25512714}{RGB}{255,127,14}
+\definecolor{forestgreen4416044}{RGB}{44,160,44}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{mediumpurple148103189}{RGB}{148,103,189}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
+
+\begin{axis}[
+axis lines* = {left},
+legend cell align={left},
+legend style={
+nodes={scale=0.8, transform shape},
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.03,0.97)},
+  anchor=north west,
+  draw=lightgray204
+},
+tick align=outside,
+tick pos=left,
+title={},
+ x grid style={white!69.01960784313725!black},
+        grid,
+        grid style={help lines,color=gray!50, densely dotted},
+xlabel={$\mathrm{SNR}_q = P_T/Q \sigma^2_{v}$},
+xmin=-34, xmax=54,
+xtick style={color=black},
+y grid style={darkgray176},
+ymajorgrids,
+ylabel={$R_{\mathrm{avg}} = \frac{1}{Q}\sum_q R_{q}$ [bits/channel use]},
+ymin=-1.07912549628293, ymax=12,
+ytick style={color=black}
+]
+% ---------- manual legend images (color → algorithm) ----------
+\addlegendimage{semithick, mark=+, draw=forestgreen4416044}
+\addlegendentry{$\mathrm{GNN}_Q$}
+\addlegendimage{semithick, mark=square, draw=steelblue31119180}
+\addlegendentry{$\mathrm{GNN}_1$}
+\addlegendimage{semithick, mark=triangle, draw=darkorange25512714}
+\addlegendentry{$\mathrm{GNN}_{q_{mid}}$}
+\addlegendimage{semithick, mark=diamond, draw=crimson2143940}
+\addlegendentry{MRT}
+\addlegendimage{semithick, mark=o, draw=mediumpurple148103189}
+\addlegendentry{MRT - no PA}
+
+% % ---------- manual legend images (line style → channel type) ----------
+\addlegendimage{semithick, mark=none, draw=black, solid}
+\addlegendentry{flat channel}
+
+\addlegendimage{semithick, mark=none, draw=black, dashed}
+\addlegendentry{i.i.d. channels}
+\addplot [semithick, mark=o, mediumpurple148103189]
+table {%
+-30 0.0453118526565453
+-20 0.398303464150909
+-10 2.05397822839838
+0.1 5.05073134031409
+10 8.29916978896873
+20 11.6168992428067
+30 14.9384023127627
+40 18.260398630893
+50 21.5998139712055
+};
+%\addlegendentry{MRT - no PA}
+\addplot [semithick, mark=square, steelblue31119180]
+table {%
+-30 0.00635623864554128
+-20 0.0622904764946384
+-10 0.52495630669555
+0.1 2.44214100340353
+10 5.42897892120493
+20 8.39209792631926
+30 10.1329602162682
+40 10.5301861780553
+50 10.577226529267
+};
+%\addlegendentry{$\mathrm{GNN}_1$}
+\addplot [semithick, mark=triangle, darkorange25512714]
+table {%
+-30 0.00635623864554128
+-20 0.0622904764946384
+-10 0.52495630669555
+0.1 2.44214100340353
+10 5.42897892120493
+20 8.39209792631926
+30 10.1329602162682
+40 10.5301861780553
+50 10.577226529267
+};
+%\addlegendentry{$\mathrm{GNN}_{q_{mid}}$}
+\addplot [semithick,mark=+, forestgreen4416044]
+table {%
+-30 0.00656809537962923
+-20 0.0643176664177203
+-10 0.539159605939483
+0.1 2.47777920164991
+10 5.46267291521807
+20 8.36187841939972
+30 9.94618822516897
+40 10.2778641892021
+50 10.3160505802707
+};
+%\addlegendentry{$\mathrm{GNN}_Q$}
+\addplot [semithick, mark=diamond, crimson2143940]
+table {%
+-30 0.0244642086078097
+-20 0.225974451283618
+-10 1.3701959934474
+0.1 3.48976236386232
+10 4.53121122630879
+20 4.70896350021364
+30 4.72816985726588
+40 4.7301063802245
+50 4.73030019317345
+};
+%\addlegendentry{MRT}
+\addplot [semithick, dashed, mark=square, steelblue31119180, mark options={solid}]
+table {%
+-30 0.00439258674776885
+-20 0.0433066549652305
+-10 0.381901731199983
+0.1 2.0076414848811
+10 4.72530814902011
+20 6.78268364647982
+30 7.36173468127701
+40 7.43566041249207
+50 7.4432782079827
+};
+\addplot [semithick, dashed,mark=triangle,  darkorange25512714, mark options={solid}]
+table {%
+-30 0.000824002168895801
+-20 0.00817304280938185
+-10 0.0761599402260313
+0.1 0.534986485460485
+10 1.91800275309935
+20 3.48935766198806
+30 4.17238661899149
+40 4.31237484463875
+50 4.33038671426733
+};
+\addplot [semithick, dashed,mark=+, forestgreen4416044, mark options={solid}]
+table {%
+-30 0.00604990613661197
+-20 0.0591157583182954
+-10 0.490484356260518
+0.1 2.26263680219837
+10 4.97428687833284
+20 6.95430911289471
+30 7.5067306382219
+40 7.57796424801952
+50 7.58532256131263
+};
+\addplot [semithick, dashed, mark=diamond, crimson2143940, mark options={solid}]
+table {%
+-30 0.0302921028224045
+-20 0.276871168048931
+-10 1.62756356670083
+0.1 4.4238911717518
+10 7.1951359287789
+20 8.62480325951564
+30 8.89726306413109
+40 8.92770001893153
+50 8.93078096215372
+};
+
+
+
+
+\end{axis}
+
+\end{tikzpicture}
