@@ -1,0 +1,297 @@
+\section{Central MIMO Power Model}
+\label{sec:pwr_model}
+
+We adopt the parametric power model for upper mid-band (FR3) base stations of
+\cite{peschiera2026fr3}. The base station (BS) is equipped with
+$M_{\mathrm{ant}}$ antennas, an equal number of power amplifiers (PAs, used in
+the downlink) and low-noise amplifiers (LNAs, used in the uplink), and
+$M_{\mathrm{RF}}$ radio-frequency (RF) chains. It serves $K$ single-antenna
+users over a bandwidth $B$ at carrier frequency $f_c$ using OFDM and
+space-division multiple access. Setting $M_{\mathrm{RF}}=M_{\mathrm{ant}}$
+selects fully-digital beamforming; $M_{\mathrm{RF}}<M_{\mathrm{ant}}$ selects
+hybrid partially-connected beamforming with $M_{\mathrm{ant}}/M_{\mathrm{RF}}$
+phase shifters per RF chain.
+
+\subsection{Model structure}
+The total consumed power is split into three hardware blocks; digital signal
+processing, analog signal processing, and the PAs, each divided by its
+supply-and-cooling efficiency $\eta_{c,\mathrm{sc}}\in(0,1]$:
+\begin{equation}
+\label{eq:pcons}
+P_{\mathrm{cons}} =
+\frac{\overline{P_{\mathrm{dig}}}}{\eta_{\mathrm{dig,sc}}}
++ \frac{\overline{P_{\mathrm{ana}}}}{\eta_{\mathrm{ana,sc}}}
++ \frac{\overline{P_{\mathrm{PA}}}}{\eta_{\mathrm{PA,sc}}} .
+\end{equation}
+Each block is built from the working-mode (active) consumption of its
+subcomponents, averaged over the operating modes within a frame. We first
+define this frame averaging (\Cref{sec:frame}) and then reuse it as a
+function for every component (\Cref{sec:pa,sec:ana,sec:dig}).
+
+\subsection{Frame structure and operating-mode averaging}
+\label{sec:frame}
+A frame of duration $T_f$ contains a downlink (DL) and an uplink (UL) phase
+under \gls{tdd}, with duration ratios $\tau_{\mathrm{DL}},\tau_{\mathrm{UL}}\in[0,1]$
+and $\tau_{\mathrm{UL}}=1-\tau_{\mathrm{DL}}$. Within each direction
+$i\in\{\mathrm{DL},\mathrm{UL}\}$ the time is further subdivided into three
+operating modes, plus an idle mode when the direction is inactive:
+\begin{itemize}
+  \item \emph{reference signalling}, for a time fraction
+        $\tau_i\,\tau_{i,\mathrm{sig}}$;
+  \item \emph{data} transmission/reception, for a fraction
+        $\tau_i\,(1-\tau_{i,\mathrm{sig}})\,\dfrac{N_{a,i}}{N_i}$;
+  \item \emph{micro-sleep} (DTX), for a fraction
+        $\tau_i\,(1-\tau_{i,\mathrm{sig}})\Big(1-\dfrac{N_{a,i}}{N_i}\Big)$;
+  \item \emph{idle}, for a fraction $(1-\tau_i)$,
+\end{itemize}
+where $N_i$ is the number of OFDM symbols (time slots) of direction $i$ and
+$N_{a,i}\le N_i$ the subset that are \emph{active} (carrying data). The
+\emph{active-resource time ratio} $N_{a,i}/N_i$ is what sets the
+data-versus-micro-sleep split: a slot is either active or not, regardless of how
+many users share it.
+with $\tau_{i,\mathrm{sig}}\in[0,1]$ the signalling fraction of direction $i$.
+
+\paragraph{Average physical resource load}
+The data-mode weight is more conveniently expressed through the
+\emph{average physical resource load} $\bar x_i$, which we now relate to the
+time ratio $N_{a,i}/N_i$. Let $K_{\max}$ be the maximum number of users that can
+be served (the number of spatial streams) and $Q_{\max}$ the number of available
+data subcarriers per active OFDM symbol. The instantaneous load of user $k$ in
+time slot $n$ is the ratio of utilised to available data subcarriers,
+\begin{equation}
+\label{eq:load_inst}
+\ell_i[k,n] = \frac{Q_i[k,n]}{Q_{\max}},\qquad i\in\{\mathrm{DL},\mathrm{UL}\},
+\end{equation}
+for $k=1,\dots,K_{\max}$ and $n=1,\dots,N_i$. Averaging over all $K_{\max}$
+potential users and $N_i$ slots gives the average physical resource load
+\begin{equation}
+\label{eq:load_avg}
+\bar x_i \triangleq \bar\ell_i
+= \frac{1}{N_i}\sum_{n=1}^{N_i}\left(
+\frac{1}{K_{\max}}\sum_{k=1}^{K_{\max}}\frac{Q_i[k,n]}{Q_{\max}}\right).
+\end{equation}
+Under space-division multiple access (no OFDMA), an active user in an active
+slot is allocated \emph{all} data subcarriers, $Q_i[k,n]=Q_{\max}$. Indexing the
+$K_i$ active users as $\{1,\dots,K_i\}$ and the $N_{a,i}$ active slots as
+$\{1,\dots,N_{a,i}\}$, each active-user/active-slot pair contributes $1$ to
+\eqref{eq:load_avg} and every other pair $0$; the double sum equals $K_i N_{a,i}$
+and
+\begin{equation}
+\label{eq:load_simplified}
+\bar x_i = \frac{N_{a,i}}{N_i}\,\frac{K_i}{K_{\max}}.
+\end{equation}
+
+\paragraph{Equivalence and modelling assumption}
+The duty-cycle split in the frame structure is governed by the active-resource
+time ratio $N_{a,i}/N_i$, whereas the power model uses the average load $\bar
+x_i$ as the data-mode weight. Comparing \eqref{eq:load_simplified} with the data
+fraction $\tau_i(1-\tau_{i,\mathrm{sig}})\,N_{a,i}/N_i$, the two agree,
+\begin{equation}
+\label{eq:equiv}
+\bar x_i = \frac{N_{a,i}}{N_i}
+\quad\Longleftrightarrow\quad
+\frac{K_i}{K_{\max}} = 1
+\quad\Longleftrightarrow\quad
+K_i = K_{\max},
+\end{equation}
+i.e.\ only when every spatial stream is scheduled. When the maximum number of
+users is active the average load is simply the ratio of active to total slots;
+for $K_i<K_{\max}$ the average load \eqref{eq:load_simplified} is the true active
+fraction scaled by $K_i/K_{\max}<1$. The number of active users $K_i$ separately
+sets the transmit power and the achievable rate, but not whether a slot is
+active. We use $\bar x_i$ as the data-mode weight throughout (and $1-\bar x_i$ as
+the micro-sleep/DTX fraction); this is therefore \emph{exact} in the
+full-spatial-load regime $K_i=K_{\max}$ evaluated here and an approximation
+otherwise.
+
+In micro-sleep and idle a component drops to a fraction of its working
+consumption, set by the reduction factors
+$\delta^{\mu}_c,\delta^{0}_c\in[0,1]$. For a component $c$ with working power
+$P^{\mathrm a}$ during data, $P^{\mathrm s}$ during signalling, and base power
+$P^{0}$ scaled in the reduced modes, the frame-averaged consumption of
+direction $i$ is the time-weighted sum
+\begin{align}
+\label{eq:frameavg}
+\mathcal{A}_i^{c}\!\left(P^{\mathrm a},P^{\mathrm s},P^{0}\right) \triangleq{}&
+\bar x_i\,\tau_i\,(1-\tau_{i,\mathrm{sig}})\,P^{\mathrm a}
++ \tau_i\,\tau_{i,\mathrm{sig}}\,P^{\mathrm s} \nonumber\\
+&+ (1-\bar x_i)\,\tau_i\,(1-\tau_{i,\mathrm{sig}})\,\delta^{\mu}_c\,P^{0}
+\nonumber\\
+&+ (1-\tau_i)\,\delta^{0}_c\,P^{0} .
+\end{align}
+For the digital and analog blocks the consumption is identical in all working
+modes, $P^{\mathrm a}=P^{\mathrm s}=P^{0}=P$, and we use the shorthand
+$\mathcal{A}_i^{c}(P)\triangleq\mathcal{A}_i^{c}(P,P,P)$. Only the PA
+distinguishes the three levels (\Cref{sec:pa}).
+
+Each direction's hardware is averaged over the \emph{whole} frame, and the two
+directions are accounted for separately, e.g.\ for the digital block
+$\overline{P_{\mathrm{dig}}}=\mathcal{A}_{\mathrm{DL}}^{\mathrm{dig}}(P_{\mathrm{dig,DL}})
++\mathcal{A}_{\mathrm{UL}}^{\mathrm{dig}}(P_{\mathrm{dig,UL}})$. The idle term
+$(1-\tau_i)\,\delta^{0}_c\,P^{0}$ is therefore the reduced consumption of
+direction $i$'s chain while that direction is \emph{not} active, i.e.\ while the
+opposite direction occupies the frame. For $i=\mathrm{DL}$ this fraction equals
+$\tau_{\mathrm{UL}}$ only because the gap-free TDD frame satisfies
+$\tau_{\mathrm{UL}}=1-\tau_{\mathrm{DL}}$; it represents the idle DL chain, not
+the active UL processing, which is captured by the separate
+$\mathcal{A}_{\mathrm{UL}}$ term.
+
+\begin{remark}[Load-dependent split]
+Only the data term in \eqref{eq:frameavg} scales with the load $\bar x_i$,
+while the micro-sleep term scales with $(1-\bar x_i)$. Collecting the terms
+proportional to $\bar x_i$ separates each averaged consumption into a
+\emph{load-dependent} part and a \emph{load-independent} part, which is used in
+the analysis to attribute consumption to the delivered traffic.
+\end{remark}
+
+\subsection{Power amplifiers}
+\label{sec:pa}
+The PAs transmit only in the DL. With a per-PA output power
+$P_a=P_{T,\mathrm{DL}}/M_{\mathrm{ant}}$, where $P_{T,\mathrm{DL}}$ is the total
+DL transmit power, the instantaneous consumption of one PA is modelled as
+\begin{equation}
+\label{eq:pa}
+P_{\mathrm{PA}}(p) = \frac{1}{\eta_{\mathrm{PA,max}}}
+\left[\xi\,P_{\max} + (1-\xi)\,P_{\max}^{\,1-\alpha}\,p^{\alpha}\right],
+\end{equation}
+where $p$ is the output power, $P_{\max}$ the maximum output power (at a fixed
+back-off from saturation), $\eta_{\mathrm{PA,max}}$ the maximum PA efficiency,
+$\xi\in[0,1]$ the static-to-dynamic consumption ratio, and $\alpha\in[0,1]$
+the efficiency exponent. Averaging over the DL frame and summing over the
+$M_{\mathrm{ant}}$ PAs gives
+\begin{equation}
+\label{eq:pa_avg}
+\overline{P_{\mathrm{PA}}} = M_{\mathrm{ant}}\,
+\mathcal{A}_{\mathrm{DL}}^{\mathrm{PA}}\!\left(
+P_{\mathrm{PA}}(P_a),\,
+P_{\mathrm{PA}}(\zeta_{\mathrm{sig}}P_{\max}),\,
+P_{\mathrm{PA}}(0)\right),
+\end{equation}
+where $\zeta_{\mathrm{sig}}\in(0,1]$ is the fraction of $P_{\max}$ used during
+signalling, and the zero-output consumption $P_{\mathrm{PA}}(0)$ is the base
+level scaled in micro-sleep and idle.
+
+\subsection{Analog signal processing}
+\label{sec:ana}
+The analog block comprises, per RF chain, the DACs (DL) or ADCs (UL), RF
+filters, mixers, $M_{\mathrm{PS}}$ phase shifters, and the LNAs (UL); the local
+oscillator (LO) is shared across chains. With
+$M_{\mathrm{PS}}=M_{\mathrm{ant}}/M_{\mathrm{RF}}$ for hybrid beamforming
+($M_{\mathrm{PS}}=0$ for fully-digital), the working-mode consumption per
+direction is
+\begin{align}
+\label{eq:ana_dl}
+P_{\mathrm{ana,DL}} &= P_{\mathrm{LO}} + M_{\mathrm{RF}}\big(
+2P_{\mathrm{DAC}} + 2P_{\mathrm{filt,RF}} + 2P_{\mathrm{mix}} \nonumber\\
+&\qquad + M_{\mathrm{PS}}P_{\mathrm{PS}}\big),\\
+\label{eq:ana_ul}
+P_{\mathrm{ana,UL}} &= P_{\mathrm{LO}} + M_{\mathrm{RF}}\Big(
+2P_{\mathrm{ADC}} + 2P_{\mathrm{filt,RF}} + 2P_{\mathrm{mix}} \nonumber\\
+&\qquad + M_{\mathrm{PS}}P_{\mathrm{PS}}
++ \tfrac{M_{\mathrm{ant}}}{M_{\mathrm{RF}}}P_{\mathrm{LNA}}\Big),
+\end{align}
+with the factor $2$ accounting for the in-phase and quadrature branches. The
+subcomponents are modelled as
+\begin{align}
+P_{\mathrm{DAC}} &= \Xi_{\mathrm{DAC},1}2^{b_{\mathrm{DAC}}}
++ \Xi_{\mathrm{DAC},2}\,b_{\mathrm{DAC}}f_{\mathrm{DAC}},\\
+P_{\mathrm{ADC}} &= W_{\mathrm{ADC}}\,f_{\mathrm{ADC}}\,2^{b_{\mathrm{ADC}}},\\
+P_{\mathrm{mix}} &= \Xi_{\mathrm{mix}}f_c,\\
+P_{\mathrm{PS}} &= \Xi_{\mathrm{PS}}B,\\
+P_{\mathrm{LNA}} &= \Xi_{\mathrm{LNA}}B,
+\end{align}
+where $b_{\mathrm{DAC}},b_{\mathrm{ADC}}$ are the effective resolutions,
+$f_{\mathrm{DAC}},f_{\mathrm{ADC}}$ the converter sampling rates,
+$W_{\mathrm{ADC}}$ the ADC Walden figure-of-merit, and $\Xi_\bullet$ the
+respective figures-of-merit. The frame-averaged analog consumption is
+\begin{equation}
+\label{eq:ana_avg}
+\overline{P_{\mathrm{ana}}} =
+\mathcal{A}_{\mathrm{DL}}^{\mathrm{ana}}\!\left(P_{\mathrm{ana,DL}}\right)
++ \mathcal{A}_{\mathrm{UL}}^{\mathrm{ana}}\!\left(P_{\mathrm{ana,UL}}\right)
++ P_{\mathrm{ana,misc}} .
+\end{equation}
+
+\subsection{Digital signal processing}
+\label{sec:dig}
+In the DL the digital block runs the channel encoder, MIMO precoder, IFFT, DPD,
+and baseband (BB) filter; in the UL the channel decoder, MIMO combiner, FFT,
+and BB filter. Each subcomponent consumption is a static (signal-independent)
+term plus a dynamic term equal to its complex giga-operations-per-second
+(GOPS) $\Xi$ divided by the computational efficiency $\eta$ (in GOPS/W) of the
+chosen FPGA/ASIC implementation:
+\begin{align}
+\label{eq:enc}
+P_{\mathrm{enc}} &= P_{\mathrm{enc,s}}
++ \frac{f_{s,\mathrm{I}}}{\eta_{\mathrm{enc}}}\frac{14}{24}\frac{R_{\mathrm{DL}}}{\tilde B}, \\
+P_{\mathrm{dec}} &= P_{\mathrm{dec,s}}
++ \frac{f_{s,\mathrm{I}}}{\eta_{\mathrm{dec}}}\frac{175}{6}\frac{R_{\mathrm{UL}}}{\tilde B},\\
+\label{eq:pre}
+P_{\mathrm{pre}} &= \bar M_{\mathrm{RF}}P_{s}
++ \frac{f_{s,\mathrm{I}}}{\eta_{\mathrm{pre}}}M_{\mathrm{RF}}\Xi_{\mathrm{pre}},\\
+ P_{\mathrm{comb}} &= \bar M_{\mathrm{RF}}P_{s}
++ \frac{f_{s,\mathrm{I}}}{\eta_{\mathrm{comb}}}M_{\mathrm{RF}}\,2K,\\
+\label{eq:ifft}
+P_{\mathrm{IFFT}} &= P_{\mathrm{IFFT,s}}
++ \frac{f_{s,\mathrm{II}}}{\eta_{\mathrm{IFFT}}}M_{\mathrm{RF}}\tfrac{3}{2}\log_2 Q_{\mathrm{IFFT}}, & & \\
+\label{eq:dpd}
+P_{\mathrm{DPD}} &= P_{\mathrm{DPD,s}}
++ \frac{f_{s,\mathrm{II}}}{\eta_{\mathrm{DPD}}}M_{\mathrm{RF}}\Xi_{\mathrm{DPD}}, & & \\
+\label{eq:bb}
+P_{\mathrm{filt,BB}} &= \bar M_{\mathrm{RF}}P_{s}
++ \frac{f_{s,\mathrm{II}}}{\eta_{\mathrm{BB}}}M_{\mathrm{RF}}\Xi_{\mathrm{BB}}, & &
+\end{align}
+where $R_{\mathrm{DL}},R_{\mathrm{UL}}$ are the delivered DL/UL sum rates,
+$\tilde B$ the effective bandwidth,
+$\bar M_{\mathrm{RF}}=\lceil M_{\mathrm{RF}}/32\rceil$ the number of FPGAs (one
+per $32$ chains, sharing the precoder/combiner/BB-filter static power $P_{s}$),
+and $Q_{\mathrm{IFFT}}$ the IFFT/FFT size. The two sampling rates are the
+constellation rate $f_{s,\mathrm{I}}=\mu B$ (for encoding/decoding and
+MIMO processing) and the oversampled rate
+$f_{s,\mathrm{II}}=Q_{\mathrm{IFFT}}\Delta f$ (for the OFDM, DPD, and BB
+operations), with $\mu\in[0,1]$ and subcarrier spacing $\Delta f$. For the
+zero-forcing MIMO processor exploiting channel reciprocity, the precoder GOPS
+is
+\begin{equation}
+\label{eq:gops_pre}
+\Xi_{\mathrm{pre}} = 2K
++ \frac{1}{\upsilon_{\mathrm{coh}}}\!\left(\frac{K^3}{3M_{\mathrm{RF}}}
++ 3K^2 + K\right),
+\end{equation}
+with $\upsilon_{\mathrm{coh}}$ the number of samples per channel coherence
+block over which the precoder is reused; the combiner only applies the
+precoding matrix, giving $\Xi_{\mathrm{comb}}=2K$. The active digital
+consumption per direction is the sum of its subcomponents,
+\begin{align}
+P_{\mathrm{dig,DL}} &= P_{\mathrm{enc}} + P_{\mathrm{pre}}
++ P_{\mathrm{IFFT}} + P_{\mathrm{DPD}} + P_{\mathrm{filt,BB}},\\
+P_{\mathrm{dig,UL}} &= P_{\mathrm{dec}} + P_{\mathrm{comb}}
++ P_{\mathrm{IFFT}} + P_{\mathrm{filt,BB}},
+\end{align}
+and the frame-averaged digital consumption is
+\begin{equation}
+\label{eq:dig_avg}
+\overline{P_{\mathrm{dig}}} =
+\mathcal{A}_{\mathrm{DL}}^{\mathrm{dig}}\!\left(P_{\mathrm{dig,DL}}\right)
++ \mathcal{A}_{\mathrm{UL}}^{\mathrm{dig}}\!\left(P_{\mathrm{dig,UL}}\right).
+\end{equation}
+
+\subsection{Delivered rate and energy efficiency}
+\label{sec:rate}
+The achievable ergodic sum rate of direction $i$, which drives the
+encoder/decoder consumption in \eqref{eq:enc}, follows from the per-user
+SINRs under zero-forcing beamforming as
+\begin{equation}
+\label{eq:rate}
+R_i = \bar x_i\,\tau_i\,(1-\tau_{i,\mathrm{sig}})\,\frac{\tilde B}{q_i}\,
+\mathbb{E}\!\left\{\sum_{\nu=1}^{q_i}\sum_{k=1}^{K}
+\log_2\!\left(1+\mathrm{SINR}_{i,k}[\nu]\right)\right\},
+\end{equation}
+where the pre-log collects the load, duration, signalling-overhead, and
+effective-bandwidth-per-subcarrier factors. The base-station energy efficiency
+then follows as the delivered rate per consumed watt,
+\begin{equation}
+\label{eq:ee}
+\mathrm{EE} = \frac{R_{\mathrm{DL}} + R_{\mathrm{UL}}}{P_{\mathrm{cons}}}
+\quad[\mathrm{bit/J}].
+\end{equation}

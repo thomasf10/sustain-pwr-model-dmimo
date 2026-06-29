@@ -1,0 +1,7 @@
+# Power figures (Fig 2a, 2b) and tests
+numpy>=1.21
+matplotlib>=3.5
+
+# Rate model (Fig 2c) only -- heavy, GPU recommended. Uncomment to install.
+# sionna
+# tensorflow

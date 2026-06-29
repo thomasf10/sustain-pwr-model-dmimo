@@ -1,0 +1,6 @@
+{
+  "description": "Per-RF-chain ergodic DL/UL sum rates [Gbit/s], DELIVERED, i.e. already including the full eq (2.40) pre-log tau_i*(1-tau_sig), average load and effective bandwidth, exactly as produced by the rate model (Fig 2c). The power figures consume these directly and apply no further factor, so the pre-log cannot be double-counted. Indexed positionally with M_RF (reused for M_ant in the fully-digital sweep). Seed values are the paper's reference results (the original raw rates [1.6, 3.64, ...] / [1.02, ...] times the 0.93 = (1-tau_sig) pre-log component); overwrite them by running rate_model.compute_and_save.",
+  "M_RF": [16, 32, 64, 128, 256, 512, 1024],
+  "R_DL_Gbps": [1.488, 3.3852, 5.6358, 7.533, 10.1649, 11.253, 12.4992],
+  "R_UL_Gbps": [0.9486, 1.1625, 1.395, 1.5624, 1.8414, 2.0274, 2.1855]
+}
