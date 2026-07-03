@@ -1,0 +1,234 @@
+\section{Distributed Massive MIMO System Model}
+
+\subsection{Downlink System Model}
+
+We consider the downlink of a distributed (cell-free) massive \gls{mimo}
+network in which $L$ \glspl{ap}, each equipped with $M$ antennas, jointly serve
+$K$ single-antenna users over the same time-frequency resources. The APs are
+connected through fronthaul links to a central processing unit (CPU) that
+encodes the data and computes the precoders, so that the $LM$ antennas act as a
+single distributed array. Transmission uses OFDM with $Q$ data subcarriers,
+indexed by $q=1,\dots,Q$; the model below is stated per subcarrier and the same
+processing is applied on each of them.
+
+Let $\vect{h}_{kl}[q]\inC{M}$ denote the channel from AP $l$ to user $k$ on
+subcarrier $q$. Stacking the contributions of all APs gives the collective
+channel
+\begin{equation}
+\label{eq:collective-channel}
+\vect{h}_{k}[q] =
+\begin{bmatrix} \vect{h}_{k1}[q] \\ \vdots \\ \vect{h}_{kL}[q] \end{bmatrix}
+\inC{LM},
+\end{equation}
+which we model as correlated Rayleigh fading,
+$\vect{h}_{k}[q]\sim\cn{\vect{0}_{LM}}{\mat{R}_{k}[q]}$. Because the antennas are
+geographically distributed, the spatial correlation matrix is block-diagonal,
+$\mat{R}_{k}[q]=\diag{\mat{R}_{k1}[q],\dots,\mat{R}_{kL}[q]}\inC{LM\times LM}$,
+with each block $\mat{R}_{kl}[q]\inC{M\times M}$ describing the correlation
+across the antennas of AP $l$; its scaling captures the large-scale fading
+between AP $l$ and user $k$.
+
+The CPU maps the data symbol $s_{k}[q]\in\mathbb{C}$ of user $k$, with unit
+power $\expt{\abs{s_{k}[q]}^2}=1$ and mutually independent across users, onto the
+$M$ antennas of each AP. AP $l$ transmits
+\begin{equation}
+\label{eq:ap-transmit}
+\vect{x}_{l}[q] = \sum_{k=1}^{K} \vect{w}_{kl}[q]\, s_{k}[q]
+= \mat{W}_{l}[q]\,\vect{s}[q],
+\end{equation}
+where $\vect{w}_{kl}[q]\inC{M}$ is the precoding vector that AP $l$ applies to
+user $k$, $\vect{s}[q]=[\,s_{1}[q]\ \cdots\ s_{K}[q]\,]^{\intercal}\inC{K}$
+collects the data symbols, and
+$\mat{W}_{l}[q]=[\,\vect{w}_{1l}[q]\ \cdots\ \vect{w}_{Kl}[q]\,]\inC{M\times K}$
+is the precoding matrix of AP $l$. Collecting the per-AP precoders of a given
+user into
+$\vect{w}_{k}[q]=[\,\vect{w}_{k1}[q]^{\intercal}\ \cdots\ \vect{w}_{kL}[q]^{\intercal}\,]^{\intercal}\inC{LM}$
+yields the network-wide precoding matrix
+\begin{equation}
+\label{eq:network-precoder}
+\mat{W}[q] = \big[\,\vect{w}_{1}[q]\ \cdots\ \vect{w}_{K}[q]\,\big]
+\inC{LM\times K},
+\end{equation}
+whose $l$-th block of $M$ rows equals $\mat{W}_{l}[q]$, so that the stacked
+transmit vector is
+$\vect{x}[q]=[\,\vect{x}_{1}[q]^{\intercal}\ \cdots\ \vect{x}_{L}[q]^{\intercal}\,]^{\intercal}=\mat{W}[q]\,\vect{s}[q]\inC{LM}$.
+
+The signal received by user $k$ on subcarrier $q$ is
+$y_{k}[q]=\vect{h}_{k}[q]^{H}\vect{x}[q]+n_{k}[q]$, which, using
+\eqref{eq:network-precoder}, separates into the desired term, the multi-user
+interference, and the noise,
+\begin{equation}
+\label{eq:downlink-received}
+y_{k}[q] =
+\underbrace{\vect{h}_{k}[q]^{H}\vect{w}_{k}[q]\, s_{k}[q]}_{\text{desired signal}}
++ \underbrace{\sum_{\substack{i=1 \\ i\neq k}}^{K}
+\vect{h}_{k}[q]^{H}\vect{w}_{i}[q]\, s_{i}[q]}_{\text{multi-user interference}}
++ \underbrace{\vphantom{\sum_{i=1}^{K}} n_{k}[q]}_{\text{noise}},
+\end{equation}
+where $n_{k}[q]\sim\cn{0}{\sigma^{2}}$ is the receiver noise with power
+$\sigma^{2}$, independent across users and subcarriers and independent of the
+channels and data. The scalar $\vect{h}_{k}[q]^{H}\vect{w}_{k}[q]$ is the
+effective channel seen by user $k$: the distributed precoder turns the
+$LM$-antenna channel into an equivalent single-antenna link.
+
+Unlike co-located massive MIMO, where a single sum-power budget applies to the
+whole array, each AP is a separate transmitter and is subject to its own power
+constraint. Since the data symbols are independent and unit-power, the average
+power radiated by AP $l$ across the OFDM block is
+\begin{equation}
+\label{eq:power-constraint}
+\sum_{q=1}^{Q}\expt{\norm{\vect{x}_{l}[q]}^{2}}
+= \sum_{q=1}^{Q}\sum_{k=1}^{K}\expt{\norm{\vect{w}_{kl}[q]}^{2}}
+\leq \rho_{\max}, \qquad l=1,\dots,L,
+\end{equation}
+where $\rho_{\max}$ is the maximum downlink transmit power per AP, assumed equal
+for all APs, and the expectation is taken over the data and channel
+realizations.
+
+It is convenient to split each precoder into a transmit direction and a power
+control coefficient,
+\begin{equation}
+\label{eq:precoder-decomposition}
+\vect{w}_{k}[q] = \sqrt{\rho_{k}}\,
+\frac{\bar{\vect{w}}_{k}[q]}{\sqrt{\expt{\norm{\bar{\vect{w}}_{k}[q]}^{2}}}},
+\end{equation}
+where $\bar{\vect{w}}_{k}[q]\inC{LM}$ is an arbitrarily scaled vector that fixes
+the spatial direction of the transmission to user $k$ and $\rho_{k}\geq 0$ is the
+downlink power allocated to that user, so that
+$\expt{\norm{\vect{w}_{k}[q]}^{2}}=\rho_{k}$. This separation isolates the two
+design tasks treated below: the choice of the precoding directions
+$\{\bar{\vect{w}}_{k}[q]\}$ (\Cref{sssec:precoding-schemes}) and the choice of the
+power allocation $\{\rho_{k}\}$ (\Cref{sssec:power-control}), the latter being
+what ties the per-user powers to the per-AP budget in
+\eqref{eq:power-constraint}.
+
+Treating the multi-user interference in \eqref{eq:downlink-received} as noise,
+the effective downlink \gls{sinr} of user $k$ on subcarrier $q$ is
+\begin{equation}
+\label{eq:downlink-sinr}
+\mathrm{SINR}_{k}^{\mathrm{dl}}[q] =
+\frac{\abs{\vect{h}_{k}[q]^{H}\vect{w}_{k}[q]}^{2}}
+{\displaystyle\sum_{\substack{i=1 \\ i\neq k}}^{K}
+\abs{\vect{h}_{k}[q]^{H}\vect{w}_{i}[q]}^{2} + \sigma^{2}} .
+\end{equation}
+With the effective channel known at the receiver, an achievable rate for user
+$k$ on subcarrier $q$ is $\log_{2}\!\big(1+\mathrm{SINR}_{k}^{\mathrm{dl}}[q]\big)$,
+and the delivered downlink sum rate $R_{\mathrm{DL}}$ follows by inserting these
+per-user, per-subcarrier SINRs into the ergodic rate expression of
+\Cref{sec:rate} (\eqref{eq:rate}), which in turn drives the encoder and MIMO
+processing consumption of the power model.
+
+\subsubsection{Transmit Precoding Schemes}
+\label{sssec:precoding-schemes}
+
+The precoding directions can be computed in two fundamentally different ways,
+mirroring the centralized and distributed uplink architectures of
+\cite{demir2021foundations}. In \emph{centralized} operation the APs forward
+their received pilots to the CPU, which estimates the collective channels and
+designs all directions jointly. Because it sees the whole array, the CPU can
+make the serving APs cancel one another's interference, giving up to $LM$
+spatial degrees of freedom for suppressing the interference to each user. The
+nearly optimal choice is minimum mean-squared-error (\gls{mmse}) precoding, the
+downlink dual of \gls{mmse} combining, which balances the signal power delivered
+to a user against the interference it causes; its complexity grows with $K$, so
+it is not scalable. Scalable approximations restrict the computation to the
+users that share serving APs with the target user, giving the P-MMSE and P-RZF
+precoders, which retain most of the interference-suppression ability at a
+bounded per-user cost. Removing the channel-estimate regularization altogether
+yields regularized zero-forcing and, in the limit, the \gls{zf} precoder
+\begin{align}
+\label{eq:zf-precoder}
+\bar{\mat{W}}[q] &= \mat{H}[q]\big(\mat{H}[q]^{H}\mat{H}[q]\big)^{-1},  \\
+\mat{H}[q]&=[\,\vect{h}_{1}[q]\ \cdots\ \vect{h}_{K}[q]\,]\in \mathbb{C}^{LM\times K},
+\end{align}
+whose columns $\bar{\vect{w}}_{k}[q]$ null the inter-user interference when the
+\gls{csi} is accurate. Zero-forcing is the scheme adopted in the power model of
+\Cref{sec:pwr_model}; \gls{rzf}, obtained by adding a loading term
+$\mat{H}[q](\mat{H}[q]^{H}\mat{H}[q]+\lambda\mat{I}_{K})^{-1}$, trades some
+interference leakage for robustness at low SNR. In practice the CPU builds
+$\mat{H}[q]$ from the channel estimates acquired on the uplink pilots, exploiting
+TDD reciprocity so that no downlink pilots are needed.
+
+In \emph{distributed} operation the CPU only encodes the data, and each AP forms
+its own directions $\bar{\vect{w}}_{kl}[q]$ from its locally estimated channels
+$\hat{\vect{h}}_{kl}[q]$, the MMSE estimates of $\vect{h}_{kl}[q]$. An AP can then
+suppress only the interference it generates itself, with the $M$ spatial degrees
+of freedom of its own array, so the coherent cross-AP cancellation of the
+centralized case is lost and interference must instead be kept small at each AP
+individually. The local counterpart of \gls{mmse} precoding is L-MMSE precoding,
+which is locally optimal but again not scalable; LP-MMSE precoding restores
+scalability by summing only over the users an AP serves; and the simplest option
+is maximum-ratio (\gls{mr}) precoding,
+\begin{equation}
+\label{eq:mr-precoder}
+\bar{\vect{w}}_{kl}[q] = \vect{h}_{kl}[q],
+\end{equation}
+which maximizes the signal power delivered to the desired user but ignores the
+interference it causes, with the benefit of admitting a closed-form SINR.
+Whichever architecture is used, the uplink-downlink duality guarantees that any
+set of uplink combining vectors achieves the same SINRs when reused, after
+normalization, as downlink precoding directions \cite{demir2021foundations}.
+
+\subsubsection{Downlink Power Control}
+\label{sssec:power-control}
+
+The directions fix the shape of each user's beam but not how much power it
+receives; that is set by the power control coefficients $\{\rho_{k}\}$, which
+must satisfy the per-AP constraints in \eqref{eq:power-constraint} while
+distributing a limited budget across users. Let
+$\bar{\vect{w}}_{kl}'[q]\inC{M}$ be the AP-$l$ block of the normalized direction
+$\bar{\vect{w}}_{k}[q]/\sqrt{\expt{\norm{\bar{\vect{w}}_{k}[q]}^{2}}}$, so that
+$\expt{\norm{\bar{\vect{w}}_{kl}'[q]}^{2}}$ is the fraction of user $k$'s power
+that AP $l$ radiates. The constraint \eqref{eq:power-constraint} then reads
+\begin{equation}
+\label{eq:power-constraint-decomposed}
+\sum_{q=1}^{Q}\sum_{k=1}^{K}\rho_{k}\,
+\expt{\norm{\bar{\vect{w}}_{kl}'[q]}^{2}} \leq \rho_{\max},
+\qquad l=1,\dots,L,
+\end{equation}
+which couples the powers of all users served by a common AP. Unlike the
+directions, which are recomputed every coherence block, the power allocation
+depends mainly on the large-scale fading and can be held fixed over many
+coherence blocks.
+
+The simplest policy gives every user the same power and rescales all precoders
+by a single factor set by the most heavily loaded AP,
+\begin{equation}
+\label{eq:power-normalization}
+\gamma = \sqrt{\frac{\rho_{\max}}{\max_{l}\tilde{p}_{l}}},
+\qquad
+\tilde{p}_{l} = \sum_{q=1}^{Q}\sum_{k=1}^{K}
+\expt{\norm{\bar{\vect{w}}_{kl}[q]}^{2}},
+\end{equation}
+so that $\vect{w}_{kl}[q]=\gamma\,\bar{\vect{w}}_{kl}[q]$. Because the same scalar
+multiplies every AP, it preserves the relative amplitudes and phases across APs
+and hence the interference nulling of \eqref{eq:zf-precoder}; the most heavily
+loaded AP then transmits at exactly $\rho_{\max}$ while the others stay below
+their budget. A per-AP scalar would load every AP fully but, by scaling each AP
+differently, would perturb the coherent combining and reintroduce residual
+multi-user interference, so the common factor is used whenever the
+interference-free SINR in \eqref{eq:downlink-sinr} is assumed.
+
+Equal power is wasteful when users have very different channel gains. A more
+balanced choice is fractional power control, which sets each user's power from
+its large-scale fading. Writing
+$\beta_{kl}=\tfrac{1}{M}\mathrm{Tr}(\mat{R}_{kl}[q])$ for the average channel
+gain between AP $l$ and user $k$, a common rule in distributed operation, where
+AP $l$ assigns a separate power $\rho_{kl}$ to each user through
+$\vect{w}_{kl}[q]=\sqrt{\rho_{kl}}\,\bar{\vect{w}}_{kl}[q]/\sqrt{\expt{\norm{\bar{\vect{w}}_{kl}[q]}^{2}}}$,
+is
+\begin{equation}
+\label{eq:fractional-power}
+\rho_{kl} = \rho_{\max}\,
+\frac{\beta_{kl}^{\,\kappa}}{\sum_{i=1}^{K}\beta_{il}^{\,\kappa}},
+\qquad l=1,\dots,L,
+\end{equation}
+so that AP $l$ splits its full power among its users according to their gains.
+The exponent $\kappa$ tunes the trade-off between throughput ($\kappa>0$,
+favoring strong users) and fairness ($\kappa<0$, protecting weak users), with
+$\kappa=1/2$ recovering the heuristic of \cite{demir2021foundations}; the
+centralized case admits the analogous per-user rule $\rho_{k}$ normalized against
+the binding constraint \eqref{eq:power-constraint-decomposed}. Beyond such
+heuristics, the powers can be optimized for a network utility such as max-min
+fairness or sum rate, but these problems do not scale to very large networks, so
+the statistics-based rules above are the practical default.

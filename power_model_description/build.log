@@ -1,0 +1,1731 @@
+Rc files read (in order):
+  NONE
+Latexmk: This is Latexmk, John Collins, 9 March 2026. Version 4.88.
+Latexmk: applying rule 'pdflatex'...
+Rule 'pdflatex':  Reasons for rerun
+Changed files or newly in use/created:
+  abbr.tex
+Category 'changed_user':
+  abbr.tex
+
+------------
+Run number 1 of rule 'pdflatex'
+------------
+------------
+Running 'pdflatex  -interaction=nonstopmode -halt-on-error -recorder  "main.tex"'
+------------
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex.fmt)
+ restricted \write18 enabled.
+entering extended mode
+(main.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-03-20>
+(IEEEtran.cls
+Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
+-- See the "IEEEtran_HOWTO" manual for usage information.
+-- http://www.michaelshell.org/tex/ieeetran/
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ptm.fd)
+-- Using 8.5in x 11in (letter) paper.
+-- Using PDF output.
+-- This is a 10 point document.
+)
+** ATTENTION: Overriding command lockouts (line 2).
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty)
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithmic
+.sty (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mathtools\mathtools.st
+y (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\calc.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mathtools\mhsetup.sty)
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithm.s
+ty (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/subfig\subfig.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty)
+
+Package caption Warning: Unknown document class (or package),
+(caption)                standard defaults will be used.
+See the caption package documentation for explanation.
+
+)) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/base\textcomp.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/sttools\stfloats.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\verbatim.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/siunitx\siunitx.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/translations\translati
+ons.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmd
+s.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.
+sty) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty)
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.
+cfg)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.de
+f))) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/cite\cite.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/makecell\makecell.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/lineno\lineno.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.st
+y
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.st
+y)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx
+))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\dvipsnam.def)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/placeins\placeins.sty
+) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xifthen\xifthen.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/ifmtarg\ifmtarg.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/colortbl\colortbl.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/bbm\bbm.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgfplots\pgfplots.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.re
+vision.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfrcs.s
+ty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfuti
+l-common.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfuti
+l-latex.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs
+.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revision.tex
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgfcore
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/systemlayer\pgfsys
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+s.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+slibraryfiltered.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.
+cfg)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys-pdftex.def
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys-common-pdf.def)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+yssoftpath.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ysprotocol.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+re.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.cod
+e.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathutil
+.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathpars
+er.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.basic.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.trigonometric.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.random.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.comparison.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.base.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.round.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.misc.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.integerarithmetics.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathcalc
+.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloa
+t.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code
+.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repoints.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathconstruct.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathusage.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rescopes.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+regraphicstate.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+retransformations.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+requick.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reobjects.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathprocessing.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rearrows.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reshade.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reimage.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reexternal.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+relayers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+retransparency.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repatterns.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rerdf.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+eshapes.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+eplot.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfc
+omp-version-0-65.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfc
+omp-version-1-18.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgffor.s
+ty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfkeys.
+sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+s.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/math\pgfmath.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.cod
+e.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgffor
+.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz\tikz.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryplothandlers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+ematrix.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarytopaths.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.co
+de.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotscor
+e.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/sys\pgfplot
+ssysgeneric.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\pgfplo
+tslibrary.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/oldpgfcompa
+tib\pgfplotsoldpgfsupp_loader.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryfpu.code.tex)
+Package pgfplots: loading complementary utilities for your pgf version...
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/oldpgfcompa
+tib\pgfplotsoldpgfsupp_pgfutil-common-lists.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsutil.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsliststructure.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsliststructureext.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsarray.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsmatrix.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstableshared.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsdeque.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsbinary.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsbinary.data.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsutil.verb.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\pgflib
+rarypgfplots.surfshading.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/sys\pgflibr
+arypgfplots.surfshading.pgfsys-pdftex.def)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tscolormap.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tscolor.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotssta
+ckedplots.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsplo
+thandlers.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsmes
+hplothandler.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsmes
+hplotimage.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.sc
+aling.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotscoo
+rdprocessing.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.er
+rorbars.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.ma
+rkers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotstic
+ks.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.pa
+ths.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+edecorations.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.pathmorphing.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/decora
+tions\pgflibrarydecorations.pathmorphing.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.pathreplacing.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/decora
+tions\pgflibrarydecorations.pathreplacing.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.contourlua.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryplotmarks.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryplotmarks.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/units\nicefrac.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.groupplots.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarycalc.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.dateplot.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfcalen
+dar.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfcal
+endar.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.fillbetween.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+tikzlibraryfillbetween.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryintersections.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryintersections.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+tikzlibrarydecorations.softclip.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+pgflibraryfillbetween.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.decorations.softclip.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarypositioning.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefin
+ekeys.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.
+sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\getti
+tlestring.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.
+sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcal
+c.sty)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfi
+lecheck.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\unique
+counter.sty)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/acronym\acronym.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/bigfoot\suffix.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xstring\xstring.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xstring\xstring.tex)
+))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/cleveref\cleveref.sty)
+
+==> First Aid for cleveref.sty applied!
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarypatterns.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+rarypatterns.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.polar.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.geometric.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.geometric.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.misc.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.misc.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.symbols.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.symbols.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.arrows.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.arrows.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.callouts.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.callouts.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.multipart.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.multipart.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgfplots\pgfplotstable
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.re
+vision.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstable.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstable.coltype.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/filecontents\fileconte
+nts.sty
+
+Package filecontents Warning: This package is obsolete. Disabling it and
+(filecontents)                passing control to the filecontents environment
+(filecontents)                defined by the LaTeX kernel.
+
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/base\glossa
+ries.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xkeyval\xkeyval.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkeyval.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkvutils.tex
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mfirstuc\mfirstuc.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xfor\xfor.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-base
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tracklang\tracklang.st
+y
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/tracklang\tracklang.
+tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-l3fp
+.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-utf8
+.ldf))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-hypernav.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-list.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-long.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-super.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/supertabular\supertabu
+lar.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-tree.sty)) (abbr.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amscls\amsthm.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pd
+ftex.def) (main.aux)
+-- Lines per column: 56 (exact).
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\ltcaption.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tra
+nslations-basic-dictionary-english.trsl)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
+kii
+[Loading MPS to PDF converter (version 2006.09.02).]
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-
+base.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.
+cfg))
+Package pgfplots notification 'compat/show suggested version=true': document ha
+s been generated with the most recent feature set (\pgfplotsset{compat=1.18}).
+
+(main.out) (main.out) (sections/original_pwr_model.tex
+
+LaTeX Warning: Citation `peschiera2026fr3' on page 1 undefined on input line 5.
+
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd)
+Underfull \hbox (badness 3471) in paragraph at lines 41--43
+[]\OT1/ptm/m/it/10 data \OT1/ptm/m/n/10 trans-mis-sion/reception, for a frac-ti
+on $\OML/cmm/m/it/10 ^^\[] \OT1/cmr/m/n/10 (1 \OMS/cmsy/m/n/10 ^^@
+
+Underfull \hbox (badness 2080) in paragraph at lines 55--61
+ \OT1/ptm/m/it/10 a) Av-er-age phys-i-cal re-source load: [][] \OT1/ptm/m/n/10 
+The data-mode
+[1{C:/Users/Thomas/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/T
+homas/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2])
+(sections/dmimo_sysmodel.tex
+Overfull \hbox (36.66985pt too wide) detected at line 83
+[][][][][] \U/msb/m/n/10 E [] \OT1/cmr/m/n/10 = [] [] \U/msb/m/n/10 E [] \OMS/c
+msy/m/n/10 ^^T \OML/cmm/m/it/10 ^^Z[];  l \OT1/cmr/m/n/10 = 1\OML/cmm/m/it/10 ;
+ [] ; L;
+
+LaTeX Warning: Reference `sssec:precoding-schemes' on page 1 undefined on input
+ line 100.
+
+
+LaTeX Warning: Reference `sssec:power-control' on page 1 undefined on input lin
+e 101.
+
+[3]
+
+LaTeX Warning: Citation `demir2021foundations' on page 4 undefined on input lin
+e 126.
+
+
+Overfull \hbox (50.80283pt too wide) detected at line 144
+[][][][][]\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ] = [][\OML/cmm/m/
+it/10 q\OT1/cmr/m/n/10 ][][][\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ][][][\OML/cmm/m
+/it/10 q\OT1/cmr/m/n/10 ][][]\OML/cmm/m/it/10 ;  []\OT1/cmr/m/n/10 [\OML/cmm/m/
+it/10 q\OT1/cmr/m/n/10 ] = [ [][][\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ]  []  [][]
+[\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ] ] \OMS/cmsy/m/n/10 2 \U/msb/m/n/10 C[]\OML
+/cmm/m/it/10 ;
+
+LaTeX Warning: Citation `demir2021foundations' on page 4 undefined on input lin
+e 171.
+
+
+LaTeX Warning: Reference `eq:zf-precoder' on page 4 undefined on input line 206
+.
+
+
+LaTeX Warning: Reference `eq:downlink-sinr' on page 4 undefined on input line 2
+11.
+
+
+LaTeX Warning: Citation `demir2021foundations' on page 4 undefined on input lin
+e 230.
+
+
+LaTeX Warning: Reference `eq:power-constraint-decomposed' on page 4 undefined o
+n input line 232.
+
+) [4] (main.bbl)
+
+** Conference Paper **
+Before submitting the final camera ready copy, remember to:
+
+ 1. Manually equalize the lengths of two columns on the last page
+ of your paper;
+
+ 2. Ensure that any PostScript and/or PDF output post-processing
+ uses only Type 1 fonts and that every step in the generation
+ process uses the appropriate paper size.
+
+[5] (main.aux)
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package rerunfilecheck Warning: File `main.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+ )
+(see the transcript file for additional information)<C:/Users/Thomas/AppData/Lo
+cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Thomas/
+AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Use
+rs/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.p
+fb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
+m/cmmi5.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
+msfonts/cm/cmmi7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1
+/public/amsfonts/cm/cmr10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fo
+nts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/Thomas/AppData/Local/Programs/M
+iKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Thomas/AppData/Local/Pr
+ograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Thomas/AppDat
+a/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Thom
+as/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb
+><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/sym
+bols/msam7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/amsfonts/symbols/msbm10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fo
+nts/type1/urw/times/utmb8a.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/f
+onts/type1/urw/times/utmr8a.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/
+fonts/type1/urw/times/utmri8a.pfb>
+Output written on main.pdf (5 pages, 245355 bytes).
+Transcript written on main.log.
+Latexmk: Getting log file 'main.log'
+Latexmk: Examining 'main.fls'
+Latexmk: Examining 'main.log'
+Latexmk: Found input bbl file 'main.bbl'
+Latexmk: References changed.
+Latexmk: References changed.
+Latexmk: Log file says output to 'main.pdf'
+Latexmk: Using bibtex to make bibliography file(s).
+  ===Source file 'main.bbl' for 'pdflatex'
+Latexmk: Found bibliography file(s):
+  ./mybib.bib
+  C:/Users/Thomas/AppData/Local/Programs/MiKTeX/bibtex/bib/ieeetran/IEEEabrv.bib
+Latexmk: applying rule 'bibtex main'...
+Rule 'bibtex main':  Reasons for rerun
+Changed files or newly in use/created:
+  main.aux
+
+------------
+Run number 1 of rule 'bibtex main'
+------------
+------------
+Running 'bibtex  "main.aux"'
+------------
+This is BibTeX, Version 0.99e (MiKTeX 26.2)
+The top-level auxiliary file: main.aux
+The style file: IEEEtran.bst
+Database file #1: IEEEabrv.bib
+Database file #2: mybib.bib
+-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
+-- http://www.michaelshell.org/tex/ieeetran/bibtex/
+-- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
+
+Done.
+Latexmk: applying rule 'pdflatex'...
+Rule 'pdflatex':  Reasons for rerun
+Changed files or newly in use/created:
+  main.aux
+  main.bbl
+  main.out
+
+------------
+Run number 2 of rule 'pdflatex'
+------------
+------------
+Running 'pdflatex  -interaction=nonstopmode -halt-on-error -recorder  "main.tex"'
+------------
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex.fmt)
+ restricted \write18 enabled.
+entering extended mode
+(main.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-03-20>
+(IEEEtran.cls
+Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
+-- See the "IEEEtran_HOWTO" manual for usage information.
+-- http://www.michaelshell.org/tex/ieeetran/
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ptm.fd)
+-- Using 8.5in x 11in (letter) paper.
+-- Using PDF output.
+-- This is a 10 point document.
+)
+** ATTENTION: Overriding command lockouts (line 2).
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty)
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithmic
+.sty (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mathtools\mathtools.st
+y (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\calc.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mathtools\mhsetup.sty)
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithm.s
+ty (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/subfig\subfig.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty)
+
+Package caption Warning: Unknown document class (or package),
+(caption)                standard defaults will be used.
+See the caption package documentation for explanation.
+
+)) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/base\textcomp.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/sttools\stfloats.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\verbatim.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/siunitx\siunitx.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/translations\translati
+ons.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmd
+s.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.
+sty) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty)
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.
+cfg)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.de
+f))) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/cite\cite.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/makecell\makecell.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/lineno\lineno.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.st
+y
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.st
+y)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx
+))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\dvipsnam.def)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/placeins\placeins.sty
+) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xifthen\xifthen.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/ifmtarg\ifmtarg.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/colortbl\colortbl.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/bbm\bbm.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgfplots\pgfplots.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.re
+vision.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfrcs.s
+ty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfuti
+l-common.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfuti
+l-latex.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs
+.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revision.tex
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgfcore
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/systemlayer\pgfsys
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+s.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+slibraryfiltered.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.
+cfg)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys-pdftex.def
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys-common-pdf.def)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+yssoftpath.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ysprotocol.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+re.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.cod
+e.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathutil
+.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathpars
+er.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.basic.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.trigonometric.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.random.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.comparison.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.base.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.round.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.misc.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.integerarithmetics.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathcalc
+.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloa
+t.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code
+.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repoints.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathconstruct.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathusage.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rescopes.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+regraphicstate.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+retransformations.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+requick.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reobjects.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathprocessing.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rearrows.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reshade.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reimage.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reexternal.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+relayers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+retransparency.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repatterns.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rerdf.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+eshapes.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+eplot.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfc
+omp-version-0-65.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfc
+omp-version-1-18.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgffor.s
+ty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfkeys.
+sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+s.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/math\pgfmath.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.cod
+e.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgffor
+.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz\tikz.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryplothandlers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+ematrix.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarytopaths.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.co
+de.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotscor
+e.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/sys\pgfplot
+ssysgeneric.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\pgfplo
+tslibrary.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/oldpgfcompa
+tib\pgfplotsoldpgfsupp_loader.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryfpu.code.tex)
+Package pgfplots: loading complementary utilities for your pgf version...
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/oldpgfcompa
+tib\pgfplotsoldpgfsupp_pgfutil-common-lists.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsutil.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsliststructure.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsliststructureext.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsarray.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsmatrix.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstableshared.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsdeque.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsbinary.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsbinary.data.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsutil.verb.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\pgflib
+rarypgfplots.surfshading.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/sys\pgflibr
+arypgfplots.surfshading.pgfsys-pdftex.def)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tscolormap.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tscolor.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotssta
+ckedplots.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsplo
+thandlers.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsmes
+hplothandler.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsmes
+hplotimage.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.sc
+aling.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotscoo
+rdprocessing.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.er
+rorbars.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.ma
+rkers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotstic
+ks.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.pa
+ths.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+edecorations.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.pathmorphing.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/decora
+tions\pgflibrarydecorations.pathmorphing.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.pathreplacing.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/decora
+tions\pgflibrarydecorations.pathreplacing.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.contourlua.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryplotmarks.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryplotmarks.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/units\nicefrac.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.groupplots.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarycalc.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.dateplot.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfcalen
+dar.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfcal
+endar.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.fillbetween.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+tikzlibraryfillbetween.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryintersections.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryintersections.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+tikzlibrarydecorations.softclip.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+pgflibraryfillbetween.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.decorations.softclip.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarypositioning.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefin
+ekeys.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.
+sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\getti
+tlestring.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.
+sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcal
+c.sty)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfi
+lecheck.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\unique
+counter.sty)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/acronym\acronym.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/bigfoot\suffix.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xstring\xstring.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xstring\xstring.tex)
+))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/cleveref\cleveref.sty)
+
+==> First Aid for cleveref.sty applied!
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarypatterns.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+rarypatterns.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.polar.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.geometric.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.geometric.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.misc.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.misc.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.symbols.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.symbols.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.arrows.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.arrows.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.callouts.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.callouts.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.multipart.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.multipart.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgfplots\pgfplotstable
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.re
+vision.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstable.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstable.coltype.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/filecontents\fileconte
+nts.sty
+
+Package filecontents Warning: This package is obsolete. Disabling it and
+(filecontents)                passing control to the filecontents environment
+(filecontents)                defined by the LaTeX kernel.
+
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/base\glossa
+ries.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xkeyval\xkeyval.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkeyval.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkvutils.tex
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mfirstuc\mfirstuc.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xfor\xfor.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-base
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tracklang\tracklang.st
+y
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/tracklang\tracklang.
+tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-l3fp
+.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-utf8
+.ldf))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-hypernav.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-list.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-long.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-super.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/supertabular\supertabu
+lar.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-tree.sty)) (abbr.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amscls\amsthm.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pd
+ftex.def) (main.aux)
+-- Lines per column: 56 (exact).
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\ltcaption.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tra
+nslations-basic-dictionary-english.trsl)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
+kii
+[Loading MPS to PDF converter (version 2006.09.02).]
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-
+base.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.
+cfg))
+Package pgfplots notification 'compat/show suggested version=true': document ha
+s been generated with the most recent feature set (\pgfplotsset{compat=1.18}).
+
+(main.out) (main.out) (sections/original_pwr_model.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd)
+Underfull \hbox (badness 3471) in paragraph at lines 41--43
+[]\OT1/ptm/m/it/10 data \OT1/ptm/m/n/10 trans-mis-sion/reception, for a frac-ti
+on $\OML/cmm/m/it/10 ^^\[] \OT1/cmr/m/n/10 (1 \OMS/cmsy/m/n/10 ^^@
+
+Underfull \hbox (badness 2080) in paragraph at lines 55--61
+ \OT1/ptm/m/it/10 a) Av-er-age phys-i-cal re-source load: [][] \OT1/ptm/m/n/10 
+The data-mode
+[1{C:/Users/Thomas/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/T
+homas/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2])
+(sections/dmimo_sysmodel.tex
+Overfull \hbox (36.66985pt too wide) detected at line 83
+[][][][][] \U/msb/m/n/10 E [] \OT1/cmr/m/n/10 = [] [] \U/msb/m/n/10 E [] \OMS/c
+msy/m/n/10 ^^T \OML/cmm/m/it/10 ^^Z[];  l \OT1/cmr/m/n/10 = 1\OML/cmm/m/it/10 ;
+ [] ; L;
+[3]
+
+LaTeX Warning: Citation `demir2021foundations' on page 4 undefined on input lin
+e 126.
+
+
+Overfull \hbox (50.80283pt too wide) detected at line 144
+[][][][][]\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ] = [][\OML/cmm/m/
+it/10 q\OT1/cmr/m/n/10 ][][][\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ][][][\OML/cmm/m
+/it/10 q\OT1/cmr/m/n/10 ][][]\OML/cmm/m/it/10 ;  []\OT1/cmr/m/n/10 [\OML/cmm/m/
+it/10 q\OT1/cmr/m/n/10 ] = [ [][][\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ]  []  [][]
+[\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ] ] \OMS/cmsy/m/n/10 2 \U/msb/m/n/10 C[]\OML
+/cmm/m/it/10 ;
+
+LaTeX Warning: Citation `demir2021foundations' on page 4 undefined on input lin
+e 171.
+
+
+LaTeX Warning: Citation `demir2021foundations' on page 4 undefined on input lin
+e 230.
+
+) [4] (main.bbl)
+
+** Conference Paper **
+Before submitting the final camera ready copy, remember to:
+
+ 1. Manually equalize the lengths of two columns on the last page
+ of your paper;
+
+ 2. Ensure that any PostScript and/or PDF output post-processing
+ uses only Type 1 fonts and that every step in the generation
+ process uses the appropriate paper size.
+
+[5] (main.aux)
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ )
+(see the transcript file for additional information)<C:/Users/Thomas/AppData/Lo
+cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Thomas/
+AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Use
+rs/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.p
+fb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
+m/cmmi5.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
+msfonts/cm/cmmi7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1
+/public/amsfonts/cm/cmr10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fo
+nts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/Thomas/AppData/Local/Programs/M
+iKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Thomas/AppData/Local/Pr
+ograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Thomas/AppDat
+a/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Thom
+as/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb
+><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/sym
+bols/msam7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/amsfonts/symbols/msbm10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fo
+nts/type1/urw/times/utmb8a.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/f
+onts/type1/urw/times/utmr8a.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/
+fonts/type1/urw/times/utmri8a.pfb>
+Output written on main.pdf (5 pages, 247986 bytes).
+Transcript written on main.log.
+Latexmk: Getting log file 'main.log'
+Latexmk: Examining 'main.fls'
+Latexmk: Examining 'main.log'
+Latexmk: Found input bbl file 'main.bbl'
+Latexmk: References changed.
+Latexmk: Log file says output to 'main.pdf'
+Latexmk: Using bibtex to make bibliography file(s).
+  ===Source file 'main.bbl' for 'pdflatex'
+Latexmk: Found bibliography file(s):
+  ./mybib.bib
+  C:/Users/Thomas/AppData/Local/Programs/MiKTeX/bibtex/bib/ieeetran/IEEEabrv.bib
+Latexmk: applying rule 'bibtex main'...
+Rule 'bibtex main':  Reasons for rerun
+Changed files or newly in use/created:
+  main.aux
+
+------------
+Run number 2 of rule 'bibtex main'
+------------
+------------
+Running 'bibtex  "main.aux"'
+------------
+This is BibTeX, Version 0.99e (MiKTeX 26.2)
+The top-level auxiliary file: main.aux
+The style file: IEEEtran.bst
+Database file #1: IEEEabrv.bib
+Database file #2: mybib.bib
+-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
+-- http://www.michaelshell.org/tex/ieeetran/bibtex/
+-- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
+
+Done.
+Latexmk: applying rule 'pdflatex'...
+Rule 'pdflatex':  Reasons for rerun
+Changed files or newly in use/created:
+  main.aux
+
+------------
+Run number 3 of rule 'pdflatex'
+------------
+------------
+Running 'pdflatex  -interaction=nonstopmode -halt-on-error -recorder  "main.tex"'
+------------
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex.fmt)
+ restricted \write18 enabled.
+entering extended mode
+(main.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-03-20>
+(IEEEtran.cls
+Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
+-- See the "IEEEtran_HOWTO" manual for usage information.
+-- http://www.michaelshell.org/tex/ieeetran/
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ptm.fd)
+-- Using 8.5in x 11in (letter) paper.
+-- Using PDF output.
+-- This is a 10 point document.
+)
+** ATTENTION: Overriding command lockouts (line 2).
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty)
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithmic
+.sty (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mathtools\mathtools.st
+y (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\calc.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mathtools\mhsetup.sty)
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithm.s
+ty (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/subfig\subfig.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty)
+
+Package caption Warning: Unknown document class (or package),
+(caption)                standard defaults will be used.
+See the caption package documentation for explanation.
+
+)) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/base\textcomp.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/sttools\stfloats.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\verbatim.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/siunitx\siunitx.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/translations\translati
+ons.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmd
+s.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.
+sty) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty)
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.
+cfg)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.de
+f))) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/cite\cite.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/makecell\makecell.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/lineno\lineno.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.st
+y
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.st
+y)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx
+))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/graphics\dvipsnam.def)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/placeins\placeins.sty
+) (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xifthen\xifthen.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/ifmtarg\ifmtarg.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/colortbl\colortbl.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/bbm\bbm.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgfplots\pgfplots.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.re
+vision.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfrcs.s
+ty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfuti
+l-common.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfuti
+l-latex.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs
+.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revision.tex
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgfcore
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/systemlayer\pgfsys
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+s.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+slibraryfiltered.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.
+cfg)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys-pdftex.def
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys-common-pdf.def)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+yssoftpath.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ysprotocol.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+re.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.cod
+e.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathutil
+.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathpars
+er.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.basic.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.trigonometric.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.random.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.comparison.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.base.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.round.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.misc.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.integerarithmetics.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathcalc
+.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloa
+t.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code
+.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repoints.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathconstruct.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathusage.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rescopes.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+regraphicstate.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+retransformations.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+requick.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reobjects.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathprocessing.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rearrows.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reshade.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reimage.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reexternal.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+relayers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+retransparency.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repatterns.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rerdf.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+eshapes.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+eplot.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfc
+omp-version-0-65.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfc
+omp-version-1-18.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgffor.s
+ty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfkeys.
+sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+s.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/math\pgfmath.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.cod
+e.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgffor
+.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz\tikz.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryplothandlers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+ematrix.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarytopaths.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.co
+de.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotscor
+e.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/sys\pgfplot
+ssysgeneric.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\pgfplo
+tslibrary.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/oldpgfcompa
+tib\pgfplotsoldpgfsupp_loader.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryfpu.code.tex)
+Package pgfplots: loading complementary utilities for your pgf version...
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/oldpgfcompa
+tib\pgfplotsoldpgfsupp_pgfutil-common-lists.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsutil.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsliststructure.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsliststructureext.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsarray.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsmatrix.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstableshared.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/liststructu
+re\pgfplotsdeque.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsbinary.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsbinary.data.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tsutil.verb.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\pgflib
+rarypgfplots.surfshading.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/sys\pgflibr
+arypgfplots.surfshading.pgfsys-pdftex.def)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tscolormap.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/util\pgfplo
+tscolor.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotssta
+ckedplots.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsplo
+thandlers.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsmes
+hplothandler.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotsmes
+hplotimage.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.sc
+aling.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotscoo
+rdprocessing.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.er
+rorbars.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.ma
+rkers.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplotstic
+ks.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.pa
+ths.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+edecorations.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.pathmorphing.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/decora
+tions\pgflibrarydecorations.pathmorphing.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarydecorations.pathreplacing.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/decora
+tions\pgflibrarydecorations.pathreplacing.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.contourlua.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryplotmarks.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryplotmarks.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/units\nicefrac.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.groupplots.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarycalc.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.dateplot.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfcalen
+dar.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfcal
+endar.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.fillbetween.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+tikzlibraryfillbetween.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryintersections.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryintersections.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+tikzlibrarydecorations.softclip.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/pgfcontrib\
+pgflibraryfillbetween.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.decorations.softclip.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarypositioning.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefin
+ekeys.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.
+sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\getti
+tlestring.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.
+sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcal
+c.sty)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfi
+lecheck.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\unique
+counter.sty)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/acronym\acronym.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/bigfoot\suffix.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xstring\xstring.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xstring\xstring.tex)
+))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/cleveref\cleveref.sty)
+
+==> First Aid for cleveref.sty applied!
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarypatterns.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+rarypatterns.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/libs\tikzli
+brarypgfplots.polar.code.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.geometric.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.geometric.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.misc.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.misc.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.symbols.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.symbols.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.arrows.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.arrows.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.callouts.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.callouts.code.tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.multipart.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.multipart.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/pgfplots\pgfplotstable
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots\pgfplots.re
+vision.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstable.code.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/pgfplots/numtable\pg
+fplotstable.coltype.code.tex)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/filecontents\fileconte
+nts.sty
+
+Package filecontents Warning: This package is obsolete. Disabling it and
+(filecontents)                passing control to the filecontents environment
+(filecontents)                defined by the LaTeX kernel.
+
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/base\glossa
+ries.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xkeyval\xkeyval.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkeyval.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkvutils.tex
+)))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/mfirstuc\mfirstuc.sty)
+ (C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/xfor\xfor.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-base
+.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tracklang\tracklang.st
+y
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/generic/tracklang\tracklang.
+tex))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-l3fp
+.def)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/datatool\datatool-utf8
+.ldf))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-hypernav.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-list.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-long.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-super.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/supertabular\supertabu
+lar.sty))
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/glossaries/styles\glos
+sary-tree.sty)) (abbr.tex)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amscls\amsthm.sty)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pd
+ftex.def) (main.aux)
+-- Lines per column: 56 (exact).
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/caption\ltcaption.sty)
+
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tra
+nslations-basic-dictionary-english.trsl)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
+kii
+[Loading MPS to PDF converter (version 2006.09.02).]
+)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-
+base.sty
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.
+cfg))
+Package pgfplots notification 'compat/show suggested version=true': document ha
+s been generated with the most recent feature set (\pgfplotsset{compat=1.18}).
+
+(main.out) (main.out) (sections/original_pwr_model.tex
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd)
+(C:\Users\Thomas\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd)
+Underfull \hbox (badness 3471) in paragraph at lines 41--43
+[]\OT1/ptm/m/it/10 data \OT1/ptm/m/n/10 trans-mis-sion/reception, for a frac-ti
+on $\OML/cmm/m/it/10 ^^\[] \OT1/cmr/m/n/10 (1 \OMS/cmsy/m/n/10 ^^@
+
+Underfull \hbox (badness 2080) in paragraph at lines 55--61
+ \OT1/ptm/m/it/10 a) Av-er-age phys-i-cal re-source load: [][] \OT1/ptm/m/n/10 
+The data-mode
+[1{C:/Users/Thomas/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/T
+homas/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2])
+(sections/dmimo_sysmodel.tex
+Overfull \hbox (36.66985pt too wide) detected at line 83
+[][][][][] \U/msb/m/n/10 E [] \OT1/cmr/m/n/10 = [] [] \U/msb/m/n/10 E [] \OMS/c
+msy/m/n/10 ^^T \OML/cmm/m/it/10 ^^Z[];  l \OT1/cmr/m/n/10 = 1\OML/cmm/m/it/10 ;
+ [] ; L;
+[3]
+Overfull \hbox (50.80283pt too wide) detected at line 144
+[][][][][]\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ] = [][\OML/cmm/m/
+it/10 q\OT1/cmr/m/n/10 ][][][\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ][][][\OML/cmm/m
+/it/10 q\OT1/cmr/m/n/10 ][][]\OML/cmm/m/it/10 ;  []\OT1/cmr/m/n/10 [\OML/cmm/m/
+it/10 q\OT1/cmr/m/n/10 ] = [ [][][\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ]  []  [][]
+[\OML/cmm/m/it/10 q\OT1/cmr/m/n/10 ] ] \OMS/cmsy/m/n/10 2 \U/msb/m/n/10 C[]\OML
+/cmm/m/it/10 ;
+) [4] (main.bbl)
+
+** Conference Paper **
+Before submitting the final camera ready copy, remember to:
+
+ 1. Manually equalize the lengths of two columns on the last page
+ of your paper;
+
+ 2. Ensure that any PostScript and/or PDF output post-processing
+ uses only Type 1 fonts and that every step in the generation
+ process uses the appropriate paper size.
+
+[5] (main.aux) )
+(see the transcript file for additional information)<C:/Users/Thomas/AppData/Lo
+cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Thomas/
+AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Use
+rs/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.p
+fb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
+m/cmmi5.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
+msfonts/cm/cmmi7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1
+/public/amsfonts/cm/cmr10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fo
+nts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/Thomas/AppData/Local/Programs/M
+iKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Thomas/AppData/Local/Pr
+ograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Thomas/AppDat
+a/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Thom
+as/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb
+><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/sym
+bols/msam7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/amsfonts/symbols/msbm10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fo
+nts/type1/urw/times/utmb8a.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/f
+onts/type1/urw/times/utmr8a.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/
+fonts/type1/urw/times/utmri8a.pfb>
+Output written on main.pdf (5 pages, 247459 bytes).
+Transcript written on main.log.
+Latexmk: Getting log file 'main.log'
+Latexmk: Examining 'main.fls'
+Latexmk: Examining 'main.log'
+Latexmk: Found input bbl file 'main.bbl'
+Latexmk: Log file says output to 'main.pdf'
+Latexmk: Using bibtex to make bibliography file(s).
+  ===Source file 'main.bbl' for 'pdflatex'
+Latexmk: Found bibliography file(s):
+  ./mybib.bib
+  C:/Users/Thomas/AppData/Local/Programs/MiKTeX/bibtex/bib/ieeetran/IEEEabrv.bib
+Latexmk: All targets (main.pdf) are up-to-date
+
