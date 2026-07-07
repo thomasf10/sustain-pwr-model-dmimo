@@ -22,7 +22,8 @@ sustain-pwr-model-dmimo/
     ├── FR3_power_consumption_original_from_paper/   original paper scripts
     ├── FR3_power_model/                             modular re-implementation
     ├── D_MIMO_rate/                                 D-MIMO rate simulations
-    └── D_MIMO_FR3_power_model/                      power model extended to D-MIMO
+    ├── D_MIMO_FR3_power_model/                      power model extended to D-MIMO
+    └── power_gui/                                   Streamlit GUI over the models
 ```
 
 ## `power_model_description/` — mathematical description
@@ -111,4 +112,15 @@ in.
 Intended home for the FR3 power model extended to the distributed MIMO setting,
 tying the D-MIMO rate results into the power and energy-efficiency model.
 **Currently empty (planned work).**
+
+### `power_gui/`
+
+An interactive Streamlit front end over the models, kept as a thin presentation
+layer that imports them as libraries. The **FR3 central power** page (fully
+working today) exposes the operating point and hardware parameters as widgets
+and shows the digital / analog / PA breakdown, the energy efficiency, and the
+swept figures; the **D-MIMO rate** page configures the distributed downlink and
+becomes fully functional once the `D_MIMO_rate` physics stubs are implemented.
+Run with `pip install -r requirements.txt` then `streamlit run app.py`; see the
+folder `README.md` for details.
 
