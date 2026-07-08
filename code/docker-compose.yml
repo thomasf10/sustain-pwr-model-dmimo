@@ -1,0 +1,17 @@
+# Convenience wrapper: `docker compose up` from the code/ directory.
+services:
+  power-gui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fr3-dmimo-power-gui
+    container_name: fr3-dmimo-power-gui
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
+    # For live editing during development, uncomment to mount the source over
+    # the image copy (Streamlit auto-reloads on change):
+    # volumes:
+    #   - ./power_gui:/app/power_gui
+    #   - ./FR3_power_model:/app/FR3_power_model
+    #   - ./D_MIMO_rate:/app/D_MIMO_rate

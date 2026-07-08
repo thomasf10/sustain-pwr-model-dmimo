@@ -1,0 +1,10 @@
+# Keep the build context (and image) small and reproducible.
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.venv/
+venv/
+**/.pytest_cache/
+FR3_power_model/tests/
+# Docs are not needed at runtime.
+**/README.md

@@ -38,15 +38,24 @@ from config_dmimo import DMIMOConfig, PrecodingScheme
 def draw_positions(cfg: DMIMOConfig, rng: np.random.Generator):
     """Draw AP and UE locations in the coverage area.
 
+    APs and UEs are dropped independently and uniformly over the square
+    ``[0, area_size) x [0, area_size)`` [m] (the wrap-around torus of
+    :meth:`DMIMOConfig`, so no location is disadvantaged by an edge). Only the
+    horizontal ``(x, y)`` coordinates are random; the fixed ``ap_height`` and
+    ``ue_height`` set the vertical separation and are folded into the 3-D
+    distance by :func:`large_scale_fading`.
+
     Args:
         cfg: System configuration.
         rng: Random generator (use it for reproducibility).
 
     Returns:
-        Tuple ``(ap_pos, ue_pos)`` of arrays shaped ``(L, ...)`` and
-        ``(K, ...)`` holding the AP and UE coordinates.
+        Tuple ``(ap_pos, ue_pos)`` of arrays shaped ``(L, 2)`` and ``(K, 2)``
+        holding the horizontal AP and UE coordinates [m].
     """
-    raise NotImplementedError("channel model: draw AP/UE positions")
+    ap_pos = rng.uniform(0.0, cfg.area_size, size=(cfg.L, 2))
+    ue_pos = rng.uniform(0.0, cfg.area_size, size=(cfg.K, 2))
+    return ap_pos, ue_pos
 
 
 def large_scale_fading(cfg: DMIMOConfig, ap_pos, ue_pos) -> np.ndarray:

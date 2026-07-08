@@ -14,6 +14,51 @@ streamlit run app.py
 
 The app opens in the browser with two pages in the sidebar.
 
+## Run in Docker
+
+Docker gives a clean, reproducible environment (a fresh Python 3.11, no local
+setup) and sidesteps host Python-version issues. The Docker files live one level
+up in [`../`](..) (the `code/` directory), because the image has to bundle the
+GUI together with the two model packages it imports (`FR3_power_model` and
+`D_MIMO_rate`), which are siblings of this folder. The build must therefore be
+run from `code/`, not from `power_gui/`.
+
+The image installs only the light dependencies (`streamlit`, `numpy`,
+`matplotlib`). It reads the cached rate table and never runs the
+Sionna/TensorFlow rate model, so those are deliberately left out and the image
+stays small.
+
+### With Docker Compose (one command)
+
+```bash
+cd ..                       # into code/, where the Docker files live
+docker compose up --build   # build the image (first time) and start the app
+```
+
+Then open <http://localhost:8501>. Stop with `Ctrl+C`; remove the container with
+`docker compose down`.
+
+### With plain Docker
+
+```bash
+cd ..                                            # into code/
+docker build -t fr3-dmimo-power-gui .            # build the image
+docker run --rm -p 8501:8501 fr3-dmimo-power-gui  # run it
+```
+
+`-p 8501:8501` maps the container's Streamlit port (right) to the same port on
+the host (left); without it the browser cannot reach the app. `--rm` removes the
+container when you stop it.
+
+The first build takes a few minutes (it pulls the base image and installs
+Streamlit); later builds are fast because dependencies are installed in their
+own cached layer, before the source is copied, so editing a `.py` file does not
+re-trigger `pip install`.
+
+For live editing without rebuilding, uncomment the `volumes:` block in
+[`../docker-compose.yml`](../docker-compose.yml): it mounts the source over the
+image copy and Streamlit auto-reloads on change.
+
 ## Pages
 
 - **FR3 central power** (`pages/1_FR3_central_power.py`) — the fully implemented
