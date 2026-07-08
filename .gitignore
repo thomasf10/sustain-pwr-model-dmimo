@@ -1,3 +1,4 @@
 claude.md
-context_papers/
 .venv/
+**/context_papers/cell_free_book/images/
+**/context_papers/cell_free_book/journaldata/

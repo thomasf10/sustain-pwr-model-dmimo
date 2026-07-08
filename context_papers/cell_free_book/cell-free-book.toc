@@ -1,0 +1,173 @@
+\thispagestyle {empty}
+\contentsline {chapter}{\numberline {1}Introduction and Motivation}{164}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Cell-Free Networks}{169}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Historical Background}{174}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Towards Standardization in 4G}{178}{subsection.1.2.1}%
+\contentsline {subsubsection}{Network-Centric Clustering}{179}{subsubsection*.9}%
+\contentsline {subsubsection}{User-Centric Clustering}{181}{subsubsection*.10}%
+\contentsline {subsection}{\numberline {1.2.2}Cellular Massive \gls {MIMO} in 5G}{182}{subsection.1.2.2}%
+\contentsline {subsubsection}{Benefits}{182}{subsubsection*.11}%
+\contentsline {subsubsection}{Limitations}{183}{subsubsection*.12}%
+\contentsline {subsection}{\numberline {1.2.3}Cell-Free Networks Beyond 5G}{184}{subsection.1.2.3}%
+\contentsline {subsubsection}{Background}{184}{subsubsection*.13}%
+\contentsline {subsubsection}{The Roots of Cell-Free Massive MIMO}{185}{subsubsection*.14}%
+\contentsline {section}{\numberline {1.3}Three Benefits over Cellular Networks}{187}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}Benefit 1: Higher \gls {SNR} With Smaller Variations}{187}{subsection.1.3.1}%
+\contentsline {subsubsection}{Massive \gls {MIMO} Setup}{188}{subsubsection*.17}%
+\contentsline {subsubsection}{Cellular Setup With Small Cells}{190}{subsubsection*.18}%
+\contentsline {subsubsection}{Cell-Free Setup}{191}{subsubsection*.19}%
+\contentsline {subsubsection}{Numerical Comparison}{191}{subsubsection*.20}%
+\contentsline {subsection}{\numberline {1.3.2}Benefit 2: Better Ability to Manage Interference}{193}{subsection.1.3.2}%
+\contentsline {subsubsection}{Massive \gls {MIMO} Setup}{193}{subsubsection*.22}%
+\contentsline {subsubsection}{Cellular Setup With Small Cells}{194}{subsubsection*.23}%
+\contentsline {subsubsection}{Cell-Free Setup}{195}{subsubsection*.24}%
+\contentsline {subsubsection}{Numerical Comparison}{196}{subsubsection*.25}%
+\contentsline {subsection}{\numberline {1.3.3}Benefit 3: Coherent Transmission Increases the \gls {SNR}}{197}{subsection.1.3.3}%
+\contentsline {section}{\numberline {1.4}Summary of the Key Points in Section\nobreakspace {}\ref {c-introduction}}{201}{section.1.4}%
+\contentsline {chapter}{\numberline {2}User-Centric Cell-Free Massive MIMO Networks}{202}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Definition of Cell-Free Massive MIMO}{202}{section.2.1}%
+\contentsline {section}{\numberline {2.2}User-Centric Dynamic Cooperation Clustering}{204}{section.2.2}%
+\contentsline {section}{\numberline {2.3}System Models for Uplink and Downlink}{206}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Block Fading and Coherence Blocks}{207}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Time-Division Duplex Protocol}{210}{subsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.3.3}Uplink System Model}{212}{subsection.2.3.3}%
+\contentsline {subsection}{\numberline {2.3.4}Downlink System Model}{214}{subsection.2.3.4}%
+\contentsline {section}{\numberline {2.4}Network Scalability}{215}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Example of Unscalable Network Operation}{217}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}A Sufficient Condition for Scalability}{218}{subsection.2.4.2}%
+\contentsline {section}{\numberline {2.5}Channel Modeling}{220}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Correlated Rayleigh Fading}{221}{subsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5.2}Large-Scale Fading Model for Urban Deployments}{222}{subsection.2.5.2}%
+\contentsline {subsection}{\numberline {2.5.3}Local Scattering Model for Spatial Correlation}{223}{subsection.2.5.3}%
+\contentsline {section}{\numberline {2.6}Channel Hardening and Favorable Propagation}{227}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}Channel Hardening}{227}{subsection.2.6.1}%
+\contentsline {subsubsection}{Definition and Sufficient Condition for Channel Hardening}{228}{subsubsection*.34}%
+\contentsline {subsubsection}{Impact of the Number and Geographical Distribution of APs}{230}{subsubsection*.35}%
+\contentsline {subsubsection}{Takeaways}{233}{subsubsection*.37}%
+\contentsline {subsection}{\numberline {2.6.2}Favorable Propagation}{233}{subsection.2.6.2}%
+\contentsline {subsubsection}{Definition and Sufficient Condition for Favorable Propagation}{234}{subsubsection*.38}%
+\contentsline {subsubsection}{Impact of the Geographical Distribution of APs}{236}{subsubsection*.39}%
+\contentsline {subsubsection}{Takeaways}{237}{subsubsection*.41}%
+\contentsline {section}{\numberline {2.7}Summary of the Key Points in Section\nobreakspace {}\ref {c-cell-free-definition}}{239}{section.2.7}%
+\contentsline {chapter}{\numberline {3}Theoretical Foundations}{240}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Estimation Theory for Gaussian Variables}{240}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Capacity Bounds and Spectral Efficiency}{242}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Capacity Bounds for Deterministic Channels}{243}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Capacity Bounds for Random Channels}{246}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}Maximization of Rayleigh Quotients}{248}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Optimization Algorithms for Utility Maximization}{250}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Max-Min SE Fairness}{254}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Sum SE Maximization}{257}{subsection.3.4.2}%
+\contentsline {section}{\numberline {3.5}Summary of the Key Points in Section\nobreakspace {}\ref {c-theoretical-foundations}}{262}{section.3.5}%
+\contentsline {chapter}{\numberline {4}Channel Estimation}{263}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Uplink Pilot Transmission}{263}{section.4.1}%
+\contentsline {section}{\numberline {4.2}MMSE Channel Estimation}{265}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Normalized MSE}{268}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Pilot Contamination}{270}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}MMSE Estimation of the Collective Channel}{271}{subsection.4.2.3}%
+\contentsline {section}{\numberline {4.3}Impact of Architecture, Contamination, \& Spatial Correlation}{273}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Impact of the Cell-Free Architecture}{273}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Impact of Pilot Contamination}{277}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Impact of Spatial Correlation}{280}{subsection.4.3.3}%
+\contentsline {subsubsection}{Impact of Spatial Correlation on Estimation Accuracy}{280}{subsubsection*.49}%
+\contentsline {subsubsection}{Impact of Spatial Correlation on Pilot Contamination}{284}{subsubsection*.52}%
+\contentsline {section}{\numberline {4.4}Pilot Assignment and Dynamic Cooperation Cluster Formation}{285}{section.4.4}%
+\contentsline {subsubsection}{An Algorithm for Joint Pilot Assignment and Cluster Formation}{287}{subsubsection*.54}%
+\contentsline {section}{\numberline {4.5}Summary of the Key Points in Section\nobreakspace {}\ref {c-channel-estimation}}{292}{section.4.5}%
+\contentsline {chapter}{\numberline {5}Uplink Operation}{293}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Centralized Uplink Operation}{294}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Spectral Efficiency With Centralized Operation}{296}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}An Alternative Spectral Efficiency Expression}{298}{subsection.5.1.2}%
+\contentsline {subsection}{\numberline {5.1.3}Optimal Receive Combining}{300}{subsection.5.1.3}%
+\contentsline {subsection}{\numberline {5.1.4}Scalable Combining Schemes for Centralized Operation}{305}{subsection.5.1.4}%
+\contentsline {subsubsection}{Partial MMSE Combining}{305}{subsubsection*.60}%
+\contentsline {subsubsection}{Partial Regularized Zero-Forcing Combining}{307}{subsubsection*.61}%
+\contentsline {subsection}{\numberline {5.1.5}Fronthaul Signaling Load for Centralized Operation}{308}{subsection.5.1.5}%
+\contentsline {section}{\numberline {5.2}Distributed Uplink Operation}{310}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Spectral Efficiency and Optimal LSFD Weights}{312}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Scalable Schemes for Distributed Operation}{316}{subsection.5.2.2}%
+\contentsline {subsubsection}{Scalable Local Receive Combining}{317}{subsubsection*.63}%
+\contentsline {subsubsection}{Scalable Large-Scale Fading Decoding}{321}{subsubsection*.65}%
+\contentsline {subsection}{\numberline {5.2.3}Fronthaul Signaling Load for Distributed Operation}{322}{subsection.5.2.3}%
+\contentsline {section}{\numberline {5.3}Running Example}{323}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Benchmark Schemes}{326}{subsection.5.3.1}%
+\contentsline {subsubsection}{Cellular Network}{326}{subsubsection*.67}%
+\contentsline {subsubsection}{Genie-Aided SEs With Centralized and Distributed Operations}{327}{subsubsection*.69}%
+\contentsline {section}{\numberline {5.4}Numerical Performance Evaluation}{330}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Performance With Centralized Operation}{331}{subsection.5.4.1}%
+\contentsline {subsubsection}{Tightness of the SE Expressions}{334}{subsubsection*.71}%
+\contentsline {subsection}{\numberline {5.4.2}Performance With Distributed Operation}{334}{subsection.5.4.2}%
+\contentsline {subsubsection}{Tightness of the SE Expressions}{337}{subsubsection*.74}%
+\contentsline {subsubsection}{Benefits of LSFD}{338}{subsubsection*.76}%
+\contentsline {subsection}{\numberline {5.4.3}Comparison Between Cell-Free and Cellular Networks}{339}{subsection.5.4.3}%
+\contentsline {subsection}{\numberline {5.4.4}Impact of Spatial Correlation}{343}{subsection.5.4.4}%
+\contentsline {subsection}{\numberline {5.4.5}Impact of the Pilot Sequence Length}{344}{subsection.5.4.5}%
+\contentsline {subsection}{\numberline {5.4.6}Scalability of Fronthaul and Computations}{346}{subsection.5.4.6}%
+\contentsline {subsubsection}{Fronthaul Signaling}{346}{subsubsection*.83}%
+\contentsline {subsubsection}{Computational Complexity}{348}{subsubsection*.85}%
+\contentsline {section}{\numberline {5.5}Summary of the Key Points in Section\nobreakspace {}\ref {c-uplink}}{351}{section.5.5}%
+\contentsline {chapter}{\numberline {6}Downlink Operation}{353}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Centralized Downlink Operation}{354}{section.6.1}%
+\contentsline {subsection}{\numberline {6.1.1}Spectral Efficiency With Centralized Operation}{358}{subsection.6.1.1}%
+\contentsline {subsection}{\numberline {6.1.2}Centralized Transmit Precoding}{360}{subsection.6.1.2}%
+\contentsline {subsubsection}{MMSE Precoding}{363}{subsubsection*.88}%
+\contentsline {subsubsection}{P-MMSE and P-RZF Precoding}{364}{subsubsection*.89}%
+\contentsline {subsection}{\numberline {6.1.3}Fronthaul Signaling Load for Centralized Operation}{365}{subsection.6.1.3}%
+\contentsline {section}{\numberline {6.2}Distributed Downlink Operation}{366}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Spectral Efficiency With Distributed Operation}{367}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Local Transmit Precoding}{368}{subsection.6.2.2}%
+\contentsline {subsubsection}{L-MMSE Precoding}{369}{subsubsection*.91}%
+\contentsline {subsubsection}{MR Precoding}{370}{subsubsection*.92}%
+\contentsline {subsubsection}{LP-MMSE Precoding}{373}{subsubsection*.93}%
+\contentsline {subsection}{\numberline {6.2.3}Fronthaul Signaling Load for Distributed Operation}{374}{subsection.6.2.3}%
+\contentsline {section}{\numberline {6.3}Numerical Performance Evaluation}{374}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}Benchmark Schemes}{376}{subsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.3.2}Performance With Centralized Operation}{377}{subsection.6.3.2}%
+\contentsline {subsubsection}{Tightness of the SE Expression}{379}{subsubsection*.97}%
+\contentsline {subsection}{\numberline {6.3.3}Performance With Distributed Operation}{380}{subsection.6.3.3}%
+\contentsline {subsubsection}{Tightness of the SE Expression}{382}{subsubsection*.100}%
+\contentsline {subsection}{\numberline {6.3.4}Impact of the Number of UEs}{383}{subsection.6.3.4}%
+\contentsline {subsection}{\numberline {6.3.5}Impact of Spatial Correlation}{386}{subsection.6.3.5}%
+\contentsline {section}{\numberline {6.4}Summary of the Key Points in Section\nobreakspace {}\ref {c-downlink}}{388}{section.6.4}%
+\contentsline {chapter}{\numberline {7}Spatial Resource Allocation}{390}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Transmit Power Optimization}{391}{section.7.1}%
+\contentsline {subsection}{\numberline {7.1.1}Uplink Power Optimization}{391}{subsection.7.1.1}%
+\contentsline {subsubsection}{Uplink Max-Min SE Fairness}{393}{subsubsection*.104}%
+\contentsline {subsubsection}{Uplink Sum SE Maximization}{394}{subsubsection*.105}%
+\contentsline {subsection}{\numberline {7.1.2}Downlink Power Optimization}{396}{subsection.7.1.2}%
+\contentsline {subsubsection}{Optimized Centralized Downlink Power Allocation}{397}{subsubsection*.106}%
+\contentsline {subsubsection}{Optimized Distributed Downlink Power Allocation}{400}{subsubsection*.107}%
+\contentsline {section}{\numberline {7.2}Scalable Distributed Power Optimization}{407}{section.7.2}%
+\contentsline {subsection}{\numberline {7.2.1}Scalable Uplink Power Control}{408}{subsection.7.2.1}%
+\contentsline {subsection}{\numberline {7.2.2}Scalable Centralized Downlink Power Allocation}{410}{subsection.7.2.2}%
+\contentsline {subsection}{\numberline {7.2.3}Scalable Distributed Downlink Power Allocation}{414}{subsection.7.2.3}%
+\contentsline {section}{\numberline {7.3}Comparison of Power Optimization Schemes}{416}{section.7.3}%
+\contentsline {subsection}{\numberline {7.3.1}Comparison of Uplink Power Control Schemes}{417}{subsection.7.3.1}%
+\contentsline {subsection}{\numberline {7.3.2}Comparison of Downlink Power Allocation Schemes}{419}{subsection.7.3.2}%
+\contentsline {section}{\numberline {7.4}Pilot Assignment}{424}{section.7.4}%
+\contentsline {subsection}{\numberline {7.4.1}Utility-Based Pilot Assignment}{425}{subsection.7.4.1}%
+\contentsline {subsubsection}{Scalable Pilot Assignment}{427}{subsubsection*.111}%
+\contentsline {section}{\numberline {7.5}Selection of Dynamic Cooperation Clusters}{427}{section.7.5}%
+\contentsline {section}{\numberline {7.6}Implementation Constraints}{430}{section.7.6}%
+\contentsline {subsection}{\numberline {7.6.1}Low-Cost Components}{430}{subsection.7.6.1}%
+\contentsline {subsection}{\numberline {7.6.2}Quantization of Fronthaul Signaling}{431}{subsection.7.6.2}%
+\contentsline {subsection}{\numberline {7.6.3}Radio Stripes \& Other Constrained Fronthaul Architectures}{431}{subsection.7.6.3}%
+\contentsline {subsection}{\numberline {7.6.4}Synchronization of APs}{432}{subsection.7.6.4}%
+\contentsline {section}{\numberline {7.7}Summary of the Key Points in Section\nobreakspace {}\ref {c-resource-allocation}}{433}{section.7.7}%
+\contentsline {chapter}{Acknowledgements}{435}{chapter*.112}%
+\contentsline {part}{Appendices}{436}{chapter*.112}%
+\contentsline {chapter}{\numberline {A}Notation and Abbreviations}{437}{appendix.A}%
+\contentsline {chapter}{\numberline {B}Useful Lemmas}{441}{appendix.B}%
+\contentsline {chapter}{\numberline {C}Collection of Proofs}{444}{appendix.C}%
+\contentsline {section}{\numberline {C.1}Proofs from Section\nobreakspace {}\ref {c-channel-estimation}}{444}{section.C.1}%
+\contentsline {subsection}{\numberline {C.1.1}Proof of Lemma\nobreakspace {}\ref {lemma:nmse-concave}}{444}{subsection.C.1.1}%
+\contentsline {subsection}{\numberline {C.1.2}Proof of Lemma\nobreakspace {}\ref {lemma:nmse-eigenvalue-distribution}}{444}{subsection.C.1.2}%
+\contentsline {section}{\numberline {C.2}Proofs from Section\nobreakspace {}\ref {c-uplink}}{445}{section.C.2}%
+\contentsline {subsection}{\numberline {C.2.1}Proof of Theorem\nobreakspace {}\ref {proposition:uplink-capacity-general}}{445}{subsection.C.2.1}%
+\contentsline {subsection}{\numberline {C.2.2}Proof of Theorem\nobreakspace {}\ref {proposition:uplink-capacity-general-UatF}}{446}{subsection.C.2.2}%
+\contentsline {subsection}{\numberline {C.2.3}Proof of Theorem\nobreakspace {}\ref {theorem:uplink-capacity-level3}}{447}{subsection.C.2.3}%
+\contentsline {subsection}{\numberline {C.2.4}Proof of Corollary\nobreakspace {}\ref {cor:closed-form_ul}}{448}{subsection.C.2.4}%
+\contentsline {section}{\numberline {C.3}Proofs from Section\nobreakspace {}\ref {c-downlink}}{449}{section.C.3}%
+\contentsline {subsection}{\numberline {C.3.1}Proof of Theorem\nobreakspace {}\ref {theorem:downlink-capacity-level4}}{449}{subsection.C.3.1}%
+\contentsline {subsection}{\numberline {C.3.2}Proof of Theorem\nobreakspace {}\ref {prop:duality}}{450}{subsection.C.3.2}%
+\contentsline {chapter}{References}{452}{appendix*.113}%

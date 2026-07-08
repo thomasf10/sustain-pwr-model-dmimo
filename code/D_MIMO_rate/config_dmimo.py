@@ -29,6 +29,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+import numpy as np
+
 SPEED_OF_LIGHT = 3e8                     # [m/s]
 THERMAL_NOISE_DENSITY_DBM_HZ = -174.0    # k_B * T at T = 290 K [dBm/Hz]
 
@@ -113,7 +115,8 @@ class DMIMOConfig:
     area_size: float = 1000.0   # Square coverage-area side [m] (wrap-around)
     ap_height: float = 10.0     # AP height [m]
     ue_height: float = 1.5      # UE height [m]
-    pathloss_exponent: float = 3.67  # Log-distance path-loss exponent
+    pathloss_exponent: float = 3.67  # Log-distance path-loss exponent (= 36.7/10)
+    pathloss_ref_loss_dB: float = 30.5  # Path loss at d0 (3GPP UMi, 2 GHz) [dB]
     shadow_std_dB: float = 4.0  # Log-normal shadowing std [dB]
     ref_distance: float = 1.0   # Path-loss reference distance d0 [m]
     min_ap_ue_distance: float = 1.0  # Floor on AP-UE distance [m]
@@ -218,19 +221,24 @@ class DMIMOConfig:
         return self.tau_d / self.tau_c
 
     # --- Path-loss model --------------------------------------------------
-    def path_loss_dB(self, distance: float) -> float:
+    def path_loss_dB(self, distance):
         """Mean (shadowing-free) path loss at a 3-D distance [m], returned in dB.
 
-        Log-distance model anchored to free-space loss at the reference distance
-        d0: PL(d) = FSPL(d0) + 10 * n * log10(d / d0), where
-        FSPL(d0) = 20 log10(4 pi d0 / lambda_c). Add an independent
-        N(0, shadow_std_dB^2) term in the caller for shadowing. The returned
-        value is a loss (positive dB); the large-scale fading gain is its
-        negation.
+        3GPP Urban Microcell log-distance model used for the simulations in
+        Bjornson & Sanguinetti, *Foundations of User-Centric Cell-Free Massive
+        MIMO* (Sec. 2.5.2, eq. for beta_kl): the large-scale fading channel gain
+        is ``beta_kl [dB] = -30.5 - 36.7 log10(d/1m) + F_kl``, i.e. a path loss
+        ``PL(d) = pathloss_ref_loss_dB + 10 * n * log10(d / d0)`` with the
+        reference loss (30.5 dB at d0 = 1 m) and exponent n = 3.67 = 36.7/10.
+        Add an independent ``N(0, shadow_std_dB^2)`` shadowing term in the caller.
+        The returned value is a loss (positive dB); the gain is its negation.
+
+        The reference loss is calibrated for the 2 GHz band; it is representative
+        of other sub-6 GHz bands but does not model the extra loss at the FR3
+        default carrier ``f_c``. Accepts a scalar or a NumPy array of distances.
         """
-        d = max(distance, self.min_ap_ue_distance)
-        fspl_d0 = 20 * math.log10(4 * math.pi * self.ref_distance / self.wavelength)
-        return fspl_d0 + 10 * self.pathloss_exponent * math.log10(d / self.ref_distance)
+        d = np.maximum(distance, self.min_ap_ue_distance)
+        return self.pathloss_ref_loss_dB + 10 * self.pathloss_exponent * np.log10(d / self.ref_distance)
 
     # --- Reporting --------------------------------------------------------
     def summary(self) -> str:

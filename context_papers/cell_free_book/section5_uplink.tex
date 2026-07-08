@@ -1,0 +1,1165 @@
+%!TEX root = cell-free-book.tex
+
+
+\chapter{Uplink Operation}
+\label{c-uplink}
+
+This section describes two different uplink implementations of User-centric Cell-free Massive \gls{MIMO}, which are characterized by different degrees of cooperation among the APs. Section~\ref{sec:level4-uplink} considers a centralized operation in which the pilot and data signals received at all APs are gathered (through the fronthaul links) at the CPU, which performs channel estimation and data detection. The achievable SE is derived based on the MMSE channel estimates and used to obtain the optimal, but unscalable, centralized receive combining. Alternative scalable combining schemes are then proposed. In Section~\ref{sec:level3-uplink}, the SE analysis and design of scalable receive combining schemes are extended to a distributed operation where the local MMSE channel estimates are used at the APs to obtain local estimates of the UE data, which are then gathered and linearly combined at the CPU for final detection. To exemplify the performance and properties of cell-free networks under somewhat realistic conditions, a simulation setup is defined in Section~\ref{sec:running-example} that will be used as a running example in the remainder of this monograph. Performance analysis and comparisons are carried out in Section~\ref{sec:uplink-performance-comparison}, while a summary of the key points is provided in Section~\ref{c-uplink-summary}.
+
+
+\section{Centralized Uplink Operation}
+\label{sec:level4-uplink}
+  \vspace{-2mm}
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section5/distributed_centralized}
+		\put(3,28.5){\small{Received signals}}
+		\put(66,28.5){\small{Data estimates}}
+		\put(0,36){\small{AP}}
+		\put(32,24){\small{CPU}}
+		\put(15,13){\small{Channel estimation}}
+		\put(15,10){\small{Receive combining}}
+		\put(15,7){\small{Data detection}}
+		\put(51.5,20){\small{Channel estimation}}
+		\put(51.5,17){\small{Receive combining}}
+		\put(62,36){\small{AP}}
+		\put(94,24){\small{CPU}}
+		\put(75.5,7.5){\small{Data detection}}
+		\put(10,0){\small{(a) Centralized operation}}
+		\put(60,0){\small{(b) Distributed operation}}
+	\end{overpic}  
+	\caption{The uplink signal processing tasks can be divided between the APs and CPU in different ways. In the centralized operation, the channel estimation, receive combining, and data detection are done at the CPU. In the distributed operation, everything, except the data detection, is done at the APs.}
+	\label{figure:distributed_centralized}  \vspace{-3mm}
+\end{figure}
+
+The most advanced uplink implementation of Cell-free Massive MIMO is a fully centralized 
+operation, where the APs only act as remote-radio heads or relays that forward their received baseband signals to the CPU for processing.
+More precisely, each AP $l$ sends the $\tau_p$ received pilot signals $\{ \vect{y}_{t l}^{\rm pilot} : t = 1,\ldots,\tau_p \}$ in \eqref{eq:received-pilot} and the received uplink data signal $\vect{y}_{l}^{\rm{ul}}$ in \eqref{eq:DCC-uplink} to the CPU, which performs channel estimation, receive combining and data detection. The centralized operation is illustrated in Figure~\ref{figure:distributed_centralized}(a).  Although we call it \emph{centralized operation}, this should not be interpreted as building a network that gathers the information related to all UEs at a single point at the center of the network. As described in Section~\ref{sec:cell-free-networks} on p.~\pageref{sec:cell-free-networks}, the CPU is a logical entity and its tasks can be divided between many geographically distributed edge-cloud processors \cite{Interdonato2019a}, as illustrated in Figure~\ref{fig:cell-free} on p.~\pageref{fig:cell-free}. Different UEs might use different processors. Hence, in practice, centralized operation means that each UE is associated with one nearby processor which we refer to as ``the CPU'' and all its serving APs send their respective received uplink signals to it. We will now explain what processing is done at the CPU and quantify the achievable uplink SE.
+
+
+
+
+
+For each UE $k$, the pilot signals are individually used at the CPU  to compute the partial MMSE estimates $\{\vect{D}_{k}\widehat{\vect{h}}_{i} : i= 1, \ldots,K\}$ of the collective channels $\{{\vect{h}}_{i} : i=1,\ldots,K\}$ from all UEs to the APs that serve UE $k$ (i.e., the APs with indices $l\in \mathcal{M}_k$). 
+The estimation procedure was described in Section~\ref{sec:MMSE-channel-estimation} on p.~\pageref{sec:MMSE-channel-estimation}.
+Recall that $\vect{D}_{k}  = \diag( \vect{D}_{k1} , \ldots, \vect{D}_{kL} )$ is a block-diagonal matrix with $\vect{D}_{kl}$ being defined in~\eqref{eq:user-centric} as $\vect{I}_N$ for APs that serve UE $k$ and zero otherwise. 
+
+The received uplink data signals at the serving APs are jointly used at the CPU to compute an estimate $\widehat{s}_{k}$ of the signal $s_k$ transmitted by UE $k$. From the signal model in Section~\ref{sec:uplink-system-model} on p.~\pageref{sec:uplink-system-model}, this is achieved by summing up the inner products between the effective receive combining vectors $\vect{D}_{kl}\vect{v}_{kl}$ and $\vect{y}_{l}^{\rm{ul}}$ for $l=1,\ldots,L$. This yields the estimate 
+\begin{align} \notag
+\widehat{s}_{k} &=  \sum\limits_{l=1}^L\widehat{s}_{kl} \\ &= \sum\limits_{l=1}^L\vect{v}_{kl}^{\Htran} \vect{D}_{kl} {\bf y}_{l}^{\rm{ul}} = \vect{v}_{k}^{\Htran} \vect{D}_{k} {\bf y}^{\rm{ul}}\label{eq:uplink-CPU-data-estimate}
+\end{align}
+where $\vect{v}_{k} = [\vect{v}_{k1}^{\Ttran} \, \ldots \, \vect{v}_{kL}^{\Ttran}]^{\Ttran} \in \mathbb{C}^{LN}$ is the centralized combining vector and $\vect{y}^{\rm{ul}} \in \mathbb{C}^{LN}$ is the collective uplink data signal given by
+\begin{equation} \label{eq:received-data-central2}
+\vect{y}^{\rm{ul}} = \begin{bmatrix} \vect{y}_{1}^{\rm{ul}} \\ \vdots \\ \vect{y}_{L}^{\rm{ul}} 
+	\end{bmatrix} = \sum_{i=1}^{K} \vect{h}_{i} s_i + \vect{n}
+\end{equation}
+with $\vect{n} = [\vect{n}_{1}^{\Ttran} \, \ldots \, \vect{n}_{L}^{\Ttran}]^{\Ttran} \in \mathbb{C}^{LN}$ being the collective noise vector. Notice that~\eqref{eq:received-data-central2} depends on all the channel vectors $\{\vect{h}_{i}: i=1,\ldots,K\}$ since all the APs receive the signal from all UEs. Since $ \vect{D}_{kl}=\vect{0}_{N\times N}$ implies $\vect{v}_{kl}^{\Htran} \vect{D}_{kl} =\vect{0}_N^{\Ttran}$ in \eqref{eq:uplink-CPU-data-estimate}, the CPU will however apply receive combining 
+using only the data signals of the APs with $ \vect{D}_{kl} \neq \vect{0}_{N \times N}$. In other words, \eqref{eq:uplink-CPU-data-estimate} can be equivalently written as  $\widehat{s}_{k}  =  \sum_{l \in \mathcal{M}_k} \vect{v}_{kl}^{\Htran} {\bf y}_{l}^{\rm{ul}}$ by including only the subset of APs that serves UE $k$ in the summation.
+While this alternative expression is more compact at this point, it would require much more notation if used for performance analysis. That is why we utilize \eqref{eq:uplink-CPU-data-estimate} in this section.
+
+The expression in \eqref{eq:received-data-central2} is mathematically equivalent to the signal model of an uplink single-cell Massive MIMO system with correlated fading \cite[Sec.~2.3.1]{massivemimobook}, if one treats the CPU as a receiver equipped with $LN$ antennas. However, there are some key differences:
+\begin{enumerate}
+\item Multiple UEs that are managed by the CPU are using the same pilot, which is normally avoided in single-cell systems.
+
+\item The antennas are distributed over different geographical locations. Hence, the collective channel is distributed as $\vect{h}_k \sim \CN(\vect{0}_{LN}, \vect{R}_{k})$ where the spatial correlation matrix $\vect{R}_{k} = \diag(\vect{R}_{k1}, \ldots,  \vect{R}_{kL}) \in \mathbb{C}^{LN \times LN}$ has a block-diagonal structure, which is normally not the case in single-cell systems.
+
+\item Not all antennas are being used for signal detection, but only those belonging to the APs that serve the particular UE.
+\end{enumerate}
+
+Despite these distinct differences, we can compute an achievable uplink SE, based on the knowledge of the partial MMSE estimates $\{\vect{D}_{k}\widehat{\vect{h}}_{i} : i= 1, \ldots,K\}$, using the methodology from the Cellular Massive MIMO literature \cite[Sec.~4.1]{massivemimobook}. From this expression, we can further obtain the optimal centralized receive combining vector $\vect{v}_{k}$. All the analysis in this section relies on the assumption that the spatial correlation matrices $\{\vect{R}_{kl}: k=1,\ldots,K, \, l=1,\ldots,L\}$ are perfectly known at the CPU to perform channel estimation, receive combining and data detection. We will return to this assumption in Section~\ref{sec:level4-fronthaul}.
+
+\subsection{Spectral Efficiency With Centralized Operation}
+\label{sec:level4-SE}
+While the ergodic capacity of fully cooperative networks with perfect \gls{CSI} is known in some cases \cite{Estella2019a}, it is generally unknown in the considered case with imperfect CSI. However, we can rigorously analyze the performance by using the standard capacity lower bounds described in 
+Section~\ref{sec:capacity-bounds} on p.~\pageref{sec:capacity-bounds}.
+ As a first step, we use~\eqref{eq:received-data-central2} to rewrite~\eqref{eq:uplink-CPU-data-estimate} as 
+\begin{align} \label{eq:uplink-data-estimate2}
+\widehat{s}_k& = \hspace{-1cm}\underbrace{\vect{v}_k^{\Htran}\vect{D}_k{\widehat{\vect{h}}}_k s_k}_{\textrm{Desired signal over estimated channel}}+\underbrace{\vect{v}_k^{\Htran}\vect{D}_k{\widetilde{\vect{h}}}_k s_k}_{\textrm{Desired signal over unknown channel}}\nonumber \\ &+\underbrace{\condSum{i=1}{i \neq k}{K}\vect{v}_k^{\Htran}\vect{D}_k\vect{h}_i s_i}_{\textrm{Interference}}\;+\;\underbrace{\vect{v}_k^{\Htran}\vect{D}_k\vect{n}}_{\textrm{Noise}}
+\end{align}
+where the desired signal term has been divided into two parts: one
+that is received over the known partially estimated channel $\vect{D}_k{\widehat{\vect{h}}}_k$ from UE $k$ and one that is received over the unknown part of the channel, represented by the estimation error $\vect{D}_k{\widetilde{\vect{h}}}_k$. The former part can be utilized straight away for signal detection, while the latter part is less useful since only the distribution of the estimation error is known, as reported in Section~\ref{sec:mmse-of-collective-channel} on p.~\pageref{sec:mmse-of-collective-channel}. An achievable SE can be computed by treating the latter part as additional interference in the signal detection, by utilizing Lemma~\ref{lemma:capacity-memoryless-random-interference} on p.~\pageref{lemma:capacity-memoryless-random-interference}. If the first term in \eqref{eq:uplink-data-estimate2} is treated as the desired part while the other three terms are treated as noise in the receiver, the following SE is achievable.
+
+\begin{theorem} \label{proposition:uplink-capacity-general}
+	An achievable SE of UE $k$ in the centralized operation is
+	\begin{equation} \label{eq:uplink-rate-expression-general}
+	\mathacr{SE}_{k}^{({\rm ul},\cent)} = \frac{\tau_u}{\tau_c} \mathbb{E} \left\{ \log_2  \left( 1 + \mathacr{SINR}_{k}^{({\rm ul},\cent)}  \right) \right\} \quad \textrm{bit/s/Hz}
+	\end{equation}
+	where the instantaneous effective \gls{SINR} is given by
+	\begin{equation} \label{eq:uplink-instant-SINR-level4}
+	\mathacr{SINR}_{k}^{({\rm ul},\cent)} = \frac{ p_{k} \left |  \vect{v}_{k}^{\Htran} \vect{D}_{k}\widehat{\vect{h}}_{k} \right|^2  }{ 
+		\condSum{i=1}{i \neq k}{K} p_{i} \left | \vect{v}_{k}^{\Htran} \vect{D}_{k}\widehat{\vect{h}}_{i} \right|^2
+		+ \vect{v}_{k}^{\Htran}  {\bf{Z}}_k \vect{v}_{k}  + \sigmaUL \| \vect{D}_k \vect{v}_{k} \|^2
+	}
+	\end{equation}
+	with
+	\begin{align}
+	{\bf{Z}}_k = \sum\limits_{i=1}^{K} p_{i}  \vect{D}_k  \vect{C}_{i} \vect{D}_k
+	\end{align}
+	and the expectation is with respect to the channel estimates. The matrix $\vect{C}_{i}$ is the error correlation matrix of the collective channel ${\vect{h}}_{i}$.
+\end{theorem}
+\begin{proof}
+	The proof is available in Appendix~\ref{proof-of-proposition:uplink-capacity-general} on p.~\pageref{proof-of-proposition:uplink-capacity-general}.
+\end{proof}
+
+The pre-log factor ${\tau_u}/{\tau_c}$ in \eqref{eq:uplink-rate-expression-general} is the fraction of each coherence block that is used for uplink data transmission. The term $\mathacr{SINR}_{k}^{({\rm ul},\cent)}$ takes the form of an ``effective instantaneous SINR'' \cite{massivemimobook}, with the desired signal power received over the estimated channel $\vect{D}_k{\widehat{\vect{h}}}_k$ in the numerator and the interference plus noise in the denominator. More precisely, the numerator contains $p_{k}|  \vect{v}_{k}^{\Htran} \vect{D}_{k}\widehat{\vect{h}}_{k} |^2$, while the first term in the denominator is the interference that is received over the estimated parts of the interfering channels, ${\bf{Z}}_k $ is the combined spatial correlation matrix of the signals received over the unknown parts of the channels, and the last term in the denominator is the noise power after receive combining. Notice that the matrix $\vect{C}_{i}$ is the error correlation matrix of the collective channel ${\vect{h}}_{i}$; see Section~\ref{sec:mmse-of-collective-channel} on p.~\pageref{sec:mmse-of-collective-channel}.
+We call \eqref{eq:uplink-instant-SINR-level4}  an ``effective'' instantaneous SINR since it cannot be measured in the system at any particular point in time, because the averaging over the estimation errors does not occur instantaneously.
+However, the SE is effectively the same as that of a fading single-antenna single-user channel where \eqref{eq:uplink-instant-SINR-level4} is the instantaneously measurable SNR and the receiver has perfect CSI. In particular, this means that the desired data signal can be encoded and the received signal can be decoded as if we would communicate over such a fading \gls{AWGN} channel.
+
+The SE expression in Theorem~\ref{proposition:uplink-capacity-general} is not in closed form since there is an expectation in front of the logarithm in \eqref{eq:uplink-rate-expression-general}. However, the SE can be easily computed numerically using Monte Carlo methods, which means that we approximate the expectation with an average over a large number of random realizations. More precisely, we can generate realizations of the channel estimates in a large set of coherence blocks and compute the value of the logarithm for each one of them, followed by taking the sample mean of these values.
+
+\enlargethispage{\baselineskip} 
+
+Theorem~\ref{proposition:uplink-capacity-general} is rather general in the sense that the SE is derived using the DCC framework and considering multi-antenna APs with arbitrary correlated fading channels and arbitrary DCC. The case of $N=1$ was considered in \cite{Attarifar2020a}, \cite{Nayebi2016a}, \cite{Riera2018a}, \cite{Yang2019a}, while \cite{Bashar2018a}, \cite{Chen2018b} considered $N \geq 1$ with uncorrelated fading and \cite{Bjornson2019c}, \cite{Bjornson2020a} considered $N \geq 1$ with correlated fading.
+In the extreme case when all APs are serving UE $k$ (i.e., $\vect{D}_k = \vect{I}_{LN}$), the SINR in \eqref{eq:uplink-instant-SINR-level4} can be simplified to 
+\begin{equation} \label{eq:uplink-instant-SINR-level4-all}
+	\mathacr{SINR}_{k}^{({\rm ul},\cent)} =  \frac{ p_{k} \left |  \vect{v}_{k}^{\Htran} \widehat{\vect{h}}_{k} \right|^2  }{ 
+	\condSum{i=1}{i \neq k}{K} p_{i} \left | \vect{v}_{k}^{\Htran} \widehat{\vect{h}}_{i} \right|^2
+		+ \vect{v}_{k}^{\Htran}  \left( \sum\limits_{i=1}^{K} p_{i}  \vect{C}_{i}  + \sigmaUL  \vect{I}_{LN}\right) \vect{v}_{k}  
+	}.
+\end{equation}
+
+\subsection{An Alternative Spectral Efficiency Expression}
+\label{subsec:alternative-bound}
+
+The SE expression in Theorem~\ref{proposition:uplink-capacity-general} is a lower bound on the capacity that is derived by utilizing the property that the channel estimate $\widehat{\vect{h}}_{k}$ and the estimation error $\widetilde{\vect{h}}_{k} = {\vect{h}}_{k} -\widehat{\vect{h}}_{k}$ are independent random vectors. This condition is satisfied when using the MMSE estimator and Rayleigh fading channels as assumed in this monograph.
+An alternative bound that can be applied along with any channel estimator and fading model is the so-called \emph{\gls{UatF}} that is widely used in Cellular Massive MIMO \cite[Theorem~4.4]{massivemimobook}, and also in Cell-free Massive MIMO \cite{Bashar2019a}, \cite{Bjornson2019c}, \cite{Nayebi2016a} with $\vect{D}_{kl}=\vect{I}_N$ for all $k,l$ and specific combining vectors. The name comes from the fact that the channel estimates are used for computing the receive combining vectors and then effectively ``forgotten'' before the signal detection takes place. In the considered network setting with multiple-antenna APs, arbitrary correlated fading channels, and arbitrary DCC, the following achievable SE is found by applying the \gls{UatF} bound.
+
+
+\begin{theorem} \label{proposition:uplink-capacity-general-UatF}
+	An achievable SE of UE $k$ in the centralized operation is
+	\begin{equation} \label{eq:uplink-rate-expression-general-UatF}
+	\mathacr{SE}_{k}^{({\rm ul},\centuatf)} = \frac{\tau_u}{\tau_c} \log_2  \left( 1 + \mathacr{SINR}_{k}^{({\rm ul},\centuatf)}  \right) \quad \textrm{bit/s/Hz}
+	\end{equation}
+	where the effective \gls{SINR} is given by
+	\begin{align} \nonumber
+	&\mathacr{SINR}_{k}^{({\rm ul},\centuatf)} 
+	\\ &= \frac{ p_{k} \left |\mathbb{E} \left\{  \vect{v}_{k}^{\Htran} \vect{D}_{k}{\vect{h}}_{k} \right\}\right|^2  }{ 
+		\sum\limits_{i=1}^K p_{i}  \mathbb{E} \left\{| \vect{v}_{k}^{\Htran} \vect{D}_{k}{\vect{h}}_{i} |^2\right\}
+		- p_{k} \left |\mathbb{E} \left\{  \vect{v}_{k}^{\Htran} \vect{D}_{k}{\vect{h}}_{k} \right\}\right|^2  + \sigmaUL \mathbb{E} \left\{\| \vect{D}_k \vect{v}_{k} \|^2\right\}
+	}  \label{eq:uplink-instant-SINR-level4-UatF}
+	\end{align}
+	and the expectation is with respect to the channel realizations.
+\end{theorem}
+\begin{proof}
+	The proof is available in Appendix~\ref{proof-of-proposition:uplink-capacity-general-UatF} on p.~\pageref{proof-of-proposition:uplink-capacity-general-UatF}.	
+\end{proof}
+
+Intuitively, $\mathacr{SE}_{k}^{({\rm ul},\centuatf)}$ in \eqref{eq:uplink-rate-expression-general-UatF} should be smaller than $\mathacr{SE}_{k}^{({\rm ul},\cent)}$ in \eqref{eq:uplink-rate-expression-general} since it relies on a simplified implementation in which the channel estimates are not used at the CPU for signal detection. This conjecture is hard to prove analytically but has been verified by numerous numerical experiments. Except for Section~\ref{sec:uplink-performance-comparison} where will compare  $\mathacr{SE}_{k}^{({\rm ul},\centuatf)}$ with $\mathacr{SE}_{k}^{({\rm ul},\cent)}$, we will not use $\mathacr{SE}_{k}^{({\rm ul},\centuatf)}$ in the remainder of this section, to avoid underestimating the achievable performance. However, we stress that one benefit with the simplified bound in Theorem~\ref{proposition:uplink-capacity-general-UatF} is that there is no expectation in front of the logarithm, because the bounding technique is treating the channel as deterministic. We will return to the expression in Section~\ref{sec:optimized-power-allocation-uplink} on p.~\pageref{sec:optimized-power-allocation-uplink} where the uplink powers $\{p_k : k =1,\ldots,K\}$ will be optimized by making use of the fact that there are only expectations at the inside of the logarithm.
+
+
+\subsection{Optimal Receive Combining}
+\label{subsec:optimal-receive-combining}
+The SE expression in \eqref{eq:uplink-rate-expression-general} holds for any receive combining vector $\vect{v}_{k}$ but we would like to use the one that maximizes its value.
+We first note that we can multiply $\vect{D}_k \vect{v}_{k}$ with any non-zero scalar without affecting the SINR value, since all the terms in the ratio are scaled equivalently. Hence, the goal of designing the receive combining  is not to find the right length of the vector $\vect{D}_k \vect{v}_{k}$ but the right direction in the vector space.
+We notice that \eqref{eq:uplink-instant-SINR-level4} has the form of a generalized Rayleigh quotient:
+	\begin{equation} \label{eq:uplink-instant-SINR-level4-Rayleigh}
+	\mathacr{SINR}_{k}^{({\rm ul},\cent)} = \frac{ p_{k} \left |  \vect{v}_{k}^{\Htran} \vect{D}_{k}\widehat{\vect{h}}_{k} \right|^2  }{\vect{v}_{k}^{\Htran} \left(   \condSum{i=1}{i \neq k}{K} p_{i}  \vect{D}_{k}\widehat{\vect{h}}_{i} \widehat{\vect{h}}_{i}^{\Htran}\vect{D}_{k} + \vect{Z}_{k}  + \sigmaUL \vect{D}_k \right) \vect{v}_{k}  
+	}
+	\end{equation}
+where we have replaced $\vect{D}_k^2$ by $\vect{D}_k$ in the last term of the denominator by using the relation $\vect{D}_k^2=\vect{D}_k$. Hence, the SINR can be maximized as described in Lemma~\ref{lemma:gen-rayleigh-quotient} on p.~\pageref{lemma:gen-rayleigh-quotient}. This leads to the following optimal combining vector.
+
+\begin{corollary} \label{cor:MMSE-combining}
+The instantaneous SINR in \eqref{eq:uplink-instant-SINR-level4} for UE~$k$ is maximized by the MMSE combining vector
+\begin{equation} \label{eq:MMSE-combining}
+\vect{v}_{k}^{{\rm MMSE}} =    p_{k} \left( \sum\limits_{i=1}^{K} p_{i}  \vect{D}_{k} ( \widehat{\vect{h}}_{i} \widehat{\vect{h}}_{i}^{\Htran} + \vect{C}_{i})\vect{D}_{k} + \sigmaUL \vect{I}_{LN} \right)^{\!-1} \vect{D}_{k}\widehat{\vect{h}}_{k}
+\end{equation}
+which leads to the maximum value
+\begin{align} \label{eq:uplink-maximized-SINR}
+\!\!\!\!\!\!\mathacr{SINR}_{k}^{({\rm ul},\cent)} \! \!= p_{k}  \widehat{\vect{h}}_{k}^{\Htran}\vect{D}_{k} \left( \condSum{i=1}{i \neq k}{K} p_{i}  \vect{D}_{k}\widehat{\vect{h}}_{i} \widehat{\vect{h}}_{i}^{\Htran}\vect{D}_{k} + \vect{Z}_{k} + \sigmaUL \vect{I}_{LN}  \right)^{-1}  \vect{D}_{k}\widehat{\vect{h}}_{k}.\!\!
+\end{align}
+\end{corollary}
+\begin{proof}
+We can maximize \eqref{eq:uplink-instant-SINR-level4} by using Lemma~\ref{lemma:gen-rayleigh-quotient} on p.~\pageref{lemma:gen-rayleigh-quotient} with $\vect{v} = \vect{v}_{k}$, $\vect{h} = \sqrt{p_{k}} \vect{D}_{k}\widehat{\vect{h}}_{k}$, and $\vect{B} = \sum_{i=1, i \neq k}^{K} p_{i}  \vect{D}_{k}\widehat{\vect{h}}_{i} \widehat{\vect{h}}_{i}^{\Htran}\vect{D}_{k} + \vect{Z}_{k} + \sigmaUL \vect{D}_k$. 
+ To handle that $\vect{B}$ might not be positive definite (but only positive semi-definite), we can regularize it by replacing $ \sigmaUL \vect{D}_k$ with  $\sigmaUL \vect{I}_{LN}$. This makes $\vect{B}$ invertible and will not affect the final result since the inverse is then multiplied with $\vect{D}_k$, which removes the extra noise that was added to the unused dimensions. 
+\end{proof}
+
+
+
+The optimal combining vector in \eqref{eq:MMSE-combining} consists of two parts: 1) the partial estimate $\vect{D}_{k}\widehat{\vect{h}}_{k}$ of the channel to UE $k$ and 2) the inverse of a matrix that equals $\mathbb{E}\{ \vect{D}_k \vect{y}^{\rm{ul}} (\vect{y}^{\rm{ul}})^{\Htran}  \vect{D}_k | \{ \widehat{\vect{h}}_{i} \}  \}$ (plus the regularization term that is added to the unused dimensions), which is the conditional correlation matrix of the received signal, given the channel estimates. The first part identifies the combining vector that would maximize the desired signal power, while the second part rotates that vector to strike a balance between achieving a strong signal and suppressing interference.
+Note that the matrix inverse acts as a spatial whitening filter, as exemplified in Figure~\ref{figure:whitening_example}.
+The left graph in this figure shows how the received power of the desired signal and interference are arriving from different azimuth angles, while the noise is equally distributed over all angles.
+The goal of the receive combining is to identify the dashed direction where the SINR is maximized, which is clearly different from the $30^\circ$ direction where the signal is the strongest. By applying a spatial whitening filter, we obtain the graph at the right where the sum of the signal, interference, and noise powers is constant in all directions. We can then easily maximize the SINR by selecting the ``direction'' in the transformed domain where the signal is stronger, which automatically implies that the sum of the interference plus noise is at its lowest value.
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section5/whitening_example}
+		\put(34,34){\small{Maximum}}
+		\put(37,30.5){\small{SINR}}
+		\put(77,33.5){\small{Maximum SINR}}
+		\put(40,43.5){\small{Spatial whitening}}
+	\end{overpic}  
+	\caption{This figure exemplifies how MMSE combining in  \eqref{eq:MMSE-combining} is maximizing the effective SINR when using an $N=4$ antenna AP. The left graph shows how the received signal power, interference, and noise are distributed over different azimuth angles. The curves are placed on top of each other, thus it is the colored height between them that measures the power.
+	The SINR-maximizing direction of the combining vector finds a nontrivial tradeoff between having a strong signal and having low interference. 
+This direction can be easily identified by transforming the received vector using a spatial whitening filter based on the conditional correlation matrix $\mathbb{E}\{\vect{D}_k \vect{y}^{\rm{ul}} (\vect{y}^{\rm{ul}})^{\Htran}\vect{D}_k | \{ \widehat{\vect{h}}_{i} \}  \}$. This results in the graph to the right where the sum of the signal, interference, and noise is the same in all directions. The maximum SINR is then achieved when the signal power is maximized. By transforming this signal back to the original domain, the MMSE combining is obtained.}
+	\label{figure:whitening_example}  
+\end{figure}
+
+
+It can be shown that the combining vector that maximizes the instantaneous SINR also minimizes the \gls{MSE} in the data detection, which is defined as 
+\begin{align}{\rm{MSE}}_k = \mathbb{E} \left\{ \left| s_{k} - \widehat s_{k} \right |^2  \big| \left\{ \widehat{\vect{h}}_{i} : i=1,\ldots,K \right\}  \right\}.
+\end{align}
+This is the conditional MSE between the true data signal $s_k$ and the estimate  $\widehat s_{k} $ of it from \eqref{eq:uplink-data-estimate2}; see \cite[Sec.~4.1]{massivemimobook} for a deeper discussion. This is the reason why $\vect{v}_{k}^{{\rm MMSE}}$ is generally called \emph{MMSE combining}. This type of receive combining maximizes the mutual information of many types of channels with multiple receive antennas \cite{Park2013a}. However, the particular expression in \eqref{eq:MMSE-combining} is unique for Cell-free Massive MIMO with the centralized operation and the \gls{DCC} framework.
+
+\enlargethispage{\baselineskip} 
+
+ Note that $ \vect{{D}}_{k}\widehat{\vect{h}}_{i}$ in~\eqref{eq:MMSE-combining} is always non-zero except  when $ \vect{D}_{k}=\vect{0}_{LN \times LN}$, which is an uninteresting special case since the CPU only needs to apply receive combining when at least one AP serves the UE.
+This implies that the CPU needs to compute all the $K$ MMSE channel estimates $\{\widehat{\vect{h}}_{il}: i =1,\ldots,K\}$ corresponding to any AP $l$ that is serving UE $k$ (i.e., APs with index $l\in \mathcal{M}_k$). The total number of complex multiplications required for channel estimation is reported in Table~\ref{table:complexity-with-level4} and is computed as discussed above~\eqref{eq:complexity-estimation}. In addition, we need to account for the complexity of computing the combining vector $\vect{v}_{k}^{{\rm MMSE}}$ in~\eqref{eq:MMSE-combining} for $k=1,\ldots,K$ once per coherence block. This complexity can be computed using the framework described in \cite[App.~B.1.1]{massivemimobook} and exploiting the fact that only a subset of the APs takes part in estimating the transmitted signal $s_k$; see Remark~\ref{remark:computational-complexity-opt-MMSE} below for further details. Table~\ref{table:complexity-with-level4} summarizes the total number of complex multiplications required for the computation of the MMSE combining vector of a generic UE $k$. Since this number grows linearly with $K$, the optimal MMSE combining makes the network unscalable according to Definition~\ref{def:scalable} on p.~\pageref{def:scalable}. We will, therefore, look for alternatives.
+
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=.7\columnwidth,tics=10]{images/section5/block-matrices}
+		\put(5,63){$N|{\mathcal{M}}_k|$}
+		\put(-7,40){\rotatebox{90}{$N|{\mathcal{M}}_k|$}}
+		\put(4,49){Serving}
+		\put(8,43){APs}
+		\put(29,21){Only noise:}
+		\put(27,15){$\sigmaUL \vect{I}_{LN - |{\mathcal{M}}_k|N}$}
+		\put(87,46){Serving APs}
+		\put(77,55){\rotatebox{-90}{$N|{\mathcal{M}}_k|$}}
+		\put(77,33){\rotatebox{-90}{$LN - |{\mathcal{M}}_k|N$}}
+		\put(87,16){Non-serving APs}
+		\put(58,60){$-1$}
+	\end{overpic}  
+	\caption{Only the serving APs need to be considered when computing the MMSE combining vector $\vect{v}_{k}^{{\rm MMSE}}$  of UE $k$ in \eqref{eq:MMSE-combining}. By ordering the APs so that the $| \mathcal{M}_k |$ serving ones are listed first followed by the $L-| \mathcal{M}_k |$ non-serving APs, a block-diagonal matrix needs to be inverted. Only the shaded upper block of dimension $N | \mathcal{M}_k | \times N | \mathcal{M}_k |$ needs to be inverted and multiplied with a vector of length $N | \mathcal{M}_k |$. The computational complexity is identical to the case of having only $| \mathcal{M}_k |$ APs.}
+	\label{figure:block-matrices}  
+\end{figure}
+
+
+\begin{remark} [Computation of MMSE combining]\label{remark:computational-complexity-opt-MMSE}
+The complexity of computing the MMSE combining vector of UE $k$ in \eqref{eq:MMSE-combining} depends on the number of serving APs $|\mathcal{M}_k|$, not the total number of APs. To observe this, recall that $\vect{D}_{k}  = \diag( \vect{D}_{k1} , \ldots, \vect{D}_{kL} )$ is a block-diagonal matrix with $\vect{D}_{kl}$ being $\vect{I}_N$ if AP $l$ serves UE $k$ (i.e., $l\in \mathcal{M}_k$) and zero otherwise. Therefore, the elements of $\{\widehat{\vect{h}}_i:i=1,\ldots,K\}$ and $\vect{Z}_k$ whose indices correspond to the zeros of $\vect{D}_k$ do not affect any term in \eqref{eq:MMSE-combining}. 
+In particular, suppose the APs with index $1,\ldots,|\mathcal{M}_k|$ are the serving ones. The computations will then be as shown in Figure~\ref{figure:block-matrices}, where only the shaded parts are non-zero. Only the upper block of size 
+$N|\mathcal{M}_k|\times N|\mathcal{M}_k|$ needs to be inverted and then multiplied with a vector of length $N|\mathcal{M}_k|$. The total number of complex multiplications required for these two operations can be obtained by using the framework described in \cite[App.~B.1.1]{massivemimobook} and is summarized in Table~\ref{table:complexity-with-level4}. 
+If the $|\mathcal{M}_k|$ serving APs have arbitrary indices, the computational complexity remains the same since the implementation can simply reorder the APs so that the serving ones are listed first.
+\end{remark}
+
+
+
+
+\begin{sidewaystable} 
+\centering
+    \begin{tabular}{|c|c|c|} \hline
+    Scheme & {Channel estimation} & Combining vector computation \\ \hline \hline
+        \gls{MMSE} & $(N\tau_p + N^2)K |\mathcal{M}_k|$ & $\frac{\left(N|\mathcal{M}_k|\right)^2 + N|\mathcal{M}_k|}{2} K + \left(N|\mathcal{M}_k|\right)^2+\frac{\left(N|\mathcal{M}_k|\right)^3-N|\mathcal{M}_k|}{3} $ \\ \hline
+            P-MMSE & $(N\tau_p + N^2)|\mathcal{S}_k| |\mathcal{M}_k|$ & $\frac{\left(N|\mathcal{M}_k|\right)^2 + N|\mathcal{M}_k|}{2} |\mathcal{S}_k| + \left(N|\mathcal{M}_k|\right)^2+\frac{\left(N|\mathcal{M}_k|\right)^3-N|\mathcal{M}_k|}{3} $  \\ \hline
+                P-RZF & $(N\tau_p + N^2)|\mathcal{S}_k| |\mathcal{M}_k|$ & $\frac{|\mathcal{S}_k|^2+|\mathcal{S}_k|}{2}N|\mathcal{M}_k| +|\mathcal{S}_k|^2+ |\mathcal{S}_k|N|\mathcal{M}_k|+\frac{|\mathcal{S}_k|^3-|\mathcal{S}_k|}{3} $  \\ \hline
+                    \gls{MR} & $(N\tau_p + N^2) |\mathcal{M}_k|$ & $-$ \\ \hline
+    \end{tabular}
+    \caption{The number of complex multiplications required per coherence block to compute the combining vector of UE $k$, including the computation of the channel estimates.
+    Different combining schemes for the centralized operation are considered.} 
+     \label{table:complexity-with-level4}
+\end{sidewaystable}
+
+
+
+
+\subsection{Scalable Combining Schemes for Centralized Operation}
+\label{subsec:scalable-combining}
+
+We will now develop centralized receive combining schemes that are scalable, in the sense that the computational complexity per UE is independent of $K$.
+The simplest solution is to use MR combining with
+\begin{align}\label{MR_combining_D_k}
+\vect{v}_k^{{\rm MR}} = \vect{D}_{k}\widehat{\vect{h}}_k 
+\end{align} 
+ which maximizes the numerator $ |  \vect{v}_{k}^{\Htran} \vect{D}_{k}\widehat{\vect{h}}_{k} |^2$ of the effective SINR in \eqref{eq:uplink-instant-SINR-level4}.
+ In other words, the power of the desired signal is maximized while the existence of interference and estimation errors is ignored. Since the MMSE channel estimate is directly used as the MR combining vector, the computational complexity is equal to that of obtaining the partial MMSE channel estimate $\vect{D}_{k}\widehat{\vect{h}}_k$. This requires a total of $(N\tau_p + N^2) |\mathcal{M}_k|$ complex multiplications, which is summarized in Table~\ref{table:complexity-with-level4}.
+Since no additional computations are needed, MR combining is a scalable solution with low complexity.
+However, we will observe later that the performance can be poor in the presence of interference, since a high degree of favorable propagation cannot be guaranteed between all UEs (see Section~\ref{subsec-favorable-propagation} on p.~\pageref{subsec-favorable-propagation}).
+Two scalable combining schemes that are superior to MR, in terms of dealing with interference, are therefore derived next by taking inspiration from the optimal MMSE combining in~\eqref{eq:MMSE-combining}. 
+
+
+\subsubsection{Partial MMSE Combining}
+
+In a large cell-free network with distributed UEs, it is reasonable to believe that the interference that affects UE $k$ is mainly generated by a small subset of the other UEs, which are located in the neighborhood of UE $k$. We want to utilize this observation to reduce the computational complexity of the optimal MMSE combining and thereby achieve a scalable alternative.
+To this end, we assume that  only the UEs that are served by partially the same APs as UE $k$ should be included in the inverse matrix in \eqref{eq:MMSE-combining}. These UEs have indices in the set
+\begin{equation} \label{eq:S_k}
+\mathcal{S}_k = \left\{ i: \vect{D}_{k} \vect{D}_{i} \neq \vect{0}_{LN \times LN} \right\}.
+\end{equation}
+By utilizing $\mathcal{S}_k$, an alternative \emph{\gls{P-MMSE}} scheme can be defined as follows \cite{Attarifar2020a}, \cite{Bjornson2020a}, \cite{Nayebi2016a}:
+\begin{equation} \label{eq:P-MMSE-combining}
+\vect{v}_k^{{\rm P-MMSE}} =    p_k\left(\sum\limits_{i \in \mathcal {S}_k} p_{i}  \vect{D}_{k}\widehat{\vect{h}}_{i} \widehat{\vect{h}}_{i}^{\Htran}\vect{D}_{k} + {\bf{Z}}_{{\mathcal S}_k} + \sigmaUL  \vect{I}_{LN} \right)^{\!-1} \vect{{D}}_{k}\widehat{{\bf h}}_k
+\end{equation}
+with 
+\begin{align}\label{eq:Z_k-prime}
+{\bf{Z}}_{{\mathcal S}_k} 
+= \sum\limits_{i \in \mathcal{S}_k} p_{i} \vect{{D}}_{k}
+\vect{C}_{i} \vect{{D}}_{k}.
+\end{align}
+This scheme is not designed to be optimal from an SE perspective but as a scalable approximation of the optimal MMSE combining. We note that P-MMSE combining coincides with MMSE combining only when UE $k$ is served by all APs; that is, $\vect{D}_k=\vect{I}_{LN}$ and $\mathcal{S}_k=\{1,\ldots,K\}$.
+Another way to view this is that P-MMSE combining would be optimal if only the UEs with indices in $\mathcal{S}_k$ were active. However, MMSE combining and P-MMSE combining are generally different schemes.
+
+In Section~\ref{sec:selecting-DCC} on p.~\pageref{sec:selecting-DCC}, a DCC selection method was described where each AP serves exactly one UE per pilot sequence, which guarantees $|\mathcal{D}_l| = \tau_p$ for all $l$. Using this scheme, $|\mathcal{S}_k|=\tau_p$ if all the APs that serve UE $k$ co-serve the same set of UEs. This is the smallest value that $|\mathcal{S}_k|$ can take.
+ Moreover, it holds that $|\mathcal{S}_k| \leq (\tau_p-1) |\mathcal{M}_k|+1$, where the upper bound is achieved in the unlikely case that all the APs in $\mathcal{M}_k$ serve UE $k$ but otherwise serve entirely non-overlapping sets of UEs. Importantly, even this unlikely upper bound is independent of $K$.
+The number of complex multiplications required by P-MMSE for channel estimation and combining vector computation is reported in Table~\ref{table:complexity-with-level4}. In computing those numbers, we have taken into account the discussion from Remark~\ref{remark:computational-complexity-opt-MMSE} that only the number of serving APs affects the size of the matrix inverse and matrix-vector multiplication. The exact expression is rather lengthy but, importantly, it is independent of $K$, which makes P-MMSE a scalable combining scheme that supports an arbitrarily large number of UEs. 
+
+In practice, some fine-tuning can be done to improve the performance of P-MMSE by including additional UEs in $\mathcal{S}_k$ to deal with strongly interfering UEs that are only served by other APs. A proper selection of these extra UEs will increase network performance without violating the scalability. However, in this monograph, we stick to the definition of $\mathcal{S}_k$ in \eqref{eq:S_k} for brevity.
+
+
+
+
+\subsubsection{Partial Regularized Zero-Forcing Combining}
+
+The complexity of computing the P-MMSE combining vector scales with $(N|\mathcal{M}_k|)^3$. Each AP is supposed to have a relatively small number of antennas $N$ in cell-free networks, but $|\mathcal{M}_k|$ might be large when there are many APs in the vicinity of UE $k$. Since the combining vector is computed at the CPU, which  is assumed to have high computational capability, the complexity might not be an issue. However, it is nevertheless interesting to explore if a further complexity reduction can be achieved without affecting the performance to any great extent.
+We will therefore present an alternative receive combining scheme, which is obtained as a simplification of P-MMSE. To this end, we note that if the channel conditions of the interfering UEs in $\mathcal{S}_k$ are good, all the corresponding estimation error correlation matrices $\{{\bf C}_i : i \in {\mathcal S}_k\}$ in $\vect{Z}_{{\mathcal S}_k}$ will be small. If we neglect $\vect{Z}_{{\mathcal S}_k}$ in \eqref{eq:P-MMSE-combining}, we obtain
+\begin{equation} \label{eq:P-RZF-combining_0}
+\vect{v}_k^{{\rm P-RZF}} =   
+p_k\left(\sum\limits_{i \in \mathcal {S}_k} p_{i}  \vect{D}_{k}\widehat{\vect{h}}_{i} \widehat{\vect{h}}_{i}^{\Htran}\vect{D}_{k} + \sigma^2_{\rm ul}\vect{I}_{LN} \right)^{\! -1} \vect{{D}}_{k}\widehat{{\bf h}}_k.
+\end{equation}
+This change has a negligible impact on the complexity but it enables further reformulation.
+Let us construct $\vect{\widehat{H}}_{\mathcal{S}_k} \in \mathbb{C}^{LN\times |\mathcal{S}_k|}$ by stacking all the vectors $\vect{\widehat{h}}_i$ with indices $i\in \mathcal{S}_k$ with the first column being $\vect{\widehat{h}}_k$.
+We further define $\vect{{P}}_{\mathcal{S}_k} \in \mathbb{R}^{|\mathcal{S}_k| \times |\mathcal{S}_k|}$ as a diagonal matrix containing the transmit powers $p_i$ for $i\in \mathcal{S}_k$, listed in the same order as the columns of $\vect{\widehat{H}}_{\mathcal{S}_k}$.
+By letting $[\cdot]_{:,1}$ denote the operation of only keeping the first column of its matrix argument,
+we can reformulate \eqref{eq:P-RZF-combining_0} as 
+\begin{align} \nonumber
+\vect{v}_{k}^{{\rm P-RZF}} &= \left [ \left( \vect{D}_{k} \vect{\widehat{H}}_{\mathcal{S}_k}  \vect{{P}}_{\mathcal{S}_k} \vect{\widehat{H}}_{\mathcal{S}_k}^{\Htran}\vect{D}_{k} + \sigma^2_{\rm ul}\vect{I}_{LN} \right)^{\!-1} \vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k} \vect{{P}}_{\mathcal{S}_k} \right]_{:,1} \\ \nonumber
+&=  \left [\vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k} \vect{{P}}_{\mathcal{S}_k} \left( \vect{\widehat{H}}^{\Htran}_{\mathcal{S}_k}\vect{{D}}_{k}\vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k} \vect{{P}}_{\mathcal{S}_k} +\sigmaUL\vect{{I}}_{|\mathcal{S}_k|} \right)^{-1} \right]_{:,1}  \\
+&=  \left [\vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k}\left( \vect{\widehat{H}}^{\Htran}_{\mathcal{S}_k}\vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k}+\sigmaUL\vect{{P}}_{\mathcal{S}_k}^{-1} \right)^{-1} \right]_{:,1}  \label{eq:P-RZF-combining_1}
+\end{align}
+where the second equality follows from the first identity of Lemma~\ref{lemma-matrix-identities} on p.~\pageref{lemma-matrix-identities} and the third equality utilizes the fact that $\vect{{D}}_{k}\vect{{D}}_{k} = \vect{{D}}_{k}$.
+
+We call \eqref{eq:P-RZF-combining_1} \emph{\gls{P-RZF} combining}. 
+This name indicates that the matrix expression in \eqref{eq:P-RZF-combining_1} has the same form as the pseudo-inverse $\vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k}( \vect{\widehat{H}}^{\Htran}_{\mathcal{S}_k}\vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k} )^{-1}$ to the partial channel matrix $\vect{\widehat{H}}_{\mathcal{S}_k}^{\Htran} \vect{{D}}_{k}$. The only difference is that the inverse has been regularized by adding the matrix $\sigmaUL \vect{{P}}_{\mathcal{S}_k}^{-1}$ containing the noise variance and transmit powers. Combining vectors based on pseudo-inverses force the interference between the UEs to zero, but might lead to large losses in the desired signal power when the UEs have similar channels. P-RZF is balancing between suppressing interference and maintaining strong desired signal powers.
+
+The total number of complex multiplications required for channel estimation and combining vector computation with P-RZF is reported in Table~\ref{table:complexity-with-level4}. As expected, this number is independent of $K$. Hence, this scheme is also scalable. The main benefit over the P-MMSE is that an $|\mathcal{S}_k| \times |\mathcal{S}_k|$ matrix is inverted in~\eqref{eq:P-RZF-combining_1} instead of an $N|\mathcal{M}_k| \times N|\mathcal{M}_k|$ matrix as in~\eqref{eq:P-MMSE-combining}, which can substantially reduce the complexity since we typically have $N|\mathcal{M}_k| \ge |\mathcal{S}_k|$ in cell-free networks. Most likely, this benefit comes with an SE loss since, in general, the channel conditions will not be so good to every interfering UE so that the estimation errors can be ignored. The tradeoff will be evaluated later.
+
+
+\subsection{Fronthaul Signaling Load for Centralized Operation}
+\label{sec:level4-fronthaul}
+
+We wrap up the analysis of the centralized operation by quantifying the required fronthaul signaling. We will do this by counting the number of complex scalars that must be sent over the fronthaul links. In practice, these scalars will have to be quantized and different types of information can be quantized using a different number of bits per scalar. However, if all the scalars are sent over the fronthaul using the same bit precision, counting the number of scalars is sufficient to compare the  signal load of different methods.
+
+In each coherence block, AP $l$ needs to send $\tau_p N$ complex scalars representing the pilot signals $\{ \vect{y}_{t l}^{\rm pilot} : t = 1,\ldots,\tau_p \}$ and $\tau_uN$ complex scalars representing the received data signal $\vect{y}_{l}^{\rm{ul}}$. As summarized in Table~\ref{tab:signaling-level4-level3}, this requires a total of $(\tau_p + \tau_u)NL$ complex scalars, irrespective of the combining scheme used for detection at the CPU.\footnote{Note that $\tau_p N$ is an upper bound on the fronthaul signaling load for pilot signals, which is achieved in the case that AP $l$ assigns all the $\tau_p$ available pilots to the UEs that it is serving. This was assumed by the pilot assignment scheme presented in Section~\ref{sec:selecting-DCC} on p.~\pageref{sec:selecting-DCC}, but is not the case in general. In other cases, AP $l$ exchanges a lower number of complex scalars for the pilot signals through the fronthaul links.}
+Since this value does not grow with $K$, we can conclude that the fronthaul signaling is scalable.
+
+Notice that the implementations of the MMSE channel estimator and the P-MMSE combining scheme require knowledge of the spatial correlation matrices $\{\vect{R}_{kl}: k=1,\ldots,K, \, l=1,\ldots,L\}$. In a centralized network, where the APs only act as relays, this information can be acquired directly at the CPU by using one of the pilot signaling methods that already exist in Cellular Massive MIMO literature (see \cite{Sanguinetti2019a} for an overview). Hence, there is no need to exchange the spatial correlation matrices through the fronthaul links. As discussed later in Section~\ref{sec:level3-fronthaul}, the situation is different in the distributed implementation presented next, where the pilot signals are not sent to the CPU but used locally at the APs for channel estimation. Statistical information must then be acquired at the APs and gathered at the CPU using the fronthaul.
+
+
+\begin{table}[t]  
+	\caption{The number of complex scalars to send from the  APs  to the CPU over the fronthaul either in each coherence block or for each realization of the channel statistics (e.g., user locations). Both centralized and distributed operation are considered.}  \label{tab:signaling-level4-level3}
+	\centering
+	\begin{tabular}{|c|c|c|} 
+		\hline
+		{Implementation} & {Per coherence block}&{Statistics}    \\      \hline\hline 
+		
+		Centralized &   $(\tau_p+\tau_u) NL$  & $ --$     \\ \hline    
+		Distributed: opt LSFD &   $\tau_u \sum\limits_{l=1}^L |\mathcal{D}_l|$  & $ \frac{3K+1}{2}\sum\limits_{l=1}^{L} |\mathcal{D}_l|$     \\ \hline   
+				Distributed: n-opt LSFD &   $\tau_u \sum\limits_{l=1}^L |\mathcal{D}_l|$  & $\sum\limits_{l=1}^{L} \sum\limits_{k \in \mathcal{D}_l} \frac{3|\mathcal{S}_k|+1}{2}$  \\ \hline   
+				Distributed: no LSFD &   $\tau_u \sum\limits_{l=1}^L |\mathcal{D}_l|$  & $ --$  \\ \hline  
+	\end{tabular}
+\end{table}
+
+\enlargethispage{\baselineskip} 
+
+\section{Distributed Uplink Operation}
+\label{sec:level3-uplink}
+
+Instead of entirely delegating the channel estimation and data detection to the CPU, a User-centric Cell-free Massive MIMO network can be implemented to carry out as much of the signal processing as possible in a distributed manner.
+A motivating factor is that each AP can easily be equipped with a baseband processor that is (at least) as powerful as those in the UEs, thus algorithms that can make efficient use of it should be developed. The goal is to enable an ultra-dense deployment with $L \gg K$, where the CPU's capabilities are dimensioned based on the number of UEs, but largely unaffected by the number of APs. In other words, we should be able to add new APs to the network without having to upgrade the CPUs, thanks to the property that each AP comes with a local processor.
+Another reason is to reduce the fronthaul signaling compared to the centralized operation and to avoid the fronthaul quantization distortion, which exists in practice but is neglected in this monograph.
+Since a key property of cell-free networks is that multiple APs are involved in the service of each UE, the final data detection must be carried out at a point where the inputs from multiple APs are combined. Recall that the CPU is a logical entity so the unavoidable CPU tasks can be physically assigned to a nearby edge-cloud processor (or even one of the serving APs), so there is no need for a physical central unit.
+The following two-stage procedure is called \emph{distributed operation} in this monograph and is schematically described in Figure~\ref{figure:distributed_centralized}(b).
+
+In the first stage, each AP $l$ uses its received pilot signals $\{ \vect{y}_{t l}^{\rm pilot} : t = 1,\ldots,\tau_p \}$ to locally estimate the channels $\{\widehat{{\bf h}}_{il} : i \in {\mathcal D}_l \}$.
+For each UE $k$, the AP can then use the local estimates to select a local receive combining vector ${\bf v}_{kl}$. According to~\eqref{eq:uplink-data-estimate}, the AP then computes its local estimate of $s_k$ as 
+\begin{align} \label{eq:local-data-estimate-level3}
+\widehat s_{kl} &= \vect{v}_{kl}^{\Htran} \vect{D}_{kl} {\bf y}_{l}^{\rm{ul}}.
+\end{align}
+Note that this estimate is zero for $k \not \in \mathcal{D}_l$, thus AP $l$ only needs to compute \eqref{eq:local-data-estimate-level3} for the UEs that is serves.
+
+In the second stage, the local data estimates of all APs are gathered at the CPU where they are combined/fused into a final estimate of the UE data. The CPU computes its estimate as a linear combination of the local estimates:
+\begin{align} \label{eq:global-data-estimate-level3}
+\widehat{s}_k = \sum_{l=1}^{L} a_{kl}^{\star} \widehat{s}_{kl} = \sum_{l=1}^{L} a_{kl}^{\star} \vect{v}_{kl}^{\Htran} \vect{D}_{kl} {\bf y}_{l}^{\rm{ul}}
+\end{align}
+where $a_{kl} \in \mathbb{C}$ is the weight that the CPU assigns to the local signal estimate that AP $l$ has of the signal from UE $k$. Note that we include all the AP indices since $\widehat s_{kl}=0$ for $l\notin \mathcal{M}_k$ and the results do not change.
+To limit the fronthaul signaling, the APs are only sending the local data estimates to the CPU and not the channel estimates. Hence, the CPU needs to select the weights  $\{ a_{kl} : k=1,\ldots,K, l \in \mathcal{M}_k\}$ as a deterministic function of the channel statistics. Intuitively, the CPU should assign a larger weight to an AP having a large \gls{SNR} to the UE than an AP having a small \gls{SNR}, but also the interference situation and receive combining scheme should be taken into consideration. 
+
+The structure of the second stage resembles what is called \emph{\gls{LSFD}} and was originally used in Cellular Massive MIMO \cite{Adhikary2017a}, \cite{ashikhmin2012pilot}. Unlike the centralized operation, the two-stage procedure outlined above allows the network to make use of the distributed processing capabilities of the APs. The received signals are primarily processed at the points where they were received. Even if it the operation is not entirely distributed, it is as distributed as a cell-free network, utilizing coherent cooperation between APs, can become since only the final signal detection is done at the CPU.
+
+The achievable SE for arbitrary local receive combining $\{\vect{v}_{kl} : k=1,\ldots,K, l\in  \mathcal{M}_k\}$ and LSFD weights will be derived next. After that, we will show how to make a judicious selection of the local combining vectors and how to compute the optimal LSFD weights. Since the preferred solutions turn out to be unscalable for networks with many UEs, we will provide scalable alternatives.
+
+\subsection{Spectral Efficiency and Optimal LSFD Weights}
+\label{sec:level3-SE}
+
+We will now compute an SE expression for UE $k$ in the distributed operation. Plugging~\eqref{eq:DCC-uplink} into~\eqref{eq:global-data-estimate-level3} yields
+\begin{align} 
+\widehat{s}_k =\left(\sum_{l=1}^{L} a_{kl}^{\star} \vect{v}_{kl}^{\Htran}\vect{D}_{kl} \vect{h}_{kl}\right) s_k +\condSum{i=1}{i \neq k}{K}  \Bigg(\sum_{l=1}^{L} a_{kl}^{\star} \vect{v}_{kl}^{\Htran} \vect{D}_{kl}\vect{h}_{il}\Bigg)  s_i + n^\prime_{k}\label{eq:CPU_linearcomb-level3}
+\end{align}
+where $n^\prime_{k} = \sum_{l=1}^{L} a_{kl}^{\star} \vect{v}_{kl}^{\Htran}\vect{D}_{kl}\vect{n}_{l}$ represents the noise. For brevity, we define the vector $\vect{g}_{ki} \in \mathbb{C}^L$ computed as
+\begin{equation}
+ \vect{g}_{ki} = \begin{bmatrix}
+ \vect{v}_{k1}^{\Htran}\vect{D}_{k1} \vect{h}_{i1} \\
+ \vdots \\
+  \vect{v}_{kL}^{\Htran} \vect{D}_{kL} \vect{h}_{iL}
+  \end{bmatrix}.
+  \end{equation}
+ This is the vector with the receive-combined channels between UE $i$ and all APs that serve UE $k$. Using this notation, \eqref{eq:CPU_linearcomb-level3} can be expressed as 
+\begin{align} 
+\widehat{s}_k =\vect{a}_{k}^{\Htran}\vect{g}_{kk} s_k + \condSum{i=1}{i \neq k}{K}\vect{a}_{k}^{\Htran}\vect{g}_{ki}  s_i + n^\prime_{k} \!\!\label{eq:CPU_linearcomb_eff-level3}
+\end{align}
+where $\vect{a}_{k} = [ a_{k1} \, \ldots \, a_{kL} ]^{\Ttran} \in \mathbb{C}^L$ is the LSFD weight vector of UE $k$. The realizations of $\vect{g}_{ki}$ change in every coherence block, while $\vect{a}_{k}$ is supposed to be a deterministic vector that the CPU can select without knowing the channel realizations.
+We notice that \eqref{eq:CPU_linearcomb_eff-level3} has the structure of a single-antenna channel where $\{\vect{a}_{k}^{\Htran}\vect{g}_{ki}: i=1,\ldots,K\}$ represent the effective channels of the different UEs. 
+ Although the effective channel $\vect{a}_{k}^{\Htran}\vect{g}_{kk}$ is unknown at the CPU, we notice that its average $\mathbb{E}\{\vect{a}_{k}^{\Htran}  \vect{g}_{kk}\} = \vect{a}_{k}^{\Htran} \mathbb{E}\{ \vect{g}_{kk}\}$ is deterministic and non-zero if the receive combining is properly selected. Therefore, it can be assumed known\footnote{When dealing with ergodic capacities, all deterministic parameters can be assumed known without loss of generality, because these can be estimated using a finite number of transmission resources, while the capacity is only achieved as the amount of transmission resources goes to infinity. Hence, the estimation overhead for obtaining deterministic parameters is  negligible.}
+and used to compute the following achievable SE. 
+
+\begin{theorem} \label{theorem:uplink-capacity-level3}
+An achievable SE of UE $k$ in the distributed operation is
+	\begin{equation} \label{eq:uplink-rate-expression-level3}
+	\begin{split}
+	\mathacr{SE}_{k}^{({\rm ul},\dist)} = \frac{\tau_u}{\tau_c} \log_2  \left( 1 + \mathacr{SINR}_{k}^{({\rm ul},\dist)}  \right) \quad \textrm{bit/s/Hz}
+	\end{split}
+	\end{equation}
+	where the effective SINR is given by
+	\begin{equation} \label{eq:uplink-instant-SINR-level3}
+	\mathacr{SINR}_{k}^{({\rm ul},\dist)}\! =\!  \frac{ p_{k} \left| \vect{a}_{k}^{\Htran} \mathbb{E}\{ \vect{g}_{kk}\} \right|^2  }{ 
+	 \vect{a}_{k}^{\Htran} \left(
+\sum\limits_{i=1}^{K} p_{i} \mathbb{E} \{  \vect{g}_{ki} \vect{g}_{ki}^{\Htran}  \} - p_{k}  \mathbb{E}\{ \vect{g}_{kk}\} \mathbb{E}\{ \vect{g}_{kk}^{\Htran}\} + 
+		\vect{F}_{k}
+		\right)
+		\vect{a}_{k} 
+	}
+	\end{equation}
+	and
+	\begin{equation}
+	\vect{F}_{k}=\sigmaUL\diag\left(\mathbb{E}\left\{ \left\|  \vect{D}_{k1}\vect{v}_{k1}  \right\|^2\right\}, \ldots, \mathbb{E}\left\{ \left\|  \vect{D}_{kL}\vect{v}_{kL}  \right\|^2\right\}\right) \in \mathbb{R}^{L \times L}.
+	\end{equation}
+\end{theorem}
+\begin{proof}
+The proof is given in Appendix~\ref{proof-of-proposition:uplink-capacity-level3} on p.~\pageref{proof-of-proposition:uplink-capacity-level3}.
+\end{proof}
+
+
+The pre-log factor ${\tau_u}/{\tau_c}$ in \eqref{eq:uplink-rate-expression-level3} is the fraction of each coherence block that is used for uplink data transmission. The term $\mathacr{SINR}_{k}^{({\rm ul},\dist)}$ takes the form of an effective SINR and is the ratio of the signal power term $p_{k} \left| \vect{a}_{k}^{\Htran} \mathbb{E}\{ \vect{g}_{kk}\} \right|^2 $ and a term containing noise and interference (including some self-interference from the desired signal due to the imperfect channel knowledge).
+Recall that the word ``effective'' refers to that this SE is effectively the same as that of a deterministic single-antenna single-user channel where \eqref{eq:uplink-instant-SINR-level3} is the SNR and the receiver has perfect CSI. In particular, this means that the desired data signal can be encoded and the received signal can be decoded as if we would communicate over such an AWGN channel.
+
+The SE expression in~\eqref{eq:uplink-rate-expression-level3} is very general. 
+Although this monograph considers correlated Rayleigh fading channels and MMSE channel estimation, \eqref{eq:uplink-rate-expression-level3} is actually a valid SE for any channel estimator and channel model, 
+in contrast to the SE expression in~\eqref{eq:uplink-rate-expression-general} which is explicitly using those assumptions. This was previously discussed in Section~\ref{subsec:alternative-bound}.
+
+The achievable SE in~\eqref{eq:uplink-rate-expression-level3} holds for any local receive combining and LSFD vector $\vect{a}_{k}$, but we are naturally seeking a combination that makes the SE as high as possible.
+We start with considering the local receive combining vectors. Since AP $l$ locally selects $\vect{v}_{kl}$ for $k \in \mathcal{D}_l$, without receiving input from other APs, there is no way for its combining scheme to be optimal from a network-wide perspective. However, the AP can do as well as it can by optimizing a local performance metric. Recall from Section~\ref{subsec:optimal-receive-combining} that the optimal receive combining in a centralized implementation minimizes the MSE in the data detection. In analogy with this result, we can let AP $l$ select the receive combining giving the best local estimate $\widehat s_{kl} = \vect{v}_{kl}^{\Htran} \vect{D}_{kl} {\bf y}_{l}^{\rm{ul}}$ in terms of minimal conditional MSE:
+\begin{align}\label{eq:local-MSE}
+\mathbb{E}\left \{ \left| s_{k} - \vect{v}_{kl}^{\Htran} \vect{D}_{kl}\vect{y}_{l}^{\rm ul} \right|^2  \Big| \left\{ \widehat{\vect{h}}_{il} : i=1,\ldots,K  \right\} \right\}.
+\end{align}
+The combining vector $\vect{v}_{kl}$ that minimizes~\eqref{eq:local-MSE} is
+\begin{equation} \label{eq:L-MMSE-combining-single-AP}
+\vect{v}_{kl}^{{\rm L-MMSE}} =  p_{k}  \left( \sum\limits_{i=1}^{K} p_{i} \left( \widehat{\vect{h}}_{il} \widehat{\vect{h}}_{il}^{\Htran} + \vect{C}_{il} \right) + \sigmaUL  \vect{I}_{N} \right)^{-1}   \vect{D}_{kl}  \widehat{\vect{h}}_{kl}
+\end{equation}
+where $\vect{C}_{il}$ is the error correlation matrix given in \eqref{eq:error-correlation}.
+This can be proved by computing the conditional expectation in~\eqref{eq:local-MSE} and equating its first derivative with respect to $\vect{v}_{kl}$ to zero. One can also show that \eqref{eq:L-MMSE-combining-single-AP} is the combining vector that would maximize the SE if AP $l$ detected the data signal $s_{k}$ locally. 
+We call \eqref{eq:L-MMSE-combining-single-AP} \emph{\gls{L-MMSE} combining} to distinguish it from the MMSE combining in \eqref{eq:MMSE-combining}, which is applied at the CPU in the centralized operation. L-MMSE and MMSE combining coincide (except for that the latter is padded with zeros) in the special case when only AP $l$ serves UE $k$ (i.e., $\mathcal{M}_k = \{ l \}$). Hence, the computational complexity of L-MMSE  is the same as for MMSE combining in Table~\ref{table:complexity-with-level4} but with $|\mathcal{M}_k|=1$. Since this complexity grows with $K$, we notice that L-MMSE combining is not a scalable combining scheme.
+
+We now shift focus to the LSFD weights $\{ \vect{a}_{k} : k = 1,\ldots,K\}$. For any given local receive combining vectors, $\vect{a}_{k}$ can be optimized by the CPU to maximize the SE. Since it is a deterministic vector, it is optimized as a function of the channel statistics.
+We notice that \eqref{eq:uplink-instant-SINR-level3} is a generalized Rayleigh quotient with respect to $\vect{a}_k$. Hence, we can maximize the effective SINR by using Lemma~\ref{lemma:gen-rayleigh-quotient} on p.~\pageref{lemma:gen-rayleigh-quotient}.
+The optimal $\vect{a}_{k}$ is thus obtained as follows.
+\begin{corollary} \label{cor:LSFD-optimal}
+	The effective SINR in \eqref{eq:uplink-instant-SINR-level3} for UE $k$ is maximized by
+		\begin{equation} \label{eq:LSFD-vector}
+	{\vect{a}}_{k}^{\rm opt} = p_k  \left( \sum\limits_{i=1}^{K}
+	p_{i} \mathbb{E} \left\{ {\vect{g}}_{ki} {\vect{g}}_{ki}^{\Htran} \right\} +  {\vect{F}}_{k} + \widetilde{\vect{D}}_k  \right)^{-1} \mathbb{E}\left\{ {\vect{g}}_{kk}\right\}
+	\end{equation}
+	where $\widetilde{\vect{D}}_k\in\mathbb{R}^{L\times L}$ is the diagonal matrix with the $(l,l)$th element being  one if $l\notin\mathcal{M}_k$ and zero otherwise. This leads to the maximum value
+	\begin{align} \nonumber
+	&\mathacr{SINR}_{k}^{({\rm ul},\dist)} =
+	\\ &p_{k}  \mathbb{E}\left\{ {\vect{g}}_{kk}^{\Htran}\right\} \! \left( \sum\limits_{i=1}^{K}
+	p_{i} \mathbb{E} \left\{ {\vect{g}}_{ki} {\vect{g}}_{ki}^{\Htran} \right\} -p_k \mathbb{E}\left\{ {\vect{g}}_{kk}\right\}\mathbb{E}\left\{ {\vect{g}}_{kk}^{\Htran}\right\}+ {\vect{F}}_{k}+\widetilde{\vect{D}}_k  \right)^{\!\!-1}\!\!\!\mathbb{E}\left\{ {\vect{g}}_{kk}\right\} . \label{eq:sinr-level3}
+	\end{align}
+\end{corollary}
+\begin{proof}
+We can maximize \eqref{eq:uplink-instant-SINR-level3} by using Lemma~\ref{lemma:gen-rayleigh-quotient} on p.~\pageref{lemma:gen-rayleigh-quotient} with $\vect{v} = \vect{a}_{k}$, $\vect{h} = \sqrt{p_{k}} \mathbb{E}\left\{ {\vect{g}}_{kk}\right\}$, and $\vect{B} = \sum_{i=1}^{K} p_{i} \mathbb{E} \{  \vect{g}_{ki} \vect{g}_{ki}^{\Htran}  \} - p_{k}  \mathbb{E}\{ \vect{g}_{kk}\} \mathbb{E}\{ \vect{g}_{kk}^{\Htran}\} + 
+		\vect{F}_{k} + \widetilde{\vect{D}}_k$.  The term $\widetilde{\vect{D}}_k$ is not present in \eqref{eq:uplink-instant-SINR-level3} but has been added to make $\vect{B}$ positive definite and thereby invertible.\footnote{Alternatively, pseudo-inverses could have been used in \eqref{eq:LSFD-vector} and \eqref{eq:sinr-level3}, but the end result will be the same since $\widetilde{\vect{D}}_k \mathbb{E}\left\{ {\vect{g}}_{kk}\right\} = \vect{0}_L$.} This addition will not affect the result since $\widetilde{\vect{D}}_k \mathbb{E}\left\{ {\vect{g}}_{kk}\right\} = \vect{0}_L$. 
+\end{proof}
+
+This corollary provides the \gls{opt} LSFD vector that maximizes the effective SINR in~\eqref{eq:uplink-instant-SINR-level3}. The optimal vector has a structure resembling that of MMSE combining since it is also computed to maximize a generalized Rayleigh quotient.
+The evaluation of ${\vect{a}}_{k}^{\rm opt}$ in \eqref{eq:LSFD-vector} requires knowledge of the $L$-dimensional statistical vector $\mathbb{E}\left\{  \vect{g}_{kk} \right\} $, the $L\times L$ Hermitian complex matrix $\mathbb{E} \left\{ {\vect{g}}_{ki} {\vect{g}}_{ki}^{\Htran}\right\}$, for $i=1,\ldots,K$, and the $L$ diagonal elements of the real-valued matrix ${\vect{F}}_{k}$. These statistical vectors and matrices can be computed at the APs, based on the received uplink signals and their choices of local combining vectors. The CPU is unable to compute them locally since it does not have access to those signals, thus the APs need to send these statistical parameters to the CPU through the fronthaul links. We will quantify the fronthaul signaling load in Section~\ref{sec:level3-fronthaul} but it is clear that the number of parameters grows with $K$, thus making the use of the opt LSFD vector unscalable according to Definition~\ref{def:scalable} on p.~\pageref{def:scalable}.
+
+We notice that the elements of $\vect{g}_{ki}$, for all $i$, and $\vect{F}_k$ whose indices correspond to the zero rows of $\vect{D}_{kl}$ are all zero. By following the approach outlined in Remark~\ref{remark:computational-complexity-opt-MMSE}, the computation of ${\vect{a}}_{k}^{\rm opt}$ can be carried out while ignoring the $L - |\mathcal{M}_k|$ APs that are not serving UE $k$  (see also Figure~\ref{figure:block-matrices}).
+The corresponding elements of $\vect{a}_k$ can be set to zero
+and the computation of $\vect{a}_k^{\rm opt}$  only requires the inversion of a $ |\mathcal{M}_k| \times |\mathcal{M}_k|$ matrix and multiplication of it by an $ |\mathcal{M}_k|$-length vector, which corresponds to $|\mathcal{M}_k|^2+\frac{|\mathcal{M}_k|^3-|\mathcal{M}_k|}{3}$ complex multiplications. This is reported in Table~\ref{table:complexity-with-level3}. 
+ 
+
+\begin{remark}[Tightness of the capacity bound]  \label{remark-tightness-bounds}
+The SE expression\linebreak presented in Theorem~\ref{theorem:uplink-capacity-level3} is derived based on the \gls{UatF} bound from the Cellular Massive MIMO literature \cite{massivemimobook}, \cite{Marzetta2016a} in which the channel estimates are used for receive combining but ``forgotten'' when detecting the data. While this bounding principle is artificial when applied in cellular networks, where the combining and signal detection are carried out at the same place, it makes good sense in cell-free networks where each AP carries out local combining based on its local CSI and the CPU carries out the data detection without CSI.
+
+Signal detection without access to channel knowledge generally leads to rather poor performance since the receiver does not know the desired channel realization $\vect{a}_{k}^{\Htran} \vect{g}_{kk}$ but only its mean value $\vect{a}_{k}^{\Htran} \mathbb{E}\{ \vect{g}_{kk}\}$. However, if there is a high degree of channel hardening so that 
+$\vect{a}_{k}^{\Htran} \vect{g}_{kk} \approx \vect{a}_{k}^{\Htran} \mathbb{E}\{ \vect{g}_{kk}\}$, the capacity bound in Theorem~\ref{theorem:uplink-capacity-level3} is expected to be close to the SE that we would get if $\vect{a}_{k}^{\Htran} \vect{g}_{kk}$ is perfectly known.
+As shown in Section~\ref{subsec-channel-hardening} on p.~\pageref{subsec-channel-hardening}, there is no guarantee that this will be the case in cell-free networks; the degree of channel hardening can be low when  having a small number of antennas per AP \cite{Chen2018b}. In that case, the SE expression in \eqref{eq:uplink-rate-expression-level3} underestimates the practically achievable SE, but it is anyway the state-of-the-art capacity lower bound and will be used in this monograph. We will evaluate the tightness of the bound later in this section.
+\end{remark}
+
+
+
+\enlargethispage{\baselineskip} 
+
+\subsection{Scalable Schemes for Distributed Operation}\label{sec:combining-schemes-for-distributed-operation}
+
+While the L-MMSE combining in \eqref{eq:L-MMSE-combining-single-AP} and the opt LSFD vector in~\eqref{eq:LSFD-vector} are the preferable schemes in the distributed operation, none of these schemes is scalable. The former one has a computational complexity that increases with the number of UEs in the whole network and  the latter one requires a fronthaul signaling load that grows in the same way.
+Therefore, we will now present suboptimal but scalable alternatives that are inspired by the aforementioned methods.
+
+ 
+
+\subsubsection{Scalable Local Receive Combining}
+
+We begin by revisiting the problem of selecting the combining vectors $ \vect{v}_{kl}$ for $k \in \mathcal{D}_l $ at AP $l$.  Recall that L-MMSE in \eqref{eq:L-MMSE-combining-single-AP} is not a scalable scheme since it makes use of estimates of the channels from all $K$ UEs.
+To achieve scalability, the selection can instead be made as a function of the estimates $\{\widehat{\vect{h}}_{il} : i \in \mathcal{D}_l \}$ of the channels from the UEs that AP $l$ is serving. 
+
+The simplest solution is to utilize MR combining \cite{Nayebi2016a}, \cite{Ngo2017b}, which is given by
+\begin{equation}
+\vect{v}_{kl}^{{\rm MR}} = \vect{D}_{kl}\widehat{\vect{h}}_{kl}.
+\end{equation}
+One key benefit of using this scheme is that the combining vector follows directly from the channel estimates so that no additional computations are needed. The total number of complex multiplications is  $\left(N\tau_p+N^2\right)|\mathcal{M}_k|$ and is reported in Table~\ref{table:complexity-with-level3}. Another benefit is that all the expectations in Theorem~\ref{theorem:uplink-capacity-level3} can be computed analytically, so the SE is available in closed form.
+
+\begin{corollary} \label{cor:closed-form_ul}
+	If MR combining with $\vect{v}_{kl}^{{\rm MR}} = \vect{D}_{kl} \widehat{\vect{h}}_{kl}$ is used, then the expectations in \eqref{eq:uplink-instant-SINR-level3} become
+	\begin{align}  \label{eq:g_ki-expectation}
+\left [ 	\mathbb{E} \left\{\vect{g}_{ki}\right\} \right ]_l=\begin{cases}  \sqrt{\eta_k\eta_i}\tau_p \tr\left( \vect{D}_{kl} \vect{R}_{il} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl}\right) &   i\in\mathcal{P}_k \\
+0 & i\notin\mathcal{P}_k  \end{cases}
+	\end{align}
+	with $\left[	\mathbb{E} \left\{\vect{g}_{ki} \vect{g}_{ki}^{\Htran}\right\} \right]_{lr} = \left [ 	\mathbb{E} \left\{\vect{g}_{ki}\right\} \right ]_l  \left [ 	\mathbb{E} \left\{\vect{g}_{ki}^{\star}\right\} \right ]_r $ for $ r \neq l$ and 
+		\begin{align} 
+\left[	\mathbb{E} \left\{\vect{g}_{ki} \vect{g}_{ki}^{\Htran}\right\} \right]_{ll} =& \eta_k\tau_p  \tr \left(  \vect{D}_{kl}\vect{R}_{il} \vect{R}_{kl} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl}  \right) \nonumber \\ \label{eq:gki-second-moment}
+&+ \begin{cases}
+	\eta_k\eta_i\tau_p^{2}  \left|\tr \left(  \vect{D}_{kl} \vect{R}_{il} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl}  \right)\right|^2   &   i\in\mathcal{P}_k
+	\\
+	0 & i\notin\mathcal{P}_k
+	\end{cases}
+	\end{align}
+	while
+	\begin{equation} \label{eq:F_kl}
+\left[ \vect{F}_k \right]_{ll}= \sigmaUL\eta_k \tau_p  \tr\left( \vect{D}_{kl} \vect{R}_{kl} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl}\right).
+	\end{equation}
+	\end{corollary}
+	\begin{proof}
+	The proof is available in Appendix~\ref{proof-of-cor:closed-form_ul} on p.~\pageref{proof-of-cor:closed-form_ul}.
+	\end{proof}
+	
+The results from Corollary~\ref{cor:closed-form_ul} can be inserted into the instantaneous effective SINR in \eqref{eq:uplink-instant-SINR-level3} to obtain a closed-form SE expression. However, the final expression is lengthy so we will only present it in the case of $N=1$, where it can be substantially simplified.
+	
+	\begin{corollary}
+	If each AP has $N=1$ antenna, then the MMSE estimate of the scalar channel $\vect{h}_{kl} \in \mathbb{C}$ has variance
+	\begin{equation} \label{eq:gamma-notation}
+	 \gamma_{kl} = \frac{\eta_k \tau_p \beta_{kl}^2 }{ \sum_{i \in \mathcal{P}_k } \eta_i \tau_p \beta_{il} +\sigmaUL }.
+	 \end{equation}
+	The instantaneous effective SINR, $\mathacr{SINR}_{k}^{({\rm ul},\dist)}$, in \eqref{eq:uplink-instant-SINR-level3} then becomes
+		\begin{equation} \label{eq:uplink-instant-SINR-level3-closed}
+ \frac{ p_{k} \left| 
+\sum\limits_{l \in \mathcal{M}_k} a_{kl}^{\star} \gamma_{kl} \right|^2  }{ 
+ \sum\limits_{i=1}^{K} p_{i}  \! \sum\limits_{l \in \mathcal{M}_k}\! \! |a_{kl}|^2 \beta_{il} \gamma_{kl} + \sum\limits_{i \in \mathcal{P}_k \setminus \{ k \}} \! p_i
+\left| \sum\limits_{l \in \mathcal{M}_k} \! a_{kl}^{\star} \gamma_{kl} \sqrt{\frac{\eta_i}{\eta_k}} \frac{\beta_{il}}{\beta_{kl}}  \right|^2 \!\!
++ \sigmaUL \!\sum\limits_{l \in \mathcal{M}_k} \!\!  |a_{kl}|^2 \gamma_{kl}
+	}.
+	\end{equation}
+	\end{corollary}
+	\begin{proof}
+	Using the notation in \eqref{eq:gamma-notation}, the expectations in Corollary~\ref{cor:closed-form_ul} can be rewritten as $\left[\mathbb{E} \left\{\vect{g}_{ki}\right\} \right ]_l = \sqrt{\frac{\eta_i}{\eta_k}} \frac{\beta_{il}}{\beta_{kl}} \gamma_{kl}$, for $i\in\mathcal{P}_k$ and zero for other $i$, $\left[ \vect{F}_k \right]_{ll}= \sigmaUL \gamma_{kl}$,
+		\begin{align} 
+\left[	\mathbb{E} \left\{\vect{g}_{ki} \vect{g}_{ki}^{\Htran}\right\} \right]_{ll} &= \beta_{il} \gamma_{kl} + \begin{cases}
+\frac{\eta_i \beta_{il}^2}{\eta_k \beta_{kl}^2} \gamma_{kl}^2  &    i\in\mathcal{P}_k
+	\\
+	0 & i\notin\mathcal{P}_k
+	\end{cases}
+	\end{align}
+	for $ l \in \mathcal{M}_k$ and zero for other $l$. Inserting these values into \eqref{eq:uplink-instant-SINR-level3} yields the SINR expression in \eqref{eq:uplink-instant-SINR-level3-closed}.
+	\end{proof}
+	
+The closed-form effective SINR in \eqref{eq:uplink-instant-SINR-level3-closed} shows the key behaviors of the cell-free operation. The signal term $p_{k} | 
+\sum_{l \in \mathcal{M}_k} a_{kl}^{\star} \gamma_{kl} |^2$ in the numerator contains the transmit power $p_k$ multiplied with a term containing the weighted sum of the contributions from the serving APs. Each AP contributes with a term proportional to the variance $ \gamma_{kl}$ of its channel estimate, since the combining vector is based on that estimate. The coherent combination of the contributions from the different APs is represented by the square of the sum.
+ The first term in the denominator contains non-coherent interference, which means that it is a summation of the powers $p_i \beta_{il}$ of the individual interfering signals at the serving APs $l \in \mathcal{M}_k$ without any squares. Each term is multiplied with a scaling factor $|a_{kl}|^2 \gamma_{kl}$ containing the LSFD weight and the scaling made by the MR combining. The second term in the denominator is the additional coherent interference caused by pilot contamination, which has a similar shape as the signal term. The third term is the noise power.
+
+If local MR combining is used along with the LSFD vector $\vect{a}_k = [1 \, \ldots \, 1]^{\Ttran}$, then the result of the distributed operation is equivalent to MR combining in the centralized operation. 
+In other words, centralized MR combining can be implemented in a distributed fashion.
+However, MR is expected to perform poorly in the presence of interference, unless a high degree of favorable propagation is achieved, which is not guaranteed in cell-free networks (see Section~\ref{subsec-favorable-propagation} on p.~\pageref{subsec-favorable-propagation}). Therefore, we will also consider combining schemes that can suppress interference while still being scalable.
+
+
+\begin{sidewaystable} 
+\centering
+    \begin{tabular}{|c|c|c|} \hline
+    Scheme & {Channel estimation} & Combining vector computation \\ \hline \hline
+        opt (and n-opt) LSFD & $-$ & $|\mathcal{M}_k|^2+\frac{|\mathcal{M}_k|^3-|\mathcal{M}_k|}{3}$ \\ \hline
+        L-MMSE  &  $(N\tau_p + N^2)K |\mathcal{M}_k|$ &$\frac{N^2 + N}{2} K |\mathcal{M}_k| + N^2 |\mathcal{M}_k| +\frac{N^3-N}{3} |\mathcal{M}_k| $\\   \hline
+            LP-MMSE & $(N\tau_p + N^2)\sum\limits_{l \in \mathcal{M}_k}|\mathcal{D}_l|$ & $\frac{N^2 + N}{2} \!\!\!\!\sum\limits_{l \in \mathcal{M}_k}\!\!|\mathcal{D}_l| + N^2 |\mathcal{M}_k| +\frac{N^3-N}{3} |\mathcal{M}_k| $  \\ \hline
+                MR & $(N\tau_p + N^2)|\mathcal{M}_k|$ & $-$ \\ \hline
+    \end{tabular}
+    \caption{The number of complex multiplications required per coherence block to compute the local combining vectors of UE $k$, including the computation of the channel estimates. Different combining schemes for the distributed operation are considered.} 
+     \label{table:complexity-with-level3}
+\end{sidewaystable}
+
+
+Inspired by the scalable P-MMSE combining in \eqref{eq:P-MMSE-combining} that was designed for centralized operation, we can define the \gls{LP-MMSE} at AP $l$ based on only the channel estimates and statistics of UEs that are served by this AP (i.e., $\{\widehat{\vect{h}}_{il} : i \in \mathcal{D}_l\}$). By starting from \eqref{eq:L-MMSE-combining-single-AP} but taking a summation over only the UEs in $\mathcal{D}_l$, instead of all UEs, we obtain the local combining vector
+\begin{equation} \label{eq:LP-MMSE-combining-single-AP-1}
+\vect{v}_{kl}^{{\rm LP-MMSE}} =  p_{k}  \left( \sum\limits_{i \in \mathcal{D}_l} p_{i} \left( \widehat{\vect{h}}_{il} \widehat{\vect{h}}_{il}^{\Htran} + \vect{C}_{il} \right) + \sigmaUL  \vect{I}_{N} \right)^{\!-1}   \vect{D}_{kl} \widehat{\vect{h}}_{kl}.
+\end{equation}
+The number of complex multiplications required by LP-MMSE is reported in Table~\ref{table:complexity-with-level3}. Since this number is independent of $K$, LP-MMSE is a scalable solution as $K\to \infty$.
+Compared to P-MMSE in \eqref{eq:P-MMSE-combining} that was proposed for centralized operation, LP-MMSE has a substantially lower complexity per UE since it requires to compute the inverse of an $N\times N$ matrix, rather than an $N|\mathcal{M}_k|\times N|\mathcal{M}_k|$ matrix. Note that LP-MMSE coincides with L-MMSE when AP $l$ serves all the UEs (i.e., $\mathcal{D}_l=\{1,\ldots,K\}$).
+Unlike MR, the expectations in \eqref{eq:uplink-instant-SINR-level3} and \eqref{eq:sinr-level3} cannot be computed in closed form when using LP-MMSE, but can be computed numerically using Monte Carlo methods, as will be done later in this section.
+	
+\begin{remark}[Local P-RZF]
+Since the complexity of P-MMSE is rather high in the centralized operation, we presented an alternative simplified P-RZF scheme with lower complexity. A similar simplification is not needed in the distributed operation since LP-MMSE already has a rather low complexity.
+\end{remark}
+
+
+
+\subsubsection{Scalable Large-Scale Fading Decoding}
+
+The opt LSFD vector in Corollary~\ref{cor:LSFD-optimal} is also not scalable for implementation in large networks. The bottleneck originates from the fact that all UEs in the network affect the interference levels at all APs, thereby determining how accurate the local data estimates are.
+To identify a scalable way to select ${\vect{a}}_{k}$ for UE $k$, we need to limit how many interfering UEs are considered in the computation.
+
+The simplest solution is to give all the serving APs equal importance by setting ${\vect{a}}_{k} = [1 \, \ldots \, 1]^{\Ttran}$ \cite{Nayebi2017a}, \cite{Ngo2017b}. In this case, the CPU takes the local estimates of the data from UE $k$ and sum them up to create the final data estimate
+\begin{align}\label{eq:fully-distributed-estimate}
+\widehat s_{k} = \sum_{l\in\mathcal{M}_k} \widehat s_{kl}.
+\end{align}
+We call this approach \emph{no LSFD} since the LSFD weights are basically omitted. The reason is that the original works on Cell-free Massive MIMO considered this solution, while  LSFD weights were introduced only later. The key benefit is that no statistical parameters are needed at the CPU to compute \eqref{eq:fully-distributed-estimate}.\footnote{To be more precise, no statistical parameters are needed to compute ${\vect{a}}_{k}$ or \eqref{eq:fully-distributed-estimate}, but the data detection leading to the SE in Theorem~\ref{theorem:uplink-capacity-level3} requires that the signal strength and interference variance are known at the CPU.} The main drawback is that equal importance is given to all APs when computing \eqref{eq:fully-distributed-estimate}, even if some APs might be subject to high interference or low SNR. It can even happen that an AP reduces rather than increases the SE due to the suboptimal fusing of information at the CPU \cite{Buzzi2017b}.
+
+The CPU should use some side-information of how accurate the respective local data estimates are, because this is what the opt LSFD vector does. Similar to the approach taken when P-MMSE combining was developed in Section~\ref{subsec:scalable-combining}, we can compute an approximately optimal solution by taking only the UEs that are served by partially the same APs as UE $k$ into consideration. If the AP selection is done properly, these should be the UEs that cause the vast majority of the interference and, thus, affect the quality of the local data estimates the most. Recall that $\mathcal{S}_k$ in \eqref{eq:S_k} denotes the set of UEs that have at least one serving AP in common with UE $k$, including itself. We then approximate the opt LSFD vector in \eqref{eq:LSFD-vector} as
+\begin{align} \label{eq:partial-LSFD-vector}
+&{\vect{a}}_{k}^{\rm n-opt} = p_k  \left( \sum\limits_{i\in \mathcal{S}_k}
+p_{i} \mathbb{E} \left\{ {\vect{g}}_{ki} {\vect{g}}_{ki}^{\Htran} \right\} +   {\vect{F}}_{k} + \widetilde{\vect{D}}_k  \right)^{-1} \mathbb{E}\left\{ {\vect{g}}_{kk}\right\}
+\end{align}
+which we call the \emph{\gls{n-opt} LSFD vector} \cite{globecom_nopt}. The ``nearly optimal''  name will be demonstrated numerically later in this section.
+The number of complex multiplications required for computing ${\vect{a}}_{k}^{\rm n-opt}$ is the same as those needed for computing ${\vect{a}}_{k}^{\rm opt}$ since the matrices and vectors have the same dimensions. The key difference is that the n-opt LSFD scheme requires knowledge of a lower number of statistical parameters, which is independent of $K$. This makes its fronthaul signaling load scalable, as we will elaborate on next.
+
+\subsection{Fronthaul Signaling Load for Distributed Operation}
+\label{sec:level3-fronthaul}
+
+
+The fronthaul signaling required by the distributed operation can be quantified as follows. Each AP $l$ needs to send the local estimates $ \widehat{s}_{kl}$ for $k \in \mathcal{D}_l$ to the CPU, which corresponds to $\tau_u|\mathcal{D}_l|$ complex scalars per coherence block. This number equals $\tau_u \tau_p$ if we use the pilot assignment scheme from Section~\ref{sec:pilot-assignment} on p.~\pageref{sec:pilot-assignment}, where each AP serves $\tau_p$ UEs. This value does not grow with $K$ so we can conclude that this part of the distributed operation is scalable. The total fronthaul signaling is summarized in Table~\ref{tab:signaling-level4-level3}. 
+
+Moreover, the statistical parameters for the computation of the LSFD vectors are required to be sent to the CPU and this number is different for opt LSFD and n-opt LSFD as we quantify in the following. Recall that  $\vect{g}_{ki} = [ \vect{v}_{k1}^{\Htran}\vect{D}_{k1} \vect{h}_{i1} \, \ldots \, \vect{v}_{kL}^{\Htran} \vect{D}_{kL} \vect{h}_{iL}]^{\Ttran}$. Moreover, we notice that $\mathbb{E}\left\{ \left[ \vect{g}_{ki} \right]_l \left[ \vect{g}_{ki}^{\star} \right]_r  \right\}=\mathbb{E}\left\{ \left[ \vect{g}_{ki} \right]_l\right\}\mathbb{E}\left\{ \left[ \vect{g}_{ki}^{\star} \right]_r\right\}$ for $ l\neq r$, by utilizing the independence of the channels corresponding to different APs. Hence, each AP can individually send its first- and second-order statistics to the CPU, which can then combine them to compute the required parameters.
+The following statistical parameters are needed to be sent from AP $l$ to the CPU for the computation of the opt LSFD vector in \eqref{eq:LSFD-vector} for a generic UE $k\in\mathcal{D}_l$:
+\begin{itemize}
+	\item  $\mathbb{E}\left\{  \left[ \vect{g}_{ki} \right]_l\right\} $, for $i=1,\ldots,K$;
+	\item $\mathbb{E}\left\{  \left | \left[ \vect{g}_{ki} \right]_l \right |^2\right\} $, for $i=1,\ldots,K$;
+	\item $\left [ \vect{F}_k \right ]_{ll}$.
+\end{itemize}
+This sums up to $\left(3K+1\right)/2$ complex scalars. Each AP sends these complex scalars for each of its $|\mathcal{D}_l|$ UEs and, hence, $\left(3K+1\right)/2\sum_{l=1}^{L} |\mathcal{D}_l|$ complex scalars are needed in total. These values are summarized in Table~\ref{tab:signaling-level4-level3}. As anticipated earlier in this section, the number of statistical parameters that need to be shared when using opt LSFD increases with $K$, thus making it unscalable. 
+
+If the n-opt LSFD vector in \eqref{eq:partial-LSFD-vector} is used instead, then AP $l$ is required to send $\left(3|\mathcal{S}_k|+1\right)/2$ complex parameters to the CPU. In that case, the required total number of complex scalars becomes $\sum_{l=1}^{L} \sum_{k \in \mathcal{D}_l} \left(3|\mathcal{S}_k|+1\right)/2$, as summarized in Table~\ref{tab:signaling-level4-level3}. Fortunately, this number does not grow with $K$ (see the discussion after \eqref{eq:Z_k-prime} for further details) and we can conclude that the combination of n-opt LSFD and any scalable local combining scheme leads to a completely scalable distributed operation in the uplink. 
+
+Finally, in the case when no LSFD vector is used (i.e., all its elements are equal), no channel statistics need to be sent to the CPU. This case is also listed in Table~\ref{tab:signaling-level4-level3} as a worst-case baseline.
+
+
+
+
+\section{Running Example}
+\label{sec:running-example}
+
+To exemplify the performance of User-centric Cell-free Massive MIMO and make comparisons with cellular networks under somewhat realistic conditions, we will now define a network setup that will be used as a running example in the remainder of this monograph.
+The key parameters are given in Table~\ref{tab:system_parameters_running_example}. The total coverage area is $1$\,km $ \times \, 1$\,km and the total number of antennas is $M=LN=400$. The number of APs is either $L=400$ or $L=100$. In the former case, the number of antennas per AP will be $N=1$ whereas it is $N=4$ for the latter case. A wrap-around topology is used to mimic a large network deployment without edges, where all \glspl{AP} and \glspl{UE} are receiving interference from all directions. Unless otherwise stated, we assume that the APs are deployed uniformly at random in the coverage area. The communication takes place over a 20\,MHz bandwidth with a total receiver noise power of $-94$\,dBm (consisting of thermal noise and a noise figure of 7\,dB in the receiver hardware) at both the APs and UEs. The maximum uplink transmit power of each UE is 100\,mW
+while the maximum downlink transmit power of each AP is 200\,mW. The difference models the fact that APs are connected to the electricity grid and thus less power limited.
+Each coherence block consists of $\tau_c = 200$ samples. This value matches well with a 2\,ms coherence time and a 100\,kHz coherence bandwidth, which correspond to high mobility and large channel dispersion in sub-6 GHz bands, as exemplified in Section~\ref{sec:block-fading} on p.~\pageref{sec:block-fading}.
+Hence, we are considering an example that supports both user mobility and outdoor propagation conditions.
+
+
+\begin{table*}[t]
+	\renewcommand{\arraystretch}{1.}
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline \bfseries $\!\!\!\!\!$ Parameter $\!\!\!\!\!$ & \bfseries Value\\
+		\hline\hline
+				Network area &  $1$\,km $ \times\,  1$\,km \\
+					Network layout & $\!$Random deployment $\!$ \\
+				& (with wrap-around) \\
+				Number of APs &  $400$ or $100$ \\
+				Number of antennas per AP  & $1$ or $4$ \\
+		Number of total antennas & $M=LN=400$ \\
+				Bandwidth & $B = 20$\,MHz  \\
+		
+		Receiver noise power & $\sigmaUL = -94$\,dBm \\
+		
+		Maximum uplink transmit power  & $100$\,mW\\
+		Maximum downlink transmit power & $200$\,mW\\
+		Samples per coherence block & $\tau_c = 200$ \\
+		
+		Channel gain at 1 km & $\Upsilon = -140.6$\,dB \\
+		
+		Pathloss exponent & $\alpha = 3.67$ \\
+		Height difference between AP and UE & $10$\,m \\
+		
+		$\!$Standard deviation of shadow fading$\!$  & $\sigma_{\mathrm{sf}}= 4$ \\
+		
+		\hline
+	\end{tabular}
+	\caption{Key parameters of running example.}
+	\label{tab:system_parameters_running_example}
+\end{table*}
+
+\enlargethispage{\baselineskip} 
+
+The large-scale fading coefficient (channel gain) is computed in dB on the basis of the model presented in Section~\ref{subsec:large-scale-fading-model} on p.~\pageref{subsec:large-scale-fading-model}, and reported here for convenience:
+\begin{equation}\label{eq:pathloss-coefficient-section5}
+\beta_{kl} \,  [\textrm{dB}] = -30.5 - 36.7 \log_{10}\left( \frac{d_{kl}}{1\,\textrm{m}} \right)  + F_{kl}
+\end{equation}
+where $d_{kl}$ is the three-dimensional distance between \gls{AP} $l$ and \gls{UE} $k$. The APs are deployed 10\,m above the plane where the UEs are located, which acts as the minimum distance. This model matches with the 3GPP Urban Microcell model in \cite[Table~B.1.2.1-1]{LTE2017a}. The shadow fading is $F_{kl} \sim \mathcal{N}(0,4^2)$ and the terms from an AP to different UEs are correlated as \cite[Table B.1.2.2.1-4]{LTE2017a}
+\begin{equation} \label{eq:shadowing-decorrelation-repeated}
+\mathbb{E} \{ F_{kl} F_{ij} \} = 
+\begin{cases}
+4^2 2^{-\delta_{ki}/9\,\textrm{m}} & l = j \\
+0 & l \neq j
+\end{cases}
+\end{equation}
+where $\delta_{ki}$ is the distance between UE $k$ and UE $i$. The intuition behind the shadow fading correlation is that if two UEs are closely located and one of them is subject to strong shadowing caused by a large object in the propagation environment, then the other UE will likely also be subject to strong shadowing. The second row in \eqref{eq:shadowing-decorrelation-repeated} implies that each UE achieves independent shadow fading realizations from different APs, since these are deployed at fairly different locations. 
+The large-scale fading model in \eqref{eq:pathloss-coefficient-section5} corresponds to a median channel gain of $-140.6$\,dB at 1\,km (the median is achieved by $F_{kl}=0$\,dB) and has a pathloss exponent $\alpha=3.67$, as reported in Table~\ref{tab:system_parameters_running_example}.
+
+
+The spatial correlation matrices are generated using the local scattering model defined in Section~\ref{subsec:local-scattering-model} on p.~\pageref{subsec:local-scattering-model}. The multipath components are Gaussian distributed  around the nominal azimuth and elevation angles according to \eqref{eq:Gaussian-ASD}, where the nominal angles are computed by drawing a line between the AP and UE. We let $\sigma_{\varphi}$ and $\sigma_{\theta}$ denote the ASDs in the azimuth and elevation domains, respectively. Different values are considered throughout the simulations. We will also consider uncorrelated fading with  $\vect{R}_{kl} = \beta_{kl}  \vect{I}_{N}$ as a reference case. 
+
+To assign the pilots and form the DCC, the joint pilot assignment and AP selection scheme from Section~\ref{sec:pilot-assignment} on p.~\pageref{sec:pilot-assignment} is used.
+
+
+
+\subsection{Benchmark Schemes}
+
+Most of the performance evaluations will consider the achievable SE expressions that were provided in Theorem~\ref{proposition:uplink-capacity-general} for the centralized operation and in Theorem~\ref{theorem:uplink-capacity-level3} for the distributed operation. However, we will also compare these results with some benchmark schemes. For completeness, these will be briefly presented below.
+
+\subsubsection{Cellular Network}
+
+To compare the performance of a cell-free network with that of a corresponding cellular network, we can treat the cellular network as a degenerate case of a cell-free network where each UE is only served by one of the APs; that is, $|\mathcal{M}_k|=1$. To compare with the best conceivable small-cell implementation, we assume the APs use the optimal receive combining. In this case, the SE can be computed as follows.
+
+\begin{corollary} \label{theorem:uplink-capacity-general-level1}
+If UE $k$ is served only by AP $l$, an achievable SE is
+	\begin{equation} \label{eq:uplink-rate-expression-general-level1}
+	\mathacr{SE}_{kl}^{({\rm ul},\cell)} = \frac{\tau_u}{\tau_c} \mathbb{E} \left\{ \log_2  \left( 1 + \mathacr{SINR}_{kl}^{({\rm ul},\cell)}  \right) \right\}
+	\end{equation}
+	where the instantaneous effective SINR is
+	\begin{equation} \label{eq:uplink-instant-SINR_level1}
+	\mathacr{SINR}_{kl}^{({\rm ul},\cell)}=\frac{ p_{k} \left|  \vect{v}_{kl}^{\Htran} \widehat{\vect{h}}_{kl} \right|^2  }{ 
+		\condSum{i=1}{i \neq k}{K} p_{i} \left | \vect{v}_{kl}^{\Htran} \widehat{\vect{h}}_{il} \right|^2
+		+ \vect{v}_{kl}^{\Htran}  \left( \sum\limits_{i=1}^{K} p_{i} \vect{C}_{il} + \sigmaUL  \vect{I}_{N} \right)  \vect{v}_{kl} 
+	}
+	\end{equation}
+for an arbitrary receive combining $\vect{v}_{kl} \in \mathbb{C}^N$. 
+	The maximum value in \eqref{eq:uplink-instant-SINR_level1} is achieved with the L-MMSE combining in \eqref{eq:L-MMSE-combining-single-AP}, leading to 
+	\begin{align}
+	\mathacr{SINR}_{kl}^{({\rm ul},\cell)} =  p_{k}  \widehat{\vect{h}}_{kl}^{\Htran} \left( \condSum{i=1}{i \neq k}{K} p_{i}  \widehat{\vect{h}}_{il} \widehat{\vect{h}}_{il}^{\Htran} + \sum\limits_{i=1}^{K} p_{i} \vect{C}_{il} + \sigmaUL  \vect{I}_{N} \right)^{-1} \!\!\!\!\! \!\!\widehat{\vect{h}}_{kl}. \label{eq:uplink-maximized-SINR-level1}
+	\end{align}
+\end{corollary}
+\begin{proof}
+This result follows from Theorem~\ref{proposition:uplink-capacity-general} and Corollary~\ref{cor:MMSE-combining} in the special case of $\mathcal{M}_k=\{l \}$.
+\end{proof}
+
+
+
+The SE-maximizing receive combining is L-MMSE, which is not scalable but will anyway be used as a benchmark to compare cell-free networks with the best kind of cellular network implementation.\footnote{The L-MMSE scheme is more commonly referred to as multi-cell MMSE combining in the literature on Cellular Massive MIMO \cite{BjornsonHS17}, \cite{massivemimobook}.}
+
+The results presented above can be directly used to consider a cellular network with the same AP locations as in the cell-free counterpart. However, it can also be used to consider a Cellular Massive MIMO system, which is characterized by a substantially smaller $L$ and a substantially larger $N$ than in the cell-free network. 
+
+In the simulations, the APs in the small-cell setup are deployed in the same locations as in the cell-free network. The system-specific parameter values for the small-cell systems are reported in Table~\ref{tab:system_parameters_running_example_small_cell}.  Hence, the number of APs will be either $L=400$ or $L=100$. In the former case, the number of antennas per AP will be $N=1$ whereas it will be $N=4$ for the latter case. 
+	The same set of UEs is served by both network setups, in order to achieve a fair comparison. The small-cell system uses the same pilot assignment from Section~\ref{sec:pilot-assignment} on p.~\pageref{sec:pilot-assignment} as in the cell-free case even if only one AP serves each UE. The index of the single AP that is serving UE $k$ is determined as
+	\begin{align} \label{eq:selection_small_cell}
+	\ell = \underset{l\in \mathcal{M}_k}{\mathrm{arg \, max}}  \,\,\, \beta_{k l}
+	\end{align}
+	where $\mathcal{M}_k$ is the  DCC for UE $k$ that is found by implementing Algorithm~\ref{alg:basic-pilot-assignment} on p.~\pageref{alg:basic-pilot-assignment} for the cell-free case.
+ 
+
+ In the Cellular Massive MIMO setup, we assume each UE is connected to the AP with the best average channel gain, i.e., $\beta_{kl}$ for UE $k$ and AP $l$, and we will specify the system parameters and how the pilot assignment is carried out later in the simulation part.
+ 
+
+\begin{table*}[t]
+	\renewcommand{\arraystretch}{1.}
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline \bfseries $\!\!\!\!\!$ Parameter $\!\!\!\!\!$ & \bfseries Value\\
+		\hline\hline
+		
+		Number of small cells &  $400$ or $100$ \\
+		Coverage area per cell &  $50$\,m $ \times\,  50$\,m or $100$\,m $ \times\,  100$\,m \\
+		Number of antennas per AP  & $1$ or $4$ \\
+		
+		\hline
+	\end{tabular}
+	\caption{The parameters of the running example for the small-cell system. The APs are distributed either on a square grid or uniformly at random. The specified coverage areas are exact in the former case and computed on the average in the latter case.}
+	\label{tab:system_parameters_running_example_small_cell}
+\end{table*}
+
+
+\subsubsection{Genie-Aided SEs With Centralized and Distributed Operations}
+\label{sec:genie-aided-uplink}
+
+The SE expressions presented in Theorem~\ref{proposition:uplink-capacity-general} for centralized operation and in Theorem~\ref{theorem:uplink-capacity-level3} for distributed operation are computed using the state-of-the-art capacity lower bounds. 
+The bound for the centralized operation is reliable but Remark~\ref{remark-tightness-bounds} emphasized that the bound for the distributed operation might underestimate the actually achievable SE. This is because the bound is only tight when there is a sufficient degree of channel hardening. Unfortunately, there is no good definition of what this means. To evaluate these SE expressions, we can compare them to upper bounds. It is easy to obtain practically unachievable upper bounds by neglecting interference or changing the signal processing entirely, but this will not provide much insight into the tightness of the SE expressions presented earlier in this section.
+We will instead use the following methodology: we select the receive combining using the estimated channels as before, but in the final detection step we inject perfect ``genie-aided'' channel knowledge. The SE is still computed by treating interference as noise, but the perfect CSI assumption leads to higher SE values.
+
+
+We begin by considering the centralized operation and assume the channels $\{\vect{h}_k:k=1,\ldots,K\}$ are available at the CPU after the receive combining has been carried out. We can then rewrite the soft estimate of UE $k$'s uplink data in \eqref{eq:uplink-data-estimate2} as
+\begin{align} \label{eq:uplink-data-estimate-level4-genie-aided}
+\widehat{s}_k& =\underbrace{\vect{v}_k^{\Htran}\vect{D}_k{\vect{h}}_k s_k}_{\textrm{Desired signal}}+\underbrace{\condSum{i=1}{i \neq k}{K}\vect{v}_k^{\Htran}\vect{D}_k\vect{h}_i s_i}_{\textrm{Interference}}\;+\;\underbrace{\vect{v}_k^{\Htran}\vect{D}_k\vect{n}}_{\textrm{Noise}}
+\end{align}
+where the desired signal term now includes the channel $\vect{h}_k$ itself rather than its estimate. 
+We then have the following result.
+
+\begin{corollary} \label{corollary-genie-aided-level4}
+	A genie-aided SE of UE $k$ in the centralized operation~is
+	\begin{equation} \label{eq:genie-aided-uplink-SE-level4}
+	\mathacr{SE}_{k}^{({\rm gen-ul},\cent)} = \frac{\tau_u}{\tau_c} \mathbb{E} \left\{ \log_2  \left( 1 + \mathacr{SINR}_{k}^{({\rm gen-ul},\cent)}  \right) \right\}
+	\end{equation}
+where
+	\begin{equation} \label{eq:uplink-instant-SINR-genie-aided-level4}
+	\mathacr{SINR}_{k}^{({\rm gen-ul},\cent)} = \frac{ p_{k} \left |  \vect{v}_{k}^{\Htran} \vect{D}_{k}\vect{h}_{k} \right|^2  }{ 
+		\condSum{i=1}{i \neq k}{K} p_{i} \left | \vect{v}_{k}^{\Htran} \vect{D}_{k}\vect{h}_{i} \right|^2
+		+ \sigmaUL\left \Vert \vect{D}_k \vect{v}_{k}\right\Vert^2  .
+	}
+	\end{equation}
+\end{corollary}
+\begin{proof}
+This follows from utilizing Lemma~\ref{lemma:capacity-memoryless-random-interference} on p.~\pageref{lemma:capacity-memoryless-random-interference}.
+\end{proof}
+
+
+ Similarly, in the distributed operation, we can rewrite the data estimate of UE $k$ at the CPU in \eqref{eq:CPU_linearcomb_eff-level3} for final data detection as
+\begin{align} 
+\widehat{s}_k =\underbrace{\vect{a}_{k}^{\Htran}\vect{g}_{kk} s_k}_{\textrm{Desired signal}} + \underbrace{\condSum{i=1}{i \neq k}{K}\vect{a}_{k}^{\Htran}\vect{g}_{ki}  s_i}_{\textrm{Interference}} + \underbrace{n^\prime_{k}}_{\textrm{Noise}} \label{eq:uplink-data-estimate-level3-genie-aided}
+\end{align}
+where $\vect{a}_{k}\in \mathbb{C}^L$ is the LSFD vector, $n^\prime_{k} = \sum_{l=1}^{L} a_{kl}^{\star} \vect{v}_{kl}^{\Htran}\vect{D}_{kl}\vect{n}_{l}$, and $\vect{g}_{ki} = \left[ \vect{v}_{k1}^{\Htran}\vect{D}_{k1} \vect{h}_{i1} \, \ldots \, \vect{v}_{kL}^{\Htran} \vect{D}_{kL} \vect{h}_{iL}\right]^{\Ttran} \in \mathbb{C}^L$. 
+If perfect CSI is available in the final data detection step, we can treat the first term in \eqref{eq:uplink-data-estimate-level3-genie-aided} as the desired signal obtained over a known channel and thus get the following result.
+
+
+\begin{corollary} \label{corollary-genie-aided-level3}
+A genie-aided SE of UE $k$  in the distributed operation is
+	\begin{equation}\label{eq:genie-aided-uplink-SE-level3}
+	\begin{split}
+	\mathacr{SE}_{k}^{({\rm gen-ul},\dist)} = \frac{\tau_u}{\tau_c}\mathbb{E}\left\{ \log_2   \left( 1 + \mathacr{SINR}_{k}^{({\rm gen-ul},\dist)}  \right) \right\}
+	\end{split}
+	\end{equation}
+where
+	\begin{equation}  \label{eq:uplink-instant-SINR-genie-aided-level3}
+	\mathacr{SINR}_{k}^{({\rm gen-ul},\dist)}\! =\!  \frac{ p_{k} \left| \vect{a}_{k}^{\Htran}  \vect{g}_{kk} \right|^2  }{ \!
+		\!\condSum{i=1}{i \neq k}{K} p_{i}  |\vect{a}_{k}^{\Htran}\vect{g}_{ki}|^2    \!+\!  \vect{a}_{k}^{\Htran}\vect{F}_{k}^{\prime}
+		\vect{a}_{k} 
+	}
+	\end{equation}
+	with
+	$$
+	\vect{F}_{k}^{\prime}=\sigmaUL\diag\left( \left\|  \vect{D}_{k1}\vect{v}_{k1}  \right\|^2, \ldots,  \left\|  \vect{D}_{kL}\vect{v}_{kL}  \right\|^2\right) \in \mathbb{C}^{L \times L}.$$
+\end{corollary}
+\begin{proof}
+This follows from utilizing Lemma~\ref{lemma:capacity-memoryless-random-interference} on p.~\pageref{lemma:capacity-memoryless-random-interference}.
+\end{proof}
+
+We reiterate that, in the simulations, the combining vectors and LSFD vectors are computed using the estimated channels, as described earlier in this section. It is only in the final data detection step that we inject the receiver with perfect CSI. In this way, we can evaluate the tightness of the capacity bounds in Theorem~\ref{proposition:uplink-capacity-general} for centralized operation and in Theorem~\ref{theorem:uplink-capacity-level3} for distributed operation, for a given receiver operation.
+
+
+\section{Numerical Performance Evaluation}
+\label{sec:uplink-performance-comparison}
+
+
+
+In this section, we will quantify the uplink SE achieved by the centralized and distributed operations of User-centric Cell-free Massive MIMO, using the different combining schemes presented earlier in this section. The running example from Section~\ref{sec:running-example} will be considered in all the simulations. Comparisons will be made with cellular networks with either small cells or Massive MIMO. In addition to showing the SE, we will exemplify the fronthaul signaling load and the computational complexity of the combining schemes in the centralized and distributed operations, to demonstrate the difference between scalable and unscalable implementations.
+
+In all the simulations in this section, we assume each UE transmits with full power both in the pilot and data transmission phases:
+\begin{equation}
+\eta_k=p_k=\pmax, \quad k= 1,\ldots,K. 
+\end{equation}
+We will consider other optimized and heuristic power control methods in Section~\ref{c-resource-allocation} on p.~\pageref{c-resource-allocation}, where it is also shown that full power transmission approximately maximizes the sum SE in the considered setup. All the APs are randomly distributed in the coverage area following an independent and uniform distribution. There are $K=40$ UEs in all the considered setups, which implies that $L \gg K$. The pilot sequence length is $\tau_p=10$ and the remaining $\tau_u=\tau_c-\tau_p=190$ samples of each coherence block are used for uplink data. The Gaussian local scattering model is used to generate the spatial correlation matrices with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. 
+
+We use the following Monte Carlo simulation methodology to generate the numerical results for the cell-free and small-cell networks:
+\begin{enumerate}
+	\item Deploy the APs in the simulation area either in a random manner with independent uniform distribution or using a square grid. 
+	\item Randomly drop the UEs one by one.
+	\item Compute the distance from the considered UE to each AP by using the wrap-around topology.\footnote{This means that the north edge of the simulation area is connected to the south edge, while the west edge is connected to the east edge. Hence, there are multiple ways to draw a line between an AP and a UE, but we always consider the shortest option, which might go over an edge. The reason for having a wrap-around topology is to simulate a large-scale scenario where all the UEs effectively are in the center of the simulation area and are subject to interference from all directions.}
+	\item Compute the channel gain from the considered UE to each AP by using \eqref{eq:pathloss-coefficient-section5}. The shadow fading realizations are generated using the conditional Gaussian distribution recursively from \cite[Theorem~10.2]{Kay1993a} to simulate the shadowing according to \eqref{eq:shadowing-decorrelation-repeated}.
+	\item Generate spatial correlation matrices $\vect{R}_{kl}$ and estimation error correlation matrices $\vect{C}_{kl}$.
+	\item Determine the pilot assignment and DCC by implementing Algorithm~\ref{alg:basic-pilot-assignment} on p.~\pageref{alg:basic-pilot-assignment}.
+	\item Generate the estimated channels $\widehat{\vect{h}}_{kl}$ and use them to compute sample averages that approximate all the expectations in the SE expressions.
+\end{enumerate}   
+
+In each figure, the legend will indicate the schemes that are being used.
+In some figures, we will compare the scalable operation obtained using Algorithm~\ref{alg:basic-pilot-assignment} on p.~\pageref{alg:basic-pilot-assignment} with a Cell-free Massive MIMO network, where each UE is served by all the APs. In these cases, we use ``(DCC)'' to denote the scalable operation and ``(All)'' to denote the case where all APs serve all UEs.
+
+\subsection{Performance With Centralized Operation}\label{centralized-operation-uplink}
+
+In Figure~\ref{figureSec5_1}, we show the \gls{CDF} of the SE per UE with a centralized operation of User-centric Cell-free Massive MIMO. The sources of randomness that give rise to the CDF are the random AP and UE locations, as well as the shadow fading realizations. The SE is computed using \eqref{eq:uplink-rate-expression-general} for the different combining schemes described in Section~\ref{sec:level4-uplink}: MMSE, P-MMSE, P-RZF, and MR. 
+
+
+\begin{figure}[p!]
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure4a}
+\end{overpic} \label{figureSec5_1a} 
+                \caption{$L=400$, $N=1$.} 
+                \vspace{4mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure4b}
+\end{overpic} \label{figureSec5_1b} 
+                \caption{$L=100$, $N=4$.} 
+        \end{subfigure} 
+	\caption{ CDF of the uplink SE per UE in the centralized operation. We consider $K=40$ UEs, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. Different scalable and unscalable combining schemes are compared.}\label{figureSec5_1}
+\end{figure}
+
+Figure~\ref{figureSec5_1}(a) shows the scenario with $L=400$ APs and $N=1$ antenna per AP and Figure~\ref{figureSec5_1}(b) shows the scenario with $L=100$ APs with $N=4$ antennas per AP. 
+In both scenarios, the largest SE is achieved by ``MMSE (All)'', which corresponds to that all APs serve all UEs using MMSE combining. This is expected since this is the optimal scheme, however, it is not a scalable solution.
+We notice that the use of ``MMSE (DCC)'' leads to a negligible performance loss, thus it is sufficient to only involve a subset of the APs in the signal detection. If we switch to using the scalable P-MMSE combining scheme, denoted as ``P-MMSE (DCC)'', we arrive at a fully scalable solution and the gap to the optimal scheme remains negligible. The P-RZF combining scheme, which is also scalable, results in a slightly lower SE than the P-MMSE scheme. Hence, by capitalizing on the large channel gain variations in cell-free networks, a properly designed scalable DCC implementation can attain almost the same performance as the optimal unscalable solution. 
+We note that MR combining achieves significantly smaller SEs than the interference-suppressing schemes. Recall that MR requires a high degree of favorable propagation to achieve good results, which apparently is not available anywhere in the network.
+
+\enlargethispage{\baselineskip} 
+
+By comparing the performance of the two scenarios in Figures~\ref{figureSec5_1}(a) and~\ref{figureSec5_1}(b), we notice that the former case with many single-antenna APs is more desirable when having a centralized operation. The difference \linebreak is particularly large at the lower end of the CDF curves, which explains that it is beneficial to spread out the antennas as much as possible~to obtain the so-called macro-diversity gain. The reduction in the lowest SE values when switching from $L=400$, $N=1$ to $L=100$, $N=4$~are more apparent for the interference-suppressing schemes than for MR combining. Interestingly, the performance loss of using P-RZF combining is higher with $N=4$ than in the case of $N=1$. The reason is that in the first scenario with single-antenna APs, the collective estimation error correlation matrices $\vect{C}_k$ are diagonal whereas in the second case they have a block-diagonal structure with some non-zero off-diagonal elements due to the spatial correlation. When computing the P-RZF combining vector in  \eqref{eq:P-RZF-combining_0}, we neglect the estimation error correlation matrices $\vect{C}_k$ and when these are non-diagonal, this creates a more significant performance drop in comparison to the combining schemes that utilize the spatial structure of $\vect{C}_k$. On the other hand, only neglecting the matrices $\vect{C}_k$ for UEs that cause little interference, as done with P-MMSE combining, is associated with a negligible performance loss. 
+
+\vspace{-2mm}
+
+\subsubsection{Tightness of the SE Expressions}
+
+\vspace{-1mm}
+
+The SE expression for centralized operation in \eqref{eq:uplink-rate-expression-general} is a lower bound on the capacity, where the signals received over the unknown parts of the channel vectors are treated as noise. To quantify the tightness of this lower bound, Figure~\ref{figureSec5_1x} considers the same simulation setup as in Figure~\ref{figureSec5_1}(b) but includes the genie-aided SE from \eqref{eq:genie-aided-uplink-SE-level4}. We focus on P-MMSE combining, which is the scalable scheme that achieves the highest SE. Since the genie-aided SE is obtained with perfect \gls{CSI} at the CPU, a higher SE is achieved compared to \eqref{eq:uplink-rate-expression-general}. However, the performance gap is very small. In the figure, we also consider the alternative SE from \eqref{eq:uplink-rate-expression-general-UatF} that is obtained by the UatF bounding technique, where no CSI is available in the final signal detection.
+This simplification results in lower SE values compared to the original SE expression in \eqref{eq:uplink-rate-expression-general} but the gap is almost negligible.
+We will anyway continue using the original expression in the remainder of this section, but the UatF bound will be used for optimized power control in Section~\ref{sec:optimized-power-allocation} on p.~\pageref{sec:optimized-power-allocation}.  In conclusion, the two SE expressions provided in Theorem~\ref{proposition:uplink-capacity-general} and in Theorem~\ref{proposition:uplink-capacity-general-UatF} are both representative of the practically achievable performance with centralized operation.
+
+\begin{figure}[t!] \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure5}
+	\end{overpic} 
+	\caption{CDF of the uplink SE per UE in the centralized operation in the same scenario as in Figure~\ref{figureSec5_1}(b). We consider $L=100$, $N=4$, $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. The SE expression from \eqref{eq:uplink-rate-expression-general} is compared with genie-aided SE in \eqref{eq:genie-aided-uplink-SE-level4} and the UatF bound in \eqref{eq:uplink-rate-expression-general-UatF}.}    \vspace{+2mm}
+	\label{figureSec5_1x} 
+\end{figure}
+
+\subsection{Performance With Distributed Operation}
+
+We will now focus on the distributed operation. Figure~\ref{figureSec5_2} shows the \gls{CDF} of SE per UE in the same scenarios as in Figure~\ref{figureSec5_1}. Hence, 
+Figure~\ref{figureSec5_2}(a) considers $L=400$ and $N=1$, while Figure~\ref{figureSec5_2}(b) considers $L=100$ and $N=4$.
+The most advanced distributed implementation is to use L-MMSE combining at each AP, which is locally optimal, and then to apply the optimal LSFD weights ``opt LSFD'' at the CPU. This combination gives the highest SEs in Figure~\ref{figureSec5_2}, but it is not a scalable solution since the complexity grows unboundedly with $K$. The figure shows that we can achieve essentially the same SEs even if we make three simplifications: 1) involve only a subset of the APs in the data detection; 2) use the scalable n-opt LSFD (instead of opt LSFD); and 3) switch from L-MMSE to LP-MMSE combining.
+Hence, the performance loss required to achieve a scalable implementation is negligible also in the distributed operation.
+The figure also considers MR combining and we notice that there is a large SE loss compared to LP-MMSE combining. This is expected in the case of $N=4$ since LP-MMSE is using the antennas to suppress interference. However, there is also a substantial performance loss in the case of $N=1$. The reason is that MR creates larger variations in the interference power \cite{Bjornson2020a}.
+
+\begin{figure}[p!]
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure6a}
+\end{overpic} \label{figureSec5_2a}
+                \caption{$L=400$, $N=1$.} 
+                 \vspace{4mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure6b}
+\end{overpic} \label{figureSec5_2b} 
+                \caption{$L=100$, $N=4$.} 
+        \end{subfigure} 
+	\caption{CDF of the uplink SE per UE in the distributed operation. We consider $K=40$ UEs, $\tau_p=10$, and spatially correlated Rayleigh fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. Different LSFD and local combining schemes are compared.}\label{figureSec5_2}
+\end{figure}
+
+\enlargethispage{\baselineskip}
+
+By comparing the two scenarios in Figure~\ref{figureSec5_2}, we notice that the SE curves with $N=4$ are more spread out than the curves with $N=1$. The UEs with the worst channel conditions experience lower SE since there are larger gaps between the AP locations, while the UEs with the best channel conditions experience higher SE since these UEs are sensitive to interference and each AP can locally suppress interference using its array of antennas.
+Note that this behavior is different from the centralized case in Figure~\ref{figureSec5_1}, where the gap between the two scenarios was larger and it was always preferable to have many APs since interference could be suppressed at the CPU using the received signals at multiple APs. One advantage of deploying $N=4$ antennas per AP rather than $N=1$ antenna (when $M=LK=400$ is fixed) is that the channel estimation is improved at each AP owing to the spatial correlation between the channel coefficients observed at the antennas in the same array. This was previously discussed in Section~\ref{sec:impact-of-spatial-correlation} on p.~\pageref{sec:impact-of-spatial-correlation}.
+
+\subsubsection{Tightness of the SE Expressions}
+
+
+As discussed in Remark~\ref{remark-tightness-bounds}, the SE expressions used in the distributed operation are developed under the assumption that the CPU does not have access to the instantaneous channel realizations but only to the channel statistics. Such capacity bounds might underestimate the achievable SE, unless there is a sufficiently high degree of channel hardening and small interference variations.
+To investigate this potential issue, Figure~\ref{figureSec5_2x} shows the CDFs of the SE with the scalable schemes from Figure~\ref{figureSec5_2}(b) with $L=100$ and $N=4$. We compare these curves with the genie-aided SE from \eqref{eq:genie-aided-uplink-SE-level3}, which assumes that the same processing schemes are used but the CPU has perfect CSI when detecting the data.
+The gap between the genie-aided SE and the achievable SE values is larger than in the centralized case (see Figure~\ref{figureSec5_1x}), but the difference is reasonably small when using LP-MMSE combining. However, there is a substantial gap when using MR combining. The reason for this is that MR gives rise to larger power variations in both the desired and interfering signals \cite{Bjornson2020a}, \cite{Interdonato2016a}, which the detector can deal with if they are known (as in the genie-aided case) but not when it lacks CSI.
+We conclude that the SE expression that we presented is practically achievable and fairly close to what could be achieved with perfect CSI at the CPU when using LP-MMSE combining (or other interference-suppressing schemes). The gap with MR can be reduced by normalizing it as explained in \cite[Sec.~4.2.1]{massivemimobook} and \cite{Interdonato2016a}.
+
+
+\begin{figure}[t!]\centering
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure7}
+	\end{overpic} 
+	\caption{CDF of the uplink SE per UE in the distributed operation with LSFD in the same scenario as in Figure~\ref{figureSec5_2}(b). We consider $L=100$, $N=4$, $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. The SE expression from \eqref{eq:uplink-rate-expression-level3} is compared with genie-aided SE in \eqref{eq:genie-aided-uplink-SE-level3}.}    \vspace{+2mm}
+	\label{figureSec5_2x} 
+\end{figure}
+
+
+\subsubsection{Benefits of LSFD}
+
+In the distributed cell-free operation, it is important to give different priorities to the local data estimates obtained by different APs using LSFD at the CPU. To demonstrate this, we will now compare the performance with and without LSFD, where the latter is represented by $\vect{a}_k = [1 \, \ldots \, 1]^{\Ttran}$.
+Figure~\ref{figureSec5_3} compares the CDFs of the SE per UE with MR and L-MMSE combining when all APs serve all UE with their scalable alternatives, i.e., user-centric selection of APs with MR and LP-MMSE combining. The four left-most curves are without LSFD, where all the serving APs are given equal priority, while the results for the scalable n-opt LSFD with LP-MMSE combining from Figure~\ref{figureSec5_2}(b) is included as a reference curve. The first observation is that all UEs experience a much higher SE with LSFD than without LSFD, which demonstrates that the LSFD feature is essential.
+The SE is very low with MR, which can be partially addressed by adjusting the power control \cite{Ngo2017b}, but it is more efficient to use LP-MMSE combining in combination with LSFD \cite{Bjornson2019c}, \cite{Bjornson2020a}. Note that the user-centric AP selection leads to minor performance degradation when using LP-MMSE compared to L-MMSE (All), while the loss is negligible when using MR since the network is strongly interference-limited in that case.
+
+
+\begin{figure}[t!]\centering
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure8}
+	\end{overpic} 
+	\caption{CDF of the uplink SE per UE in the distributed operation with and without LSFD. We consider the same scenario as Figure~\ref{figureSec5_2}(b) with $L=100$, $N=4$, $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. Different local combining schemes are compared. The scalable LSFD scheme with LP-MMSE combining from Figure~\ref{figureSec5_2}(b) is provided as a benchmark.}    \vspace{+2mm}
+	\label{figureSec5_3} 
+\end{figure}
+
+
+\enlargethispage{\baselineskip}
+
+\subsection{Comparison Between Cell-Free and Cellular Networks}
+
+In this section, we have thus far only evaluated the performance of cell-free networks with different types of operation and different combining schemes. We will now compare cell-free networks with cellular networks, thereby extending the preliminary comparison that was made in Section~\ref{sec:benefits-cellular-networks} on p.~\pageref{sec:benefits-cellular-networks} under idealized conditions. It is inherently hard to make a fair comparison between different types of networks, but we will make an attempt by letting the total number of antennas be the same: $LN=400$. We consider both a Cellular Massive MIMO with many antennas per AP and a small-cell system with the same AP configuration as in the cell-free network.
+The propagation model described in Section~\ref{sec:running-example} is used in all cases. In Table~\ref{tab:system_parameters_running_example_cellular}, we report the parameters of the Cellular Massive MIMO system where there are 4 square cells, each having an area of $500$\,m $\times$ $500$\,m. The APs are deployed at the center of the cells and they are each equipped with 100 antennas. For the cell-free network and small-cell system, either $L=400$ APs with $N=1$ antennas or $L=100$ APs with $N=4$ antennas are deployed on a symmetric square grid.
+
+\begin{table*}[t]
+	\renewcommand{\arraystretch}{1.}
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline \bfseries $\!\!\!\!\!$ Parameter $\!\!\!\!\!$ & \bfseries Value\\
+		\hline\hline
+		
+		Number of cells &  $4$ \\
+		Cell area &  $500$\,m $ \times\,  500$\,m \\
+		Number of antennas per AP  & $100$ \\
+		Number of UEs per cell & $10$ \\
+		
+		\hline
+	\end{tabular}
+	\caption{The parameters for the Cellular Massive MIMO system used for performance comparison. Each cell covers a square area of $500$\,m $ \times\, 500$\,m and is deployed on a grid of $2 \times 2$ cells.}
+	\label{tab:system_parameters_running_example_cellular}
+\end{table*}
+
+
+We drop the UEs so that each AP in the Cellular Massive MIMO system serves the same number of UEs. Note that this does not mean that these 10 UEs are geometrically located in the corresponding square cell. Due to the random shadow fading, a UE can occasionally get a better channel to another \gls{AP} than the one located in its own square. To make a fair comparison for all the considered systems, we use the same UE locations and pilot assignments. In the Cellular Massive MIMO case, each UE in a cell is assigned to a unique pilot sequence from $\tau_p=10$ mutually orthogonal pilot sequences. To guarantee this condition and to be able to use the same pilot assignment, we drop the UEs in the coverage area one by one and assign the pilot to each according to Algorithm~\ref{alg:basic-pilot-assignment} on p.~\pageref{alg:basic-pilot-assignment}. Then, we check whether the serving AP in the Cellular Massive MIMO system can serve that UE with that assigned pilot (i.e., whether there is not any other UE that is served by this AP using the same pilot sequence). If this is the case, we assign this UE to the considered AP. Otherwise, we remove this randomly located UE and drop a new UE.
+At the end of this UE dropping methodology, it is guaranteed that all the setups consider the same UE locations and that the Cellular Massive MIMO system is well operating: each UE is connected to the AP with the largest channel gain and the 10 UEs in each cell are using mutually orthogonal pilot sequences.
+
+
+
+\begin{figure}[p!]
+\begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure9a}
+			\put(69,16){90\% likely}
+		\put(15,13.7){$- - - - - - - - - - - - - - - - - -$}
+	\end{overpic} \label{figureSec5_4a} 
+	\caption{$L=400$, $N=1$ for the cell-free and small-cell setups.} 
+	\vspace{4mm}
+\end{subfigure} 
+\begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure9b}
+			\put(63,16){90\% likely}
+		\put(15,13.7){$- - - - - - - - - - - - - - - - - -$}
+	\end{overpic} \label{figureSec5_4b} 
+	\caption{$L=100$, $N=4$ for the cell-free and small-cell setups.} 
+\end{subfigure} 
+\caption{CDF of the uplink SE per UE for Cellular Massive MIMO, a small-cell setup, and different operations of scalable Cell-free Massive MIMO. We consider $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. For the Cellular Massive MIMO case, there are $L=4$ APs with $N=100$ antennas per AP.}\label{figureSec5_4}
+\end{figure}
+ 
+
+Different scalable operations of User-centric Cell-free Massive MIMO are compared with Cellular Massive MIMO and small-cell systems in Figure~\ref{figureSec5_4}. 
+ The figure shows the CDF of the SE achieved by UEs at different random locations.  For the cellular systems, L-MMSE combining is used, which is the best scheme although it is unscalable. We have~also observed that the gap between the achievable and genie-aided SEs~for~the small-cell system is negligibly small and we will present only the genie-aided SE results for the small-cell systems in the remainder of this section to avoid any underestimation of the small-cell system performance.
+ 
+Figure~\ref{figureSec5_4}(a) considers the case with $L=400$ and $N=1$.
+Among all the considered network architectures and processing methods, the centralized cell-free operation with P-MMSE combining provides  the largest SEs. The CDF curve is to the right of all the other curves, which implies that all UEs benefit from using this mode of operation. The distributed cell-free operation with n-opt LSFD and LP-MMSE provides nearly the same median SE as the small-cell and Cellular Massive MIMO systems but it gives substantially higher SE for the weakest UEs (i.e., more fairness).  We can quantify the fairness gains by considering the 90\% likely SE value (where the CDF is $0.1$), which represents the SE that can be provided to 90\% of all UEs. The 90\% likely SE with the distributed cell-free operation is around 86\% and 55\% larger than in the small-cell and Cellular Massive MIMO systems, respectively. This is a natural consequence of both the architectural benefits of cell-free networks listed in Section~\ref{sec:benefits-cellular-networks} on p.~\pageref{sec:benefits-cellular-networks} and the increased channel estimation quality  observed from Figure~\ref{fig:basic-signal-gain-comparison-cellular-cellfree} on p.~\pageref{fig:basic-signal-gain-comparison-cellular-cellfree}. 
+Qualitatively speaking, the results in this figure are consistent with the preliminary comparison in Figure~\ref{fig:section1_figure10} on p.~\pageref{fig:section1_figure10}. The centralized cell-free operation greatly outperforms the cellular networks, while the small-cell network is slightly preferred over Cellular Massive MIMO except in the upper and lower tails of the CDF curve. The distributed cell-free operation was not considered in Figure~\ref{fig:section1_figure10} and provides substantial gains over the cellular networks in the lower tail, but at the expense of lower performance in the upper tail.
+ 
+\enlargethispage{\baselineskip} 
+ 
+Figure~\ref{figureSec5_4}(b) considers the case with $L=100$ and $N=4$. The cellular curve is the same as before, the curves for the small-cell and distributed cell-free operations are shifted to the right, while the curve for the centralized cell-free operation is shifted to the left. In other words, the gap between the centralized and distributed cell-free operations reduces, thus showing that any distributed implementation should make use of multiple antennas per AP. Interestingly, the small-cell network outperforms Cellular Massive MIMO, because it combines the SNR benefits of a distributed operation with the ability to suppress interference with $N=4$ antennas per AP.
+  The 90\% likely SE with the distributed cell-free operation is around 24\% and 90\% larger than in the small-cell and Cellular Massive MIMO systems, respectively. 
+ In conclusion, User-centric Cell-free Massive MIMO provides a more uniform service quality among the UEs (as seen from the steeper CDF curves) and, particularly, improves the service for the UEs with the weakest channel conditions (as seen from the locations of the lower tails of the curves). The centralized operation is by far the most desirable from an SE performance perspective.
+
+
+\subsection{Impact of Spatial Correlation}
+
+In the remaining simulations of this section, we will consider $L=100$ APs with $N=4$ antennas per AP. 
+Figure~\ref{figureSec5_6} analyzes the impact of spatial channel correlation. This figure shows the average SE per UE as a function of the ASD of the azimuth and elevation angular spread. We compare a cell-free network with scalable centralized and distributed operation to a small-cell setup with L-MMSE combining. The ASD for azimuth and elevation angles are the same, $\sigma_{\varphi}=\sigma_{\theta}$, and varied on the horizontal axis. The straight dotted lines present the reference average SE in the case of uncorrelated Rayleigh fading, where the spatial correlation matrices are scaled identities. We can think of uncorrelated fading as the limit case where the ASDs tend to infinity. 
+ 
+\begin{figure}[t!]\centering
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure10}
+	\end{overpic} 
+	\caption{The average uplink SE per UE as a function of ASD for azimuth and elevation angles, $\sigma_{\varphi}=\sigma_{\theta}$ for different operations of Cell-free Massive MIMO and small-cell systems. We consider $L=100$, $N=4$, $K=40$, and $\tau_p=10$. The results for uncorrelated Rayleigh fading are shown as reference by the dotted lines.}    \vspace{+1mm}
+	\label{figureSec5_6} 
+\end{figure}
+
+Note that smaller ASD means more highly correlated channels.
+We notice from Figure~\ref{figureSec5_6} that spatial correlation improves the average SE in the centralized operation whereas it degrades the average SE in the distributed operation and small-cell system. 
+When the ASD increases, the average SE with spatially correlated Rayleigh fading channels approaches the reference lines for the uncorrelated case; the difference is small when the ASDs are $30^\circ$. The intuition behind these results is that the centralized operation can exploit the spatial correlation to separate the UEs better (as is the case in Cellular Massive MIMO \cite[Sec.~4.1.5]{massivemimobook}) since it co-processes the signals over many antennas. However, in the distributed operation and small-cell implementation, local combining is applied at each AP and then we are mainly subject to the negative effects of spatial correlation.
+
+Another interesting observation is that the average SE of the small-cell network and the distributed Cell-free Massive MIMO are nearly the same when the channels are highly correlated (i.e., almost \gls{LoS}), while the cell-free system benefits more from having lower spatial correlation.
+
+\begin{figure}[t!]\centering
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure11}
+	\end{overpic} 
+	\caption{The average uplink SE per UE as a function of pilot sequence length, $\tau_p$, for different operations of Cell-free Massive MIMO and small-cell setup. We consider $L=100$, $N=4$, $K=40$, and spatially correlated Rayleigh fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. }    \vspace{+2mm}
+	\label{figureSec5_7} 
+\end{figure}
+
+
+\subsection{Impact of the Pilot Sequence Length}
+
+Figure~\ref{figureSec5_7} shows how the pilot sequence length, $\tau_p$, impacts the average SE per UE. We recall that a larger $\tau_p$ will result in less pilot contamination when $K$ is maintained fixed but also in a pre-log penalty since there is less room for data in every coherence block. For both the centralized and distributed cell-free operation, increasing the pilot sequence length improves the SE until a certain point, and then it decays with $\tau_p$. There are several reasons for this. First, reducing pilot contamination improves the channel estimation quality and reduces the coherent interference. Moreover, each UE is now served by more APs since each AP is allowed to serve up to $\tau_p$ UEs in the considered scalable DCC and pilot assignment scheme. However, after some point (i.e., $\tau_p=20$ in the centralized operation), the improvement saturates since the number of transmission symbols, $\tau_u$, allocated to uplink data transmission also decreases. If we continue to increase the pilot length, the SE will eventually reduce because of the pre-log penalty.
+The saturation point occurs at a smaller value (i.e.,  $\tau_p=10$) in the distributed cell-free operation, while $\tau_p=5$ gives the highest SE in the small-cell system. The reason is the reduced ability to suppress interference, which does not improve much by increasing the estimation quality.
+
+
+\subsection{Scalability of Fronthaul and Computations}
+
+We will now consider the fronthaul signaling and computational complexity associated with different types of centralized and distributed schemes. We consider several random network realizations by dropping APs and UEs randomly in the simulation area and all the results in this section present the signaling and complexity per AP. Hence, they are obtained by averaging over both network realizations and all the APs. In addition, we count the operations and complex numbers once when they are common for more than one UE. 
+
+\begin{figure}[p!]
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure12a}
+\end{overpic} \label{figureSec5_8a} 
+                \caption{Data plus pilot signals per coherence block.} 
+                \vspace{4mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure12b}
+\end{overpic} \label{figureSec5_8b}
+                \caption{Statistical parameters per channel statistics realization. No statistical parameters are  exchanged with centralized operation.} 
+        \end{subfigure} 
+	\caption{The average number of complex scalars to send from the  APs  to the CPU over the fronthaul either in each coherence block or for each realization of the channel statistics as a function of the number $K$ of UEs. We consider $L=100$, $N=4$, and $\tau_p=10$. Both centralized and distributed operations are considered.}\label{figureSec5_8}
+\end{figure}
+
+\enlargethispage{\baselineskip} 
+
+\subsubsection{Fronthaul Signaling}
+
+To quantify the fronthaul signaling load of different cell-free operations, we present the average number of complex scalars to be sent from the APs to the CPU per AP in each coherence block in Figure~\ref{figureSec5_8}(a). These scalars can represent both data and pilots, depending on the operation. The number of UEs is shown on the horizontal axis and a scalable fronthaul operation is represented by having a number that does not grow with $K$.
+We note that, for the centralized operation, the number of complex scalars to be sent from the APs to the CPU in each coherence block is the same irrespective of the number of UEs and DCC scheme, thus scalability is not an issue in terms of fronthaul capacity.
+For the distributed operation, the number of complex scalars related to the data signals depends on the DCC. We see that it grows with $K$ if all APs serve all UEs, while it does not grow when using the proposed scalable DCC solution where each AP serves $\tau_p$ UEs.
+Interestingly, the fronthaul load is larger in the distributed operations than in the centralized operation. The reason is that every AP is serving more UEs than it has antennas (i.e., $\tau_p > N$), thus the local receive combining is increasing the dimension of the signals that need to be sent to the CPU. Hence, the main purpose of a distributed operation cannot be to reduce the fronthaul capacity but to make use of distributed processing capabilities.
+
+The number of statistical parameters that must be sent to the CPU in one realization of the network is shown in Figure~\ref{figureSec5_8}(b). We note that, for the centralized operation, no statistical parameters need to be exchanged so there are no curves for this case. 
+For the distributed operation with LSFD, there is a certain number of statistical parameters to be sent from each AP to the CPU in each realization of the channel statistics. The largest number of parameters is needed when using opt LSFD and serving all UEs using all APs. The number of scalars grows rapidly with the number of UEs.
+Even if we introduce DCC, the number of scalars grows with $K$ if opt LSFD is used, which indicates that the fronthaul signaling load is not scalable. However, n-opt LSFD using DCC is a scalable alternative. We notice that there is a slight decrease in the number of statistical parameters that need to be sent to the CPU in this case. The reason is that as the number of UEs increases, the average number of APs serving a generic UE $k$ decreases since each AP at most serves $\tau_p$ UEs. This in turn results in a decrease in the number of UEs that are partially served by the same APs as UE $k$, i.e., $|\mathcal{S}_k|$ in Table~\ref{tab:signaling-level4-level3}.
+
+
+\begin{figure}[p!]
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure13a}
+\end{overpic} \label{figureSec5_9a}
+                \caption{Centralized operation.} 
+                \vspace{4mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section5/section5_figure13b}
+\end{overpic} \label{figureSec5_9b}
+                \caption{Distributed operation.} 
+        \end{subfigure} 
+	\caption{The average number of complex multiplications required per coherence block to compute the local combining vectors, including the computation of the channel estimates as a function of the number $K$ of UEs. We consider $L=100$, $N=4$, and $\tau_p=10$. Different combining schemes for the centralized and distributed operations are considered.}\label{figureSec5_9}
+\end{figure}
+
+\subsubsection{Computational Complexity}
+
+Figure~\ref{figureSec5_9} shows the average number of complex multiplications required for the computation of different centralized and distributed combining schemes. The results for the centralized operation in Figure~\ref{figureSec5_9}(a) are based on Table~\ref{table:complexity-with-level4} whereas the results for the distributed operation in Figure~\ref{figureSec5_9}(b) are obtained from Table~\ref{table:complexity-with-level3}. Note that the matrix in  \eqref{eq:MMSE-combining} that needs to be inverted is the same when all APs serve all UEs and as all the other common operations, this is counted once for all the UEs. However, with DCC, the matrix inverse is taken separately for each UE resulting in more complex multiplications for $K=20$ compared to MMSE combining where all APs serve all UEs, as can be seen in Figure~\ref{figureSec5_9}(a). However, as the number of UEs increases, the computational complexity decreases in the DCC case while it increases when all APs serve all UEs. Hence, for a large number of UEs, the computational complexity can be reduced efficiently with a well-designed DCC. We know from previous figures that scalable methods can be utilized with a negligible SE loss and the benefit of doing that is the vast reduction in complexity observed in this figure.
+Another observation is that P-RZF might be useful when the number of UEs is relatively small, however, when $K$ increases, the gap between P-MMSE and P-RZF decreases. The reason that the complexity of P-RZF increases with $K$ is that the number of UEs $|\mathcal{S}_k|$ that are served by partially the same APs as UE $k$ increases on the average when we increase $K$ from 20 to 60. Although $|\mathcal{S}_k|$ decreases after $K=60$, the overall effect of the other parameters from Table~\ref{table:complexity-with-level4} results in such a pattern in the computational complexity of P-RZF combining.
+
+From Figure~\ref{figureSec5_9}(b), we observe that the average number of complex multiplications does not grow with $K$ for the scalable combining LP-MMSE and MR schemes. However, the total complexity grows with $K$ when using the unscalable L-MMSE schemes. Hence, scalability is important also in the distributed operation. Note that the vertical scale is substantially smaller in the distributed operation than in the centralized operation, because the distributed schemes are less computationally complex.
+
+
+
+
+\newpage
+
+\section{Summary of the Key Points in Section~\ref{c-uplink}}
+\label{c-uplink-summary}
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+\item The uplink of a cell-free network can be implemented with either centralized or distributed operation.
+
+\item In the centralized operation, the APs are forwarding all the uplink signals to the CPU, which carries out the channel estimation and receive combining. This operation enables centralized combining where the signals received at all the APs that serve UE $k$ can be used to balance between obtaining a strong signal and suppressing interference.
+
+\item The uplink SE with the centralized operation is given in Theorem~\ref{proposition:uplink-capacity-general}. It is maximized by MMSE combining, but this is not a scalable scheme. The alternative  P-MMSE, P-RZF, and MR combining schemes are scalable and represent different tradeoffs between complexity and performance.
+
+\item In the distributed operation, each AP uses its locally received signals to compute local channel estimates and estimates of the uplink data. The local data estimates are then forwarded to the CPU, which computes a weighted average of the local estimates and then detects the data. The latter stage is called LSFD and should give higher priority to APs with good channel conditions.
+
+\item The uplink SE with the distributed operation is given in Theorem~\ref{theorem:uplink-capacity-level3} and depends both on the local receive combining and on the LSFD weights. The optimal weights can be computed but are not scalable to implement, thus a nearly optimal but scalable alternative was derived. L-MMSE is the local receive combining that minimizes the MSE of the local data estimate, but it is not scalable. LP-MMSE and MR combining are scalable alternatives. 
+
+
+\end{itemize}
+
+\end{mdframed}
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+
+\item We defined a running example and used it to evaluate the performance of cell-free networks. We noticed that a scalable operation can be achieved with a negligible SE loss compared to the case when all APs serve all UEs, but with a substantial reduction in computational complexity.
+
+\item The centralized operation can achieve substantially higher SE than the distributed operation, but both implementations outperform Cellular Massive MIMO and small-cell networks. The gain is particularly large for the UEs with the worst channel conditions, which demonstrates the ability of the cell-free architecture to increase the uniformity of the service. The centralized operation is associated with higher computational complexity than the distributed operation, but less fronthaul signaling.
+
+\item If the total number of AP antennas is fixed, a centralized operation prefers to have many single-antenna APs since this reduces the average distance between a UE and its closest APs, while the interference is mitigated by centralized receive combining. In a distributed operation, there is another tradeoff: having many single-antenna APs is beneficial for the UEs with weak channel conditions, while having fewer multi-antenna APs gives a local interference suppression capability at each AP that is beneficial for the UEs with good channel conditions.
+
+\end{itemize}
+
+\end{mdframed}
+
+

@@ -1,0 +1,560 @@
+%!TEX root = cell-free-book.tex
+
+
+\chapter{Channel Estimation}
+\label{c-channel-estimation}
+
+This section describes how channel estimation is carried out in User-centric Cell-free Massive \gls{MIMO} systems based on the transmission of uplink pilots. The system model during pilot transmission is defined in Section~\ref{sec:uplink-pilot}. The \gls{MMSE} channel estimation scheme is presented in Section~\ref{sec:MMSE-channel-estimation}.  The impact of the cell-free architecture, interference from pilot-sharing UEs, and spatial correlation in the estimation process is evaluated in Section~\ref{sec:impact-on-estimation-accuracy}. 
+A basic algorithm for pilot assignment and dynamic cooperation cluster formation is described in Section~\ref{sec:pilot-assignment}.
+The key points are summarized in Section~\ref{c-channel-estimation-summary}.
+
+\enlargethispage{\baselineskip} 
+
+\section{Uplink Pilot Transmission}
+\label{sec:uplink-pilot}
+
+We consider the cell-free network defined in Section~\ref{c-cell-free-definition} on p.~\pageref{c-cell-free-definition} where $L$ \glspl{AP}, each equipped with $N$ antennas, are arbitrarily distributed over the coverage area. The \glspl{AP} are connected to CPUs via fronthaul links. These can be used for sharing the \gls{CSI} and channel statistics  needed to decode the uplink data signals and precode the downlink data.
+
+\gls{UE} $k$ is served only by the APs with indices in the set $\mathcal{M}_k \subset \{1,\ldots,L\}$, which is assumed fixed and known wherever needed. 
+To perform coherent transmission processing (both between the antennas at each AP and across the cooperating APs), knowledge of the channel responses from the UEs to the serving APs is required. It is particularly important for AP $l$ to have estimates of the channel vector ${\bf h}_{kl}$ from UE $k$ if $l \in \mathcal{M}_k$. Since the channels are assumed to be constant throughout one coherence block and change independently from one block to another, following the block fading model described in Section~\ref{sec:block-fading} on p.~\pageref{sec:block-fading}, they need to be estimated once per each coherence block. According to the TDD protocol defined in Section~\ref{sec:tdd-protocol} on p.~\pageref{sec:tdd-protocol}, $\tau_p$ samples are reserved for uplink pilot signaling in each coherence block. Therefore, each UE can transmit a pilot sequence that spans these $\tau_p$ samples and each AP can use the received signals to estimate the channel.
+
+Ideally, we would like every UE to use a pilot sequence that is orthogonal to the pilots of all other UEs so there is no interference between the transmissions.
+However, since the pilots are $\taupu$-dimensional vectors, we can only find a set of at most $\taupu$ mutually orthogonal sequences (i.e., a set of vectors that forms an orthogonal basis that spans $\mathbb{C}^{\tau_p}$). 
+The finite length of the coherence blocks imposes the constraint $\taupu\leq \tau_c$ that makes it impossible to assign mutually orthogonal pilots to all \glspl{UE} in practical networks with $K \gg \tau_c$. 
+Hence, we instead assume the network utilizes a set of $\tau_p$ mutually orthogonal pilot sequences $\boldsymbol{\phi}_{1},\ldots,\boldsymbol{\phi}_{\tau_p}\in\mathbb{C}^{\tau_p}$ that are designed to satisfy $\| \boldsymbol{\phi}_{t} \|^2 = \tau_p$, for $t=1,\ldots,\tau_p$. One option is to use the columns of $\sqrt{\taupu} \vect{I}_{\taupu}$ as pilot sequences.
+We refer to \cite[Sec.~3.1.1]{massivemimobook} for further examples of how to select pilot sequences. The only important aspect in the context of this monograph is that
+\begin{equation}
+\boldsymbol{\phi}_{t_1} ^{\Htran} \boldsymbol{\phi}_{t_2} = \begin{cases} \tau_p & t_1 = t_2\\
+0 & t_1 \neq t_2. \end{cases}
+\end{equation}
+These $\taupu$ pilots are assigned to the UEs in a deterministic way, for example, when they get access to the network. We return to the pilot assignment problem in Section~\ref{sec:pilot-assignment}. 
+
+More than one UE might be assigned to each pilot sequence. We denote  the index of the pilot assigned to UE $k$ as $t_k \in \{ 1, \ldots, \tau_p\}$ and define
+\begin{equation}
+\mathcal{P}_k = \left\{ i : t_i = t_k, i=1,\ldots,K  \right\} \subset \{ 1, \ldots, K\} 
+\end{equation}
+as the set of UEs that use the same pilot as UE $k$, including itself. The elements of $\boldsymbol{\phi}_{t_k}$ are scaled by the square-root of the uplink transmit power of UE $k$, which we denote as $\eta_k \geq 0 $ in the pilot transmission phase.
+The elements of $\sqrt{\eta_k}\boldsymbol{\phi}_{t_k}$ are transmitted as the signal $s_k$ in \eqref{eq:DCC-uplink} over $\tau_p$ consecutive samples.
+The received signal at \gls{AP} $l$ during the entire pilot transmission is denoted as
+$\vect{Y}_{l}^{{\rm pilot}} \in \mathbb{C}^{N \times \tau_p}$ and
+ is given by
+\begin{equation} \label{eq:received-pilot-matrix}
+\vect{Y}_{l}^{{\rm pilot}} = \sum_{i=1}^{K} \sqrt{\eta_i } \vect{h}_{il} \boldsymbol{\phi}_{t_i}^{\Ttran}+ \vect{N}_{l}
+\end{equation}
+where $\vect{N}_{l}  \in \mathbb{C}^{N \times \tau_p}$ is the receiver noise with \gls{iid} elements distributed as $ \CN (0, \sigmaUL )$. The received uplink signal $\vect{Y}_{l}^{{\rm pilot}}$ is the observation that AP $l$ can use to estimate the channels $\{\vect{h}_{kl}:   l\in \mathcal{M}_k\}$ to all the UEs that it serves.
+The estimation can either be carried out directly at \gls{AP} $l$ or  be delegated to the \gls{CPU}. In the latter case, \gls{AP} $l$ acts as a relay and sends the received pilot signal $\vect{Y}_{l}^{{\rm pilot}}$ to the \gls{CPU} via the fronthaul link. The CPU can in principle compute all the channel estimates $\{\widehat{\vect{h}}_{kl} : k=1,\ldots,K, l\in \mathcal{M}_k\}$ using the received pilot signals $\{\vect{Y}_{l}^{{\rm pilot}}:  l\in \mathcal{M}_k\}$. However, since the channel vectors are independent, there is no loss of optimality if the channel estimates are computed separately at each AP $l$ in the set $\mathcal{M}_k$. 
+The estimation results presented in this section apply to both cases.
+
+
+\section{MMSE Channel Estimation}\label{sec:MMSE-channel-estimation}
+Suppose we want to estimate $\vect{h}_{kl}$ (either at AP $l$ or at the CPU), based on the received pilot signal $\vect{Y}_{l}^{{\rm pilot}}$ in \eqref{eq:received-pilot-matrix}. The first step is to remove the interference from UEs using orthogonal pilots by multiplying the received signal $\vect{Y}_{l}^{{\rm pilot}}$ with the normalized conjugate of the associated pilot $\boldsymbol{\phi}_{t_k}$. This yields $\vect{y}_{t_kl}^{{\rm pilot}} =\vect{Y}_{l}^{{\rm pilot}}  \boldsymbol{\phi}_{t_k}^{\star}/{\sqrt{\tau_p}} \in \mathbb{C}^N$, given by
+\begin{align} \notag
+\vect{y}_{t_kl}^{{\rm pilot}} & = 
+\sum_{i=1}^{K}  \frac{\sqrt{\eta_i }}{\sqrt{\tau_p}}\vect{h}_{il} \boldsymbol{\phi}_{t_i}^{\Ttran}  \boldsymbol{\phi}_{t_k}^{\star}+ \frac{1}{\sqrt{\tau_p}} \vect{N}_{l}  \boldsymbol{\phi}_{t_k}^{\star}  \\
+& = \underbrace{ \vphantom{\sum_{i \in \mathcal{P}_k\setminus \{k \}}} \sqrt{\eta_k \tau_p } \vect{h}_{kl}}_{\text{Desired part}} + \underbrace{\sum_{i \in \mathcal{P}_k\setminus \{k \}} \sqrt{\eta_i \tau_p } \vect{h}_{il}}_{\text{Interference}} + \underbrace{\vphantom{\sum_{i \in \mathcal{P}_k\setminus \{k \}}} \vect{n}_{t_k l}}_{\text{Noise}}
+\label{eq:received-pilot}
+\end{align}
+where the first term contains the desired channel $ \vect{h}_{kl}$ scaled by $\sqrt{\eta_k \tau_p }$, which is the square root of the total pilot power $\| \sqrt{\eta_k}\boldsymbol{\phi}_{t_k} \|^2 = \eta_k \tau_p$. The second term is the interference generated by the pilot-sharing UEs and the third term is the noise
+$\vect{n}_{t_k l} =  \frac{1}{\sqrt{\tau_p}} \vect{N}_{l}  \boldsymbol{\phi}_{t_k}^{\star} \sim \CN (\vect{0}_N, \sigmaUL \vect{I}_N)$. The noise term has independent elements with variance $\sigmaUL$ since $\vect{N}_l$ has \gls{iid} $ \CN (0, \sigmaUL )$-elements  and $\boldsymbol{\phi}_{t_k}^{\star}/ \sqrt{\tau_p}$ is a vector with unit norm. 
+
+Note that $\vect{y}_{t_kl}^{{\rm pilot}}$ is sufficient statistics for the estimation of $\vect{h}_{kl}$ since no information  about $\vect{h}_{kl}$  or the pilot-sharing UEs' channels is lost  by multiplying $\vect{Y}_{l}^{{\rm pilot}}$ with $\boldsymbol{\phi}_{t_k}^{\star}/{\sqrt{\tau_p}}$. This is a positive consequence of using mutually orthogonal pilots; if a larger set of partially overlapping pilots would be used instead, then many more UEs are \emph{partially} sharing the same pilot dimensions and this would make the computation of the MMSE estimator more computationally involved.
+In our case, the resulting signal $\vect{y}_{t_kl}^{{\rm pilot}}$ in \eqref{eq:received-pilot} matches with the MMSE estimation structure in Lemma~\ref{lemma:MMSE-estimator} on p.~\pageref{lemma:MMSE-estimator}, leading to the following result.
+
+\enlargethispage{\baselineskip} 
+
+\begin{corollary} \label{cor:MMSE-estimation}
+The \gls{MMSE} estimate of $\vect{h}_{kl}$ based on $\vect{y}_{t_kl}^{{\rm pilot}}$ is
+\begin{equation} \label{eq:estimates}
+\widehat{\vect{h}}_{kl} = \sqrt{\eta_k \tau_p} \vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1} \vect{y}_{t_kl}^{{\rm pilot}}  
+\end{equation}
+where
+\begin{equation} \label{eq:Psitl}
+\vect{\Psi}_{t_kl} = \mathbb{E} \left\{ \vect{y}_{t_kl}^{{\rm pilot}} {(\vect{y}_{t_kl}^{{\rm pilot}})}^{\Htran} \right\} = \sum_{i \in \mathcal{P}_k} \eta_i\tau_p \vect{R}_{il} + \sigmaUL \vect{I}_{N}
+\end{equation}
+is the correlation matrix of the received signal in \eqref{eq:received-pilot}.
+The estimate $\widehat{\vect{h}}_{kl}$ and estimation error $\widetilde{\vect{h}}_{kl} = \vect{h}_{kl} - \widehat{\vect{h}}_{kl}$ are independent random variables distributed as
+\begin{align} \label{eq:estimate-distribution}
+\widehat{\vect{h}}_{kl} &\sim \CN \left( \vect{0}_N, \eta_k \tau_p \vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1} \vect{R}_{kl} \right) \\
+\widetilde{\vect{h}}_{kl} &\sim \CN(\vect{0}_N,\vect{C}_{kl})
+\end{align}
+with the error correlation matrix
+\begin{equation} \label{eq:error-correlation}
+\vect{C}_{kl} = \mathbb{E} \{ \widetilde{\vect{h}}_{kl} \widetilde{\vect{h}}_{kl}^{\Htran} \}= \vect{R}_{kl} - \eta_k \tau_p \vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1} \vect{R}_{kl}.
+\end{equation} 
+\end{corollary}
+\begin{proof}
+We consider the received signal in \eqref{eq:received-pilot} and define $q = \sqrt{\eta_k \tau_p} $, ${\bf n} = \sum_{i \in \mathcal{P}_k\setminus \{k \}} \sqrt{\eta_i \tau_p } \vect{h}_{il} + \vect{n}_{t_k l}$, ${\bf R} = {\bf R}_{kl}$ and ${\bf S} = \sum_{i \in \mathcal{P}_k\setminus \{k \}}\eta_i\tau_p \vect{R}_{il} + \sigmaUL \vect{I}_{N}$. The MMSE estimate and its properties then follow directly from Lemma~\ref{lemma:MMSE-estimator} on p.~\pageref{lemma:MMSE-estimator}.
+\end{proof}
+
+The  \gls{MMSE} estimator has this name because it minimizes the MSE $\mathbb{E}\{ \| \vect{h}_{kl} - \widehat{\vect{h}}_{kl} \|^2 \}=\mathbb{E}\{ \| \widetilde{\vect{h}}_{kl} \|^2 \}$ among all possible estimators.
+The \gls{MMSE} estimator in \eqref{eq:estimates} is linear in the sense that $\widehat{\vect{h}}_{kl}$ is computed by multiplying the processed received signal $\vect{y}_{t_kl}^{{\rm pilot}}$ with matrices. It is therefore sometimes
+called the linear MMSE estimator. However, we prefer to use the pure MMSE notion to make it clear that one cannot further reduce the MSE by using a non-linear estimator. Note that
+\begin{equation}
+\eta_k \tau_p \vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1} \vect{R}_{kl}  = \vect{R}_{kl} - \vect{C}_{kl}
+\end{equation}
+so the correlation matrix of the channel estimate $\widehat{\vect{h}}_{kl} $ can also be expressed as $\vect{R}_{kl} - \vect{C}_{kl}$. The distribution of $\widehat{\vect{h}}_{kl}$ in \eqref{eq:estimate-distribution} allows us to generate random realizations of the channel estimate without having to compute the received signal $\vect{y}_{t_kl}^{{\rm pilot}}$ as an intermediate step. It is convenient for both mathematical analysis and numerical simulations.
+
+In practice, the computation of $\widehat{\vect{h}}_{kl}$ in \eqref{eq:estimates} requires knowledge of two matrices: 
+\begin{enumerate}
+\item The spatial correlation matrix $\vect{R}_{kl}=\mathbb{E}\{  \vect{h}_{kl} \vect{h}_{kl}^{\Htran} \}$ of $\vect{h}_{kl}$; 
+\item
+The sum $\vect{\Psi}_{t_kl} = \sum_{i \in \mathcal{P}_k} \eta_i\tau_p \vect{R}_{il} + \sigmaUL \vect{I}_{N}$ of the correlation matrices of pilot-sharing UEs and noise.
+\end{enumerate}
+Both matrices depend on the statistics of the channels and thus are constant.
+Therefore, we can assume that the matrix $\sqrt{\eta_k \tau_p} \vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1}$ can be precomputed. This matrix can be described by $N^{2}$ complex scalars, which can be exchanged via the fronthaul links to make $\sqrt{\eta_k \tau_p} \vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1}$ available wherever needed (e.g., at AP $l$ or the CPU). The required fronthaul signaling is negligible since the channel statistics are deterministic and thus constant throughout the entire data transmission.\footnote{In practice, the channel statistics will change due to UE mobility or new scheduling decisions, but measurements suggest roughly two orders of magnitude slower variations compared to the channel vectors.}
+If the matrix is precomputed, computing the MMSE estimate in a given coherence block entails first computing $\vect{y}_{t_kl}^{\rm{pilot}}$ and then multiplying it with $\sqrt{\eta_k \tau_p} \vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1}$ of each UE served by AP $l$.
+The first operation requires $N\tau_p$ complex multiplications per pilot sequence while the second needs $N^{2}$ complex multiplications per UE \cite[Sec.~3.4]{massivemimobook}. 
+In summary, the computational complexity for channel estimation at AP $l$ is
+\begin{equation} \label{eq:complexity-estimation}
+|\mathcal{D}_l| (N\tau_p + N^{2}) \quad \textrm{complex multiplications}
+\end{equation}
+per coherence block, if every UE that it serves uses a different pilot sequence (which is preferable). This value is scalable as $K \to \infty$ if $|\mathcal{D}_l| $ remains finite, which is in line with the sufficient condition for scalability presented in Lemma~\ref{lemma:D-requirement} on p.~\pageref{lemma:D-requirement}.
+
+\begin{remark}[Alternative estimation methods]
+The MMSE estimator is the optimal choice when having full statistical knowledge, as assumed in this monograph (see Section~\ref{sec:correlated-rayleigh-fading} on p.~\pageref{sec:correlated-rayleigh-fading}). Note that each spatial correlation matrix $\vect{R}_{kl}$ contains $N^2$ elements and the computational complexity in \eqref{eq:complexity-estimation} is proportional to $N^2$. 
+There are alternative channel estimators in the literature that provide larger MSEs, since the MMSE estimator is optimal, but can be useful to limit the computational complexity or deal with incomplete statistical knowledge.
+This can be of interest in Cellular Massive MIMO systems, where $N$ is large, since the complexity or overhead required to learn all the matrix elements can be substantial. However, none of these issues are pressing in Cell-free Massive MIMO, where $N$ is small, and will thus not be covered in this monograph.
+We refer to \cite[Sec.~3.4]{massivemimobook} for details on alternative estimators and to \cite{BSD16A}, \cite{CaireC17a}, \cite{NeumannJU17}, \cite{Sanguinetti2019a}, \cite{UpadhyaJU17} for methods to estimate spatial correlation matrices in practice.
+\end{remark}
+
+
+
+
+\subsection{Normalized MSE}
+
+The value of the MSE depends on the average channel gain $ \beta_{kl} $ (among other factors) and a strong channel might have larger errors in absolute terms than a weaker channel. However, it is the relative size of the error that matters, not the absolute size.
+Hence, the estimation accuracy is quantified by considering the \gls{NMSE}. When it comes to the channel between AP $l$ and UE $k$, the \gls{NMSE} is defined as
+\begin{align}
+\mathacr{NMSE}_{kl}=\frac{\mathbb{E}\{ \| \vect{h}_{kl} - \widehat{\vect{h}}_{kl} \|^2 \}}{ \mathbb{E}\{ \| \vect{h}_{kl}\|^2 \}} &= \frac{\tr( \vect{C}_{kl}  )}{ \tr( \vect{R}_{kl}  )} =1 - \frac{\eta_k \tau_p  \tr(\vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1} \vect{R}_{kl}) }{ \tr( \vect{R}_{kl}  )} \label{eq:nmse-correlated-AP-l}
+\end{align}
+and measures the relative estimation error variance per
+antenna.  The \gls{NMSE} is 0 when perfect estimation is achieved while it is 1 if $\eta_k=0$ so that we are only receiving noise and interference.
+In general, any reasonable estimator will provide an \gls{NMSE} between 0 and 1, where smaller values are preferable.
+
+In the case of single-antenna APs (i.e., $N=1$), the spatial correlation matrix $\vect{R}_{kl}$ reduces to the average channel gain $\beta_{kl}$ and \eqref{eq:nmse-correlated-AP-l} simplifies to 
+\begin{align}
+\mathacr{NMSE}_{kl}=1 - \frac{\eta_k \tau_p \beta_{kl}}{ \eta_k \tau_p \beta_{kl} + \hspace{-1cm}\underbrace{\sum_{i \in \mathcal{P}_k\setminus \{k \} }\eta_i \tau_p \beta_{il}}_{\text{Interference from pilot-sharing UEs}} \hspace{-1cm} + \,\sigmaUL} \label{eq:nmse-uncorrelated-AP-l}
+\end{align}
+which can be rewritten as
+\begin{align}
+\mathacr{NMSE}_{kl}=1 - \frac{\mathacr{SNR}_{kl}^{\text{pilot}}}{ \mathacr{SNR}_{kl}^{\text{pilot}} +\sum\limits_{i \in \mathcal{P}_k\setminus \{ k \}}\mathacr{SNR}_{il}^{\text{pilot}}  + 1} \label{eq:nmse-uncorrelated-AP-l-1}
+\end{align}
+where 
+\begin{align}
+\mathacr{SNR}_{kl}^{\text{pilot}}= \frac{\eta_k\tau_p \beta_{kl}}{\sigmaUL} \label{eq:effective-pilot-SNR}
+\end{align}
+is the \emph{effective} SNR of the pilot transmission from UE $k$ to AP $l$. The word ``effective'' implies that the pilot processing gain $\tau_p$ is included in the SNR expression, which is achieved since the receiver processing in \eqref{eq:received-pilot} coherently captures all the transmitted pilot energy without increasing the noise. If the pilot sequences are $\tau_p = 10$ samples long, then the effective SNR is $10$\,dB larger than the nominal SNR at a single sample. This gain is highly desirable for achieving good estimation quality also for UEs with limited transmit power and/or weak channel conditions.
+
+Since it is the total pilot energy $\eta_k\tau_p$ that determines $\mathacr{SNR}_{kl}^{\text{pilot}}$, in practice, one can choose between spreading it over the $\tau_p$ samples of the pilot sequence or concentrating it into only one of them. The former solution keeps the peak-to-average-power ratio low but is sensitive to hardware imperfections; for example, a UE might only be able to approximately generate its pilot sequence, leading to only approximate orthogonality between the sequences that are meant to be orthogonal. This problem does not occur in the latter case since UEs with orthogonal pilots are transmitting at different samples of the coherence block. On the other hand, the concentration of pilot energy into specific samples corresponds to boosting their power, which is not possible in all implementations since it can increase the peak-to-average-power ratio. Generally speaking, the system can improve the effective SNR of the pilot transmission by either increasing the pilot length or boosting the pilot power on specific samples.
+
+
+\subsection{Pilot Contamination}
+
+From \eqref{eq:nmse-uncorrelated-AP-l}, it follows that the interference generated by the pilot-sharing UEs increases the NMSE, thereby reducing the channel estimation quality. In the case of multiple-antenna APs (i.e., $N > 1$), the NMSE in \eqref{eq:nmse-correlated-AP-l} is exactly the same in \eqref{eq:nmse-uncorrelated-AP-l} if uncorrelated Rayleigh fading is assumed (i.e., $\vect{R}_{kl}=\beta_{kl}\vect{I}_{N}$). This means that there is neither an advantage nor a disadvantage in using multiple antennas at the APs in the absence of spatial correlation. With spatially correlated channels, the NMSE in \eqref{eq:nmse-correlated-AP-l} has a more complicated structure. It is clearly increased by the interference from the pilot-sharing UEs, which enters into $\vect{\Psi}_{t_kl}$ in \eqref{eq:Psitl}. Unlike \eqref{eq:nmse-uncorrelated-AP-l}, \eqref{eq:nmse-correlated-AP-l} depends not only on the average channel gains but on the full spatial correlation matrices $\vect{R}_{il}$, for $i\in \mathcal{P}_k$. Intuitively, the NMSE should be better when the interfering UEs' channels have very different spatial correlation properties than the desired UE. For example, if we know a priori that the channels of two UEs contain multipath components distributed over widely different sets of angular directions, then their corresponding spatial correlation matrices should have different dominant eigenspaces and this should somehow be beneficial during channel estimation.
+This intuition will be confirmed later on in Section~\ref{sec:impact-of-spatial-correlation}. 
+
+The ``pilot interference'' generated by the pilot-sharing UEs is known as \emph{pilot contamination} in the Cellular Massive MIMO literature and behaves differently from the receiver noise; it does not only reduce the estimation quality, but also makes the channel estimates of pilot-sharing UEs correlated. To see this, let us compare the MMSE estimate $\widehat{\vect{h}}_{kl}$ in \eqref{eq:estimates} of UE $k$ with the estimate 
+\begin{equation} \label{eq:estimates_il-first}
+\widehat{\vect{h}}_{il} =  \sqrt{\eta_i \tau_p} \vect{R}_{il} \vect{\Psi}_{t_i l}^{-1} \vect{y}_{t_i l}^{{\rm pilot}}
+\end{equation}
+of another UE $i \in \mathcal{P}_{k}\setminus \{ k \}$ using the same pilot. In this case, we have that $\Psiv_{t_kl} = \Psiv_{t_il}$ and 
+$\vect{y}_{t_kl}^{{\rm pilot}} = \vect{y}_{t_il}^{{\rm pilot}} $ such that \eqref{eq:estimates_il-first} can be rewritten as
+\begin{align}\label{eq:estimates_il}
+\widehat{\vect{h}}_{il} = \sqrt{\eta_i \tau_p} \vect{R}_{il} \vect{\Psi}_{t_kl}^{-1} \vect{y}_{t_kl}^{{\rm pilot}}.
+\end{align}
+By comparing \eqref{eq:estimates_il} with \eqref{eq:estimates}, we notice that only the scalar and the first matrix differ. If $\vect{R}_{kl}$ is invertible, we can write the relation as
+\begin{equation} \label{eq:relation-i-k-estimates}
+\widehat{\vect{h}}_{il}   =\sqrt{ \frac{\eta_i}{\eta_k} }  \vect{R}_{il}\vect{R}_{kl}^{-1}   \widehat{\vect{h}}_{kl}, \quad i\in\mathcal{P}_k.
+\end{equation}
+This implies that the two estimates are correlated, with the cross-correlation matrix given by
+\begin{equation} \label{eq:cross-correlation-channel-estimates}
+\mathbb{E}\left\{\widehat{\vect{h}}_{kl}\widehat{\vect{h}}_{il}^{\Htran}\right\}=\sqrt{\eta_k\eta_i}\tau_p\vect{R}_{kl}\vect{\Psi}_{t_kl}^{-1}\vect{R}_{il}, \quad i\in\mathcal{P}_k.
+\end{equation}  
+This happens although the true channels were assumed statistically independent (i.e., $
+\mathbb{E}\left\{{\vect{h}}_{kl}{\vect{h}}_{il}^{\Htran}\right\} = {\bf 0}_{N\times N}$, for $i\neq k$). Observe that if there is no spatial correlation so that $\vect{R}_{kl}=\beta_{kl}\vect{I}_{N}$ and $\vect{R}_{il}=\beta_{il}\vect{I}_{N}$, then the channel estimate $\widehat{\vect{h}}_{il}$ in \eqref{eq:estimates_il} for any $i\in \mathcal{P}_k \setminus \{ k \}$ will be the same as the channel estimate $\widehat{\vect{h}}_{kl}$ except for a scaling factor. In this case, the channel estimates are fully correlated. 
+
+In conclusion, UEs that transmit the same pilot sequence contaminate each others' channel estimates, in the same way as in Cellular Massive MIMO systems \cite{Marzetta2010a}, \cite{Sanguinetti2019a} and other types of cellular systems \cite{Niemela2004a}, \cite{Sapienza2001a}. The contamination not only reduces the estimation quality (i.e., increases the NMSE) but also makes the channel estimates statistically dependent~\cite{Sanguinetti2019a}. This has an important impact beyond channel estimation, since the contamination makes it harder to mitigate interference between UEs that use the same pilot in uplink and downlink. This will be investigated in Sections~\ref{c-uplink} and~\ref{c-downlink} on p.~\pageref{c-uplink} and p.~\pageref{c-downlink}, respectively.
+
+
+
+\subsection{MMSE Estimation of the Collective Channel}\label{sec:mmse-of-collective-channel}
+
+So far, we have considered the estimation of a channel vector $\vect{h}_{kl}$ between a generic AP $l$ and UE $k$. To perform coherent processing of the signals at multiple APs, it is necessary to have knowledge of the collective channel $\vect{h}_k \sim \CN(\vect{0}_M, \vect{R}_{k}) $ defined in \eqref{eq:collective_channel}, where $\vect{R}_{k} = \diag(\vect{R}_{k1}, \ldots,  \vect{R}_{kL}) \in \mathbb{C}^{M \times M}$
+is the block-diagonal collective spatial correlation matrix. However, the estimate $\widehat{\vect{h}}_{k}  = [\widehat{\vect{h}}_{k1}^{\Ttran} \, \ldots \, \widehat{\vect{h}}_{kL}^{\Ttran}]^{\Ttran}$ of $\vect{h}_k$ from all APs to UE $k$ can be only partially computed since only the APs in $\mathcal{M}_k \subset\{1,\ldots,L\}$ are computing estimates of the channels and/or send their pilot signals to the CPU. This means that only the following partial channel estimate is known in a scalable cell-free network:
+\begin{equation} \label{eq:estimates-central}
+\vect{D}_{k}\widehat{\vect{h}}_{k} \triangleq \begin{bmatrix} \vect{D}_{k1}\widehat{\vect{h}}_{k1} \\ \vdots \\ \vect{D}_{kL}\widehat{\vect{h}}_{kL} 
+\end{bmatrix} \sim \CN \left( \vect{0}_M, \eta_k \tau_p \vect{D}_{k}\vect{R}_{k} \vect{\Psi}_{t_k}^{-1} \vect{R}_{k}\vect{D}_{k} \right)
+\end{equation}
+where $\vect{D}_{k}  = \diag( \vect{D}_{k1} , \ldots, \vect{D}_{kL} )$ is a block-diagonal matrix with $\vect{D}_{kl}$ being defined in~\eqref{eq:user-centric} as $\vect{I}_N$ for APs that serve UE $k$ and zero otherwise.
+Moreover,  $\vect{\Psi}_{t_k}^{-1} = \diag( \vect{\Psi}_{t_k1}^{-1}, \ldots, \vect{\Psi}_{t_kL}^{-1})$ contains the inverses of the received pilot signal correlation matrices defined in \eqref{eq:Psitl}.
+ The estimation error is $\vect{D}_{k}\widetilde{\vect{h}}_k = \vect{D}_{k}\vect{h}_k - \vect{D}_{k}\widehat{\vect{h}}_{k} \sim \CN(\vect{0}_M,\vect{D}_{k}\vect{C}_k)$ with
+$\vect{C}_k = \diag(\vect{C}_{k1}, \ldots, \vect{C}_{kL})$. Note that $\vect{D}_{k}\vect{C}_k = \vect{D}_{k}\vect{C}_k \vect{D}_k$ so we use the former expression for brevity.
+
+The \gls{NMSE} of $\vect{D}_{k}\widehat{\vect{h}}_{k}$ can be computed as \begin{align}\notag
+\mathacr{NMSE}_{k} &=\frac{\mathbb{E}\{ \| \vect{D}_{k}\vect{h}_{k} - \vect{D}_{k}\widehat{\vect{h}}_{k} \|^2 \}}{ \mathbb{E}\{ \| \vect{D}_{k}\vect{h}_{k}\|^2 \}} = \frac{\tr( \vect{D}_{k}\vect{C}_{k}  )}{ \tr( \vect{D}_{k}\vect{R}_{k}  )}\mathop{=}^{(a)}\frac{\sum\limits_{l=1}^L\tr( \vect{D}_{kl}\vect{C}_{kl}  )}{ \sum\limits_{l=1}^L\tr( \vect{D}_{kl}\vect{R}_{kl}  )}\\&=1 - \frac{\eta_k \tau_p \sum\limits_{l \in \mathcal{M}_k} \tr(\vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1} \vect{R}_{kl}) }{ \sum\limits_{l \in \mathcal{M}_k}\tr( \vect{R}_{kl}  )} \label{eq:nmse-correlated-collective}
+\end{align}
+where ${(a)}$ follows from the block-diagonal structure of both $\vect{C}_{k}$ and $\vect{R}_{k}$. The NMSE of the collective channel in \eqref{eq:nmse-correlated-collective} has a similar form as the NMSE of an individual AP-to-UE channel in \eqref{eq:nmse-correlated-AP-l}. Note that \eqref{eq:nmse-correlated-collective} is not the sum or average of the individual NMSEs, but contains a summation of MSEs in the numerator normalized by a summation of channel gains.
+\pagebreak
+
+In the case of single-antenna APs or uncorrelated Rayleigh fading, \eqref{eq:nmse-correlated-collective} can be simplified as
+\begin{align}\notag
+\mathacr{NMSE}_{k}&=1 - \frac{\eta_k \tau_p \sum\limits_{l \in \mathcal{M}_k} \frac{\beta_{kl}^2}{{ \eta_k\tau_p  \beta_{kl} +\sum\limits_{i \in \mathcal{P}_k\setminus \{ k \}}\eta_i\tau_p  \beta_{il} + \sigmaUL}} }{ \sum\limits_{l \in \mathcal{M}_k}\beta_{kl} }\\&=
+1 - \frac{\sum\limits_{l \in \mathcal{M}_k}\frac{(\mathacr{SNR}_{kl}^{\text{pilot}})^2}{ \mathacr{SNR}_{kl}^{\text{pilot}} + \sum\limits_{i \in \mathcal{P}_k\setminus \{k\}} \mathacr{SNR}_{il}^{\text{pilot}} +1}}{ \sum\limits_{l \in \mathcal{M}_k} \mathacr{SNR}_{kl}^{\text{pilot}}}. \label{eq:nmse-uncorrelated-collective}
+\end{align}
+In any case, the presence of pilot-sharing UEs will increase the NMSE and create a correlation between their respective channel estimates.
+
+
+\section{Impact of Architecture, Contamination, \& Spatial Correlation}\label{sec:impact-on-estimation-accuracy}
+
+We will exemplify how the estimation accuracy of the MMSE estimator is affected by the cell-free architecture, pilot contamination, and spatial correlation. The numerical examples will uncover some of the basic properties that determine the NMSE and its impact on communication performance. 
+
+\enlargethispage{\baselineskip}
+
+\subsection{Impact of the Cell-Free Architecture}
+
+To gain insights into the basic impact of channel estimation errors in cell-free networks, we begin by considering  single-antenna APs and the estimation of the collective channel of an arbitrary UE $k$ that has a unique pilot sequence: $\mathcal{P}_k = \{k\}$. In this case, the NMSE in \eqref{eq:nmse-uncorrelated-collective} reduces to
+\begin{align}
+\mathacr{NMSE}_{k}=1 - \frac{\sum\limits_{l \in \mathcal{M}_k} \frac{ \mathacr{SNR}_{kl}^{\text{pilot}}}{1+\frac{1}{\mathacr{SNR}_{kl}^{\text{pilot}}}}}{\sum\limits_{l \in \mathcal{M}_k}  \mathacr{SNR}_{kl}^{\text{pilot}}}.\label{eq:nmse-uncorrelated-unique-pilot}
+\end{align}
+If one AP has a much larger value of its effective SNR than the other APs in $\mathcal{M}_k$, then \eqref{eq:nmse-uncorrelated-unique-pilot} can be approximated as
+\begin{align}
+\mathacr{NMSE}_{k}\approx 1 - \frac{1}{1+\frac{1}{\mathacr{SNR}_{kl_{\max} }^{\text{pilot}}}}
+ = \frac{1}{\mathacr{SNR}_{kl_{\max} }^{\text{pilot}} +1}
+\label{eq:nmse-uncorrelated-unique-pilot-unique-AP}
+\end{align}
+with $l_{\max} = \arg \max_{l \in \mathcal{M}_k} \mathacr{SNR}_{kl}^{\text{pilot}}$. This approximation is exact if
+$|\mathcal{M}_k|=1$ or when all the serving APs have the same value of $\mathacr{SNR}_{kl}^{\text{pilot}}$. However, when the APs have different values of $\mathacr{SNR}_{kl}^{\text{pilot}}$, then the exact NMSE in \eqref{eq:nmse-uncorrelated-unique-pilot} will be larger than the approximation in \eqref{eq:nmse-uncorrelated-unique-pilot-unique-AP}.
+
+\begin{figure}[t!]
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/section4_figure1}
+\end{overpic} 
+                \caption{NMSE when two APs may serve UE $k$. We assume that $\mathacr{SNR}_{k1}^{\text{pilot}}$ is fixed to $10$\,dB while $\mathacr{SNR}_{k2}^{\text{pilot}}$ varies from $-30$\,dB to $30$\,dB. The cases in which only AP $1$ or $2$ is serving UE $k$ is reported for comparison.}    \vspace{+2mm}
+	\label{fig:basic-NMSE-analysis-twoAPs} 
+\end{figure}
+
+This fact is exemplified in Figure~\ref{fig:basic-NMSE-analysis-twoAPs} where \eqref{eq:nmse-uncorrelated-unique-pilot} is plotted for the case in which UE $k$ is served by $|\mathcal{M}_k|=2$ APs, or just one of them. We assume that $\mathacr{SNR}_{k1}^{\text{pilot}}$ is fixed to $10$\,dB while we let $\mathacr{SNR}_{k2}^{\text{pilot}}$ vary from $-30$\,dB to $30$\,dB.  There is one NMSE curve for the case when both APs serve the UE and two curves for the case when only one of the APs serves the UE.
+We observe that the NMSE with both APs is higher than the NMSE with only AP $1$ serving the UE if $\mathacr{SNR}_{k2}^{\text{pilot}} < \mathacr{SNR}_{k1}^{\text{pilot}}$. In contrast, a lower NMSE is obtained for $\mathacr{SNR}_{k2}^{\text{pilot}} > \mathacr{SNR}_{k1}^{\text{pilot}}$. This shows that having more than one serving AP is not necessarily improving the estimation accuracy of the collective channel.
+
+To gain further insights into this, we revisit the simulation scenario from Figure~\ref{fig:section1_figure9} on p.~\pageref{fig:section1_figure9}, where a cell-free network was compared~with a corresponding small-cell setup and a single-cell Massive MIMO setup. In the cell-free case, we consider $L=64$ single-antenna APs that are deployed on a square grid in a coverage area of $400$\,m$\,\times\, 400$\,m as shown in Figure~\ref{fig:basic-comparison-cellular-cellfree}(c) on p.~\pageref{fig:basic-comparison-cellular-cellfree}. The bandwidth is 10\,MHz and the noise power is $\sigmaUL = -96$\,dBm. The channels are Rayleigh fading, the channel gains are modelled as in \eqref{eq:large-scale-model-simple}, and the propagation distances are computed assuming that the \glspl{AP} are deployed 10\,m above the \gls{UE}. Comparisons are made with a single-cell setup with a 64-antenna Massive MIMO AP (with uncorrelated Rayleigh fading) and with a cellular network consisting of $64$ small cells deployed at the same $64$ AP locations.
+
+
+\begin{figure}[t!]
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/section4_figure2}
+\end{overpic} 
+                \caption{Average NMSE for a single UE in the three different setups illustrated in Figure~\ref{fig:basic-comparison-cellular-cellfree} on p.~\pageref{fig:basic-comparison-cellular-cellfree}.}    \vspace{+2mm}
+	\label{fig:basic-NMSE-comparison-cellular-cellfree} 
+\end{figure}
+
+
+Figure~\ref{fig:basic-NMSE-comparison-cellular-cellfree} shows the average of the NMSE in~\eqref{eq:nmse-uncorrelated-unique-pilot} for different uniformly distributed UE positions. The pilot transmit power $\eta_k$ varies from $1$\,mW to $1$\,W and the pilot length is $\tau_p = 10$. When comparing the three setups, we notice that it is preferable to have many single-antenna APs rather than a single AP with a large co-located array (as in conventional Cellular Massive MIMO). However, the small-cell network achieves better average estimation accuracy than the cell-free architecture since the AP with the lowest NMSE is always chosen in the small-cell network. This is in agreement with the results of Figure~\ref{fig:basic-NMSE-analysis-twoAPs} where the lowest NMSE is achieved when only using the AP with the best channel. However, this does not mean that the cell-free architecture will achieve a lower communication performance, but only that the varying estimation quality must be taken into account when the cell-free network is combining the received signals from multiple APs.
+
+\enlargethispage{\baselineskip}
+
+The SE gain of using a cell-free architecture will be quantified in later sections of this monograph, but we will give an indication of the performance gain by considering the SNR that is achieved in the data detection.
+Suppose only UE $k$ is active in the network, then the local estimate in \eqref{eq:uplink-data-estimate} of the data signal $s_{k}$  can be expressed as
+\begin{align} \notag
+\widehat{s}_{kl} &= \underbrace{\vect{v}_{kl}^{\Htran} \widehat{\vect{h}}_{kl}s_{k}}_{\textrm{Signal over estimated channel}} + \underbrace{\vect{v}_{kl}^{\Htran} \widetilde{\vect{h}}_{kl}s_{k}}_{\textrm{Signal over unknown channel}} +  \underbrace{\vect{v}_{kl}^{\Htran}{\bf n}_{l}}_{\textrm{Noise}}
+\label{eq:uplink-data-estimate-single-UE}.
+\end{align} 
+This is the data estimate at AP $l$.
+All the local estimates of the serving APs are sent to a CPU where the final estimate of $s_k$ is obtained as
+\begin{align} \notag
+\widehat s_{k} &= \sum_{l\in \mathcal{M}_k} \widehat s_{kl} \\
+&= \sum_{l\in \mathcal{M}_k} \vect{v}_{kl}^{\Htran} \widehat{\vect{h}}_{kl}s_{k} +  \sum_{l\in \mathcal{M}_k}\vect{v}_{kl}^{\Htran} \widetilde{\vect{h}}_{kl}s_{k} + \sum_{l\in \mathcal{M}_k} \vect{v}_{kl}^{\Htran}{\bf n}_{l}.
+\end{align}
+For simplicity, we assume the APs apply \gls{MR} combining with $\vect{v}_{kl} = \widehat{{\bf h}}_{kl}$ and compute the resulting SNR as
+\begin{align} \notag
+\mathacr{SNR}_{k}^{\text{data}} &= 
+\frac{\mathbb{E} \left\{ \left| \sum\limits_{l\in \mathcal{M}_k} \! \vect{v}_{kl}^{\Htran} \widehat{\vect{h}}_{kl}s_{k} \right|^2 \right\}}{ \mathbb{E} \left\{ \left| \sum\limits_{l\in \mathcal{M}_k} \! \vect{v}_{kl}^{\Htran}{\bf n}_{l} \right|^2 \right\}}  = 
+\frac{p_k \mathbb{E} \left\{ \left| \sum\limits_{l\in \mathcal{M}_k} \! \| \widehat{\vect{h}}_{kl} \|^2 \right|^2 \right\}}{ \sigmaUL \sum\limits_{l\in \mathcal{M}_k}  \mathbb{E} \left\{ \| \widehat{{\bf h}}_{kl} \|^2 \right\}} 
+\\ &=
+\frac{\sum\limits_{l\in \mathcal{M}_k} \! p_k  \tr \left( (\vect{R}_{kl}-\vect{C}_{kl})^2 \right)  }{ \sum\limits_{l\in \mathcal{M}_k} \! \sigmaUL  \tr(\vect{R}_{kl}-\vect{C}_{kl}) } + \sum\limits_{l\in \mathcal{M}_k} \! \! \frac{p_k \tr(\vect{R}_{kl}-\vect{C}_{kl}) }{\sigmaUL} \label{eq:SNR-simple} 
+\end{align}
+where the expectations with respect to the channel estimates are computed using Lemma~\ref{lemma:fourth-order-moment-Gaussian-vector} on p.~\pageref{lemma:fourth-order-moment-Gaussian-vector}. We stress that this is only one of the many ways to compute SNRs in the presence of estimation errors.
+
+\begin{figure}[t!]
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/section4_figure3}
+\end{overpic} 
+                \caption{CDF of the SNR~\eqref{eq:SNR-simple} achieved in the uplink by the UE with MR combining and MMSE estimation in the same three setups as in Figure~\ref{fig:basic-NMSE-comparison-cellular-cellfree}.}    \vspace{+2mm}
+	\label{fig:basic-signal-gain-comparison-cellular-cellfree} 
+\end{figure}
+
+Figure~\ref{fig:basic-signal-gain-comparison-cellular-cellfree} shows the distribution of the SNR value in~\eqref{eq:SNR-simple} achieved at different random UE locations. We consider the same setups as in Figure~\ref{fig:basic-NMSE-comparison-cellular-cellfree} and let $p_k = \eta_k = 10$\,mW.
+The results show that the cell-free network achieves a higher \gls{SNR} in the data detection than the corresponding small-cell setup (and Cellular Massive MIMO). This happens despite the lower average estimation quality of the channel estimates, as reported in Figure~\ref{fig:basic-NMSE-comparison-cellular-cellfree}. The reason is that the cell-free network achieves a beamforming gain by coherently processing the signals at multiple APs. 
+An even larger benefit will be achieved in a  setup with multiple UEs, where the cell-free system excels at mitigating interference, as first illustrated in Section~\ref{subsec:benefit2} on p.~\pageref{subsec:benefit2}. This will be thoroughly analyzed in later sections.
+
+
+\enlargethispage{\baselineskip}
+
+\subsection{Impact of Pilot Contamination}
+
+
+\begin{figure}[t!]
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/section4_figure4}
+\end{overpic} 
+                \caption{NMSE as a function of the SNR ${\mathacr{SNR}_{2l}^{\text{pilot}}}$ of the interfering pilot signal. The effective SNR of the desired UE is $\mathacr{SNR}_{1l}^{\text{pilot}} =0, 10$, or $20$\,dB. The dotted lines correspond to the NMSE in the absence of pilot contamination.}    \vspace{+2mm}
+	\label{fig:basic-NMSE-pilot-contamination-effect} 
+\end{figure}
+
+We now shift focus to the impact of pilot contamination. We concentrate on an arbitrary single-antenna AP $l$ and assume that it wants to \linebreak estimate the channel of UE $1$, while UE $2$ uses the same pilot. From \eqref{eq:nmse-uncorrelated-AP-l-1}, we obtain
+\begin{align}
+\mathacr{NMSE}_{1l}=1 - \frac{ \mathacr{SNR}_{1l}^{\text{pilot}} }{ \mathacr{SNR}_{1l}^{\text{pilot}} +\mathacr{SNR}_{2l}^{\text{pilot}} + 1 } .\label{eq:nmse-uncorrelated}
+\end{align}
+The NMSE increment caused by pilot contamination depends on how much the interference is affecting the term $\mathacr{SNR}_{2l}^{\text{pilot}} + 1$ in the denominator of \eqref{eq:nmse-uncorrelated}, which accounts for interference and noise. The contamination is small when the value is close to one.
+Figure~\ref{fig:basic-NMSE-pilot-contamination-effect} shows the NMSE of the desired channel estimate for ${\mathacr{SNR}_{1l}^{\text{pilot}}}  \in \{0,10,20\}$\,dB  and varying values of ${\mathacr{SNR}_{2l}^{\text{pilot}}}$ from $-30$ to $20$\,dB.
+The dotted lines correspond to the case without pilot contamination (i.e., ${\mathacr{SNR}_{2l}^{\text{pilot}}} =0$) and are reported as references. The NMSE increases when the interfering signal becomes stronger, particularly when the desired UE has a strong channel to the AP. However, the pilot contamination effect is negligible whenever the interfering signal is $10$\,dB weaker than the noise. We can thus conclude that each UE is only sensitive to pilot contamination from UEs that are relatively close to its serving APs. 
+Another implication is that the UEs that an AP serves should preferably have different pilot sequences to limit pilot contamination \cite{Bjornson2020a}, \cite{Sabbagh2018a}. This is aligned with the Cellular Massive MIMO literature where orthogonal pilots~are normally utilized within every cell but reused in different cells \cite{massivemimobook},~\cite{Marzetta2016a}.
+
+
+\begin{figure}[t!]
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/section4_figure5}
+		\put(15,18){Reference: $-10$\,dB}
+\end{overpic} 
+                \caption{The effective SNR~\eqref{eq:effective-pilot-SNR} of an interfering pilot signal depends on the distance between the AP and the interfering UE. In this simulation, the same propagation model as in Figure~\ref{fig:basic-NMSE-comparison-cellular-cellfree} is used. Pilot contamination has a negligible impact on the NMSE when the SNR is below the reference curve of $-10$\,dB.}    \vspace{+1mm}
+	\label{fig:basic-NMSE-distance-effect} 
+\end{figure}
+
+
+
+The distance between the AP and the interfering UE is one of the main factors determining the SNR of the interfering signal. Figure~\ref{fig:basic-NMSE-distance-effect} shows the effective SNR~\eqref{eq:effective-pilot-SNR} as a function of the propagation distance using the same parameter values as in Figure~\ref{fig:basic-signal-gain-comparison-cellular-cellfree}.
+The SNR reduces with the distance but can be above the $-10$\,dB reference curve for several hundred meters. Hence, pilot contamination is a non-negligible issue in practice. However, it is a gradual effect so the largest impact occurs when the interfering UE is rather close to the AP.
+The effective SNR increases by 10\,dB when increasing the pilot length from $\tau_p=1$ to  $\tau_p=10$, which affects both the desired signal and contaminating signal. Even if the signal-to-contamination ratio remains the same, the propagation distances for which pilot contamination is a problem will grow since it is determined by comparing the contamination with the noise. On the other hand, each pilot can be reused less frequently among the UEs when  $\tau_p$ is increased. Hence, we can expect the use of longer pilots to be beneficial when it comes to limiting the pilot contamination, as long as we assign the pilots properly to the UEs. We return to this in Section~\ref{sec:pilot-assignment}.
+Importantly, the curves in Figure~\ref{fig:basic-NMSE-distance-effect} will move up or down depending on the transmit power, bandwidth, and propagation model so it is not the exact numbers that matter but the general behavior.
+
+\enlargethispage{\baselineskip}
+
+\subsection{Impact of Spatial Correlation}
+\label{sec:impact-of-spatial-correlation}
+We now quantify the impact of spatial correlation among AP antennas on the channel estimation accuracy and pilot contamination. 
+
+\subsubsection{Impact of Spatial Correlation on Estimation Accuracy}
+Consider the spatially correlated channel $\vect{h} \sim \CN ( \vect{0}_N, \vect{R}  )$ between an arbitrary AP and an arbitrary UE, where the \gls{UE} and \gls{AP} indices are dropped for simplicity. We assume the UE uses a unique pilot sequence, thus the \gls{NMSE} in \eqref{eq:nmse-correlated-AP-l} can be simplified as
+\begin{equation} \label{eq:nmse2}
+\mathacr{NMSE}=1-\frac{\eta \tau_p \tr\left(\vect{R} \left(\eta\tau_p\vect{R}+\sigmaUL\vect{I}_N\right)^{-1}   \vect{R}\right) }{ \tr( \vect{R} )}.
+\end{equation}
+Let $\vect{R} = \vect{U} \vect{\Lambda} \vect{U}^{\Htran}$ denote the eigenvalue decomposition of the spatial correlation matrix, where the columns of the unitary matrix $\vect{U} \in \mathbb{C}^{N \times N}$ contain the eigenvectors (also called eigendirections) and the diagonal matrix $\vect{\Lambda} = \diag(\lambda_1,\ldots,\lambda_N)$ contains the corresponding non-negative eigenvalues where $\sum_{n=1}^N\lambda_n=\tr( \vect{R} )=N\beta$.
+By using the eigenvalue decomposition, the NMSE in \eqref{eq:nmse2} can be rewritten as
+\begin{align} \label{eq:nmse-without-pilot-contamination}
+\mathacr{NMSE}&=1-\frac{\eta \tau_p \tr\left(\vect{U}\vect{\Lambda}\vect{U}^{\Htran} \left(\eta\tau_p\vect{U}\vect{\Lambda}\vect{U}^{\Htran}+\sigmaUL\vect{I}_N\right)^{-1}  \vect{U}\vect{\Lambda}\vect{U}^{\Htran}\right) }{ N\beta} \nonumber \\
+&=1-\frac{\eta\tau_p}{N\beta}\tr\left(\vect{\Lambda} \left( \eta \tau_p \vect{\Lambda}+\sigmaUL\vect{I}_N \right)^{-1} \vect{\Lambda}\right) \nonumber \\
+&=1-\frac{\eta\tau_p}{N\beta}\sum_{n=1}^N \frac{\lambda_n^2}{\eta\tau_p\lambda_n+\sigmaUL}\nonumber\\
+&=1-\frac{1}{N\beta}\sum_{n=1}^N \frac{\mathacr{SNR}^{\text{pilot}}\lambda_n^2}{\mathacr{SNR}^{\text{pilot}}\lambda_n+\beta}
+\end{align}
+where the second equality follows from moving the matrices $\vect{U}$ and $\vect{U}^{\Htran}$ into the inverse, applying the cyclic shift property of the trace (see the second identity in Lemma~\ref{lemma-matrix-identities} on p.~\pageref{lemma-matrix-identities}), and utilizing that $\vect{U}\vect{U}^{\Htran}= \vect{U}^{\Htran}\vect{U}=\vect{I}_N$. An important observation from \eqref{eq:nmse-without-pilot-contamination} is that the NMSE depends on the eigenvalues but not on the eigenvectors. This is a direct consequence of the fact that the estimation error correlation matrix $\vect{C} = \vect{R} - \eta \tau_p \vect{R} \left(\eta\tau_p\vect{R}+\sigmaUL\vect{I}_N\right)^{-1}   \vect{R} $ has the same eigenvectors as the spatial correlation matrix $\vect{R}$ \cite[Sec.~3.3]{massivemimobook}.
+
+We cannot change the spatial correlation matrices of a practical channel, but it is anyway important to understand what impact the correlation has. To this end, we now search for the eigenvalue distributions that maximize and minimize the NMSE under the constraint that $\sum_{n=1}^N\lambda_n=N\beta$. We will make use of the following result.
+
+\begin{lemma}\label{lemma:nmse-concave} The function $\mathacr{NMSE} : \mathbb{R}_{\geq 0}^{N} \to \mathbb{R}_{\geq 0}$ of the eigenvalue vector $\boldsymbol{\lambda}=[ \lambda_1 \, \ldots \, \lambda_N ]^{\Ttran}$ given in \eqref{eq:nmse-without-pilot-contamination} is strictly concave on its domain.
+\end{lemma}
+\begin{proof}
+The proof is available in Appendix~\ref{proof-of-lemma:nmse-concave} on p.~\pageref{proof-of-lemma:nmse-concave}.
+\end{proof}
+
+A consequence of the strict concavity stated in Lemma~\ref{lemma:nmse-concave} is that the maximum value of the NMSE in \eqref{eq:nmse-without-pilot-contamination} under the average channel gain constraint $\sum_{n=1}^N\lambda_n=N\beta$ is unique and achieved when all eigenvalues are equal: $\lambda_n=\beta$, for $n=1,\ldots,N$. This shows that, among all the spatial correlation matrices $\vect{R}$ that satisfy $\tr( \vect{R} )=N\beta$, the uncorrelated fading model with $\vect{R}=\beta\vect{I}_N$ provides the largest NMSE.
+
+To identify the spatial correlation that instead minimizes the NMSE, we need the following lemma.
+
+\begin{lemma}\label{lemma:nmse-eigenvalue-distribution} Suppose the eigenvalues of $\vect{R}$ are sorted in decaying order:
+\begin{equation}
+\lambda_1\geq\lambda_2\geq\ldots\lambda_r>\lambda_{r+1}=\ldots=\lambda_N=0
+\end{equation}
+where $r\leq N$ is the rank. Let $\boldsymbol{\lambda}=[\lambda_1 \, \ldots \, \lambda_{r-2} \ \lambda_{r-1} \ \lambda_{r} \ 0  \, \ldots \, 0]^{\Ttran}$ denote the corresponding eigenvalue vector. Then, $\mathacr{NMSE}\left(\boldsymbol{\lambda}\right)>\mathacr{NMSE}\left(\boldsymbol{{\lambda}^\prime}\right)$ where $\boldsymbol{{\lambda}^\prime}=[\lambda_1 \, \ldots \, \lambda_{r-2} \ \lambda_{r-1}+\lambda_{r} \ 0 \, \ldots \, 0 ]^{\Ttran}$.
+\end{lemma}
+\begin{proof}
+The proof is available in Appendix~\ref{proof-of-lemma:nmse-eigenvalue-distribution} on p.~\pageref{proof-of-lemma:nmse-eigenvalue-distribution}.
+\end{proof}
+
+\begin{figure}[t!]
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/section4_figure6}
+\end{overpic} 
+                \caption{NMSE in the estimation of an arbitrary UE's spatially correlated channel, as a function of the azimuth ASD $\sigma_{\varphi}$. The local scattering model~\eqref{eq:elements-of-R} with Gaussian angular distribution is used. The results are averaged over different nominal azimuth angles and the elevation angle is $\theta = -15^\circ$. The effective SNR~\eqref{eq:effective-pilot-SNR} is $10$\,dB and the AP is equipped with $N=8$ antennas.}    \vspace{+2mm}
+	\label{fig:basic-NMSE-ASD-effect} 
+\end{figure}
+
+
+This lemma provides a procedure for reducing the NMSE by modifying the two smallest non-zero eigenvalues of the correlation matrix. More precisely, they are replaced with one eigenvalue being the sum of two smallest non-zero eigenvalues and one eigenvalue being identically zero.
+If we repeat this procedure multiple times, we will progressively reduce the NMSE and eventually reach the case when $\lambda_1=N\beta$, and $\lambda_n=0$, for $n\geq 2$, which provides the smallest possible NMSE among all spatial correlation matrices $\vect{R}$ that satisfy $\sum_{n=1}^N\lambda_n=\tr( \vect{R} )=N\beta$.
+This corresponds to the case where $\vect{R}=\lambda_1\vect{u}_1\vect{u}_1^{\Htran}$ is a rank-one matrix and thus represents the strongest type of spatial correlation.
+Any rank-one correlation matrix with the same  $\lambda_1=N\beta$ achieves the same estimation accuracy. 
+The conclusion is that the higher the spatial correlation is, the easier it is to estimate the channel since there is more structure to be utilized by the estimator.
+
+
+
+\begin{figure}[t!]
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/section4_figure7}
+\end{overpic} 
+                \caption{NMSE in the estimation of an arbitrary spatially correlated channel, as a function of the number of antennas $N$ at the AP.
+                The effective SNR~\eqref{eq:effective-pilot-SNR} is $0,10$, or $20$\,dB and the spatial correlation is modeled as in Figure~\ref{fig:basic-NMSE-ASD-effect} with $\sigma_{\varphi}=\sigma_{\theta}=10^\circ$.}    \vspace{+2mm}
+	\label{fig:basic-NMSE-numOfAntennas-effect} 
+\end{figure}
+
+The above properties are illustrated numerically in Figure~\ref{fig:basic-NMSE-ASD-effect}, where the \gls{NMSE} is shown for the local scattering model in~\eqref{eq:elements-of-R}, as a function of the azimuth \gls{ASD} $\sigma_{\varphi}$. The results are averaged over different nominal azimuth angles, while the elevation angle is fixed at $\theta = -15^\circ$ and the elevation ASD is either $\sigma_{\theta} = 0^\circ$ or $\sigma_{\theta} = 10^\circ$.
+The effective \gls{SNR}~\eqref{eq:effective-pilot-SNR} is 10\,dB and there are $N=8$ antennas at the AP. Figure~\ref{fig:basic-NMSE-ASD-effect} shows that the NMSE is smaller when the \gls{ASD} reduces (i.e., with higher spatial correlation). The \gls{NMSE} for uncorrelated channels is shown in Figure~\ref{fig:basic-NMSE-ASD-effect} as a reference.  For strongly spatially correlated channels, the NMSE can be one order of magnitude smaller than in the uncorrelated case, but this benefit is basically lost when $\sigma_{\varphi}\ge 40^\circ$.
+The ASD in the elevation dimension only affects the NMSE when the ASD in the azimuth dimension is small. The lower bound for fully correlated channels is attained in the extreme case of $\sigma_{\varphi}=\sigma_{\theta} = 0^\circ$.
+
+\enlargethispage{\baselineskip}
+
+The impact of the number of AP antennas is studied in Figure~\ref{fig:basic-NMSE-numOfAntennas-effect} using the same correlation model as in Figure~\ref{fig:basic-NMSE-ASD-effect} but with the ASDs $\sigma_{\varphi}=\sigma_{\theta}=10^\circ$. The NMSE is shown as a function of the number of antennas for effective SNRs of $0$, $10$, and $20$\,dB. The NMSE reduces as the number of AP antennas increases since the channel realizations observed at adjacent antennas are strongly correlated, which is utilized by the MMSE estimator to improve the estimation quality.
+However, only marginal gains are observed for $N\ge 8$, irrespective of the effective SNR. 
+This happens when the ULA has become so wide that the outmost antennas experience almost uncorrelated channel realizations.
+
+
+\subsubsection{Impact of Spatial Correlation on Pilot Contamination}
+
+Next, we will analyze the impact of spatial correlation on pilot contamination. Assume UE $1$ and UE $2$ use the same pilot sequence and consider an arbitrary AP whose index is omitted.
+The \gls{NMSE} of UE 1 in \eqref{eq:nmse-correlated-AP-l} takes the form
+\begin{align} \label{eq:nmse-lower-bound}
+\mathacr{NMSE}_1 =1-\frac{\eta_1 \tau_p \tr\left(\vect{R}_1 \left(\eta_1 \tau_p\vect{R}_1+ \eta_2\tau_p \vect{R}_2+\sigmaUL\vect{I}_N\right)^{-1}   \vect{R}_1\right) }{ \tr( \vect{R}_1 )}.
+\end{align}
+Unlike the NMSE in \eqref{eq:nmse-uncorrelated} for single-antenna APs, \eqref{eq:nmse-lower-bound} depends not only on the effective SNRs but also on the full spatial correlation matrices $\vect{R}_1$ and $\vect{R}_2$ of the UEs. We now observe that \eqref{eq:nmse-lower-bound} can be lower bounded by Lemma~\ref{lemma:scaling-mse} on p.~\pageref{lemma:scaling-mse} as
+\begin{align} \label{eq:nmse-lower-bound-no-interference}
+\mathacr{NMSE}_1 \geq 1-\frac{\eta_1 \tau_p \tr\left(\vect{R}_1 \left(\eta_1 \tau_p\vect{R}_1+\sigmaUL\vect{I}_N\right)^{-1}   \vect{R}_1\right) }{ \tr( \vect{R}_1 )}
+\end{align}
+where the equality occurs if and only if the correlation matrices are spatially orthogonal $\vect{R}_1\vect{R}_2 = \vect{0}_{N \times N}$. This  condition means that the eigenspaces are non-overlapping. If $\vect{R}_1 \neq \vect{0}_{N \times N}$ or $\vect{R}_2 \neq \vect{0}_{N \times N}$, the condition can only be satisfied if both $\vect{R}_1$ and $\vect{R}_2$ are rank-deficient.
+
+
+ In the case of spatially orthogonal correlation matrices (i.e., $\vect{R}_1\vect{R}_2 = \vect{0}_{N \times N}$), the NMSE is completely unaffected by the interfering UE. Therefore, in theory, it is possible to completely avoid pilot contamination between the UEs. While the orthogonality condition is unlikely to hold in practice, a good rule-of-thumb is to assign pilots to the UEs such that
+$\tr\left(\vect{R}_1\vect{R}_2\right)$ is small.
+
+\begin{figure}[t!]
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/section4_figure8}
+	\put(15,48){\footnotesize{Uncorrelated fading: same SNR}}
+\put(48,32){\footnotesize{Uncorrelated fading: 20\,dB weaker}}
+\end{overpic} 
+                \caption{NMSE in the estimation of the desired UE's channel when there is an interfering UE, which uses the same pilot. There are $N = 4$ antennas. The local scattering model is used with $\theta_1 = \theta_2= -15^\circ$, $\sigma_{\varphi}=10^\circ$, and $\sigma_{\theta}=0^\circ$.
+The desired UE has a nominal azimuth angle of $30^\circ$, while the azimuth angle of the interfering UE is varied between $-60^\circ$ and $60^\circ$. The NMSE with uncorrelated fading is shown as references.}  
+	\label{fig:basic-NMSE-spatial-correlation-effect-pilot-contamination} 
+\end{figure}
+
+\enlargethispage{\baselineskip} 
+
+Figure~\ref{fig:basic-NMSE-spatial-correlation-effect-pilot-contamination} shows the \gls{NMSE} of the estimate of the desired channel with $N=4$ antennas. The spatial correlation is modeled by the local scattering model with elevation angles $\theta_1 = \theta_2= -15^\circ$ and ASDs $\sigma_{\varphi}=10^\circ$,  $\sigma_{\theta}=0^\circ$.
+The azimuth angle of the desired UE is $\varphi_1 = 30^\circ$, while the azimuth angle $\varphi_2$ of the interfering UE is varied between $-60^\circ$ and $60^\circ$.
+The effective \gls{SNR} of the desired \gls{UE} is 10\,dB and the interfering signal either has the same SNR or is 20\,dB weaker. When the \gls{UE} angles are well-separated, the \gls{NMSE} is below $0.1$, irrespective of how strong the interfering pilot signal is. This shows that pilot contamination has a minor impact on the estimation quality when the \glspl{UE} have well-separated eigenspaces. The \gls{NMSE} increases when the \glspl{UE} have similar angles and reaches a peak at $\varphi_1=\varphi_2$. The variations are large when the interfering \gls{UE} has a strong channel to the \gls{AP}, while the variations are small when the interfering signal is 20\,dB weaker. 
+The figure also includes reference curves for the case of uncorrelated fading, where the NMSE is angle-independent.
+We notice that the NMSE with correlated fading is always lower (or equal) to the NMSE with uncorrelated fading, even in the worst-case scenario where the desired and interfering UEs have identical angles.
+Hence, spatial channel correlation is helpful in practice to improve the estimation quality under pilot contamination.
+
+
+\section{Pilot Assignment and Dynamic Cooperation Cluster Formation}
+\label{sec:pilot-assignment}
+\label{sec:selecting-DCC}
+
+The $\tau_p$ mutually orthogonal pilots must be reused among the UEs and can be assigned to them in an effort to limit the pilot contamination effect. The examples given earlier in this section have demonstrated that this entails keeping a large physical distance between the pilot-sharing UEs, so that each AP that serves a given UE will be subject to pilot contamination that drowns in the receiver noise. This is a good way of picturing what we want to achieve when performing a pilot assignment but it is a simplification since the observations were made using a propagation model in which the SNR is a strictly decreasing function of the distance. In reality, the SNR and propagation distance are correlated, but there is also a fair amount of random variations that can be modeled as shadow fading.
+Hence, when designing pilot assignment algorithms, we should not take geometric parameters, such as the locations on a map, as input but instead consider the spatial correlation matrices $\vect{R}_{kl}$. Those matrices are describing both the average channel gains $\beta_{kl}$, including shadow fading, and the spatial channel characteristics.
+
+The pilot assignment is a combinatorial problem. There are $(\tau_p)^K$ possible assignments in a setup with $K$ UEs and $\tau_p$ pilots, thus the complexity of evaluating all of them grows exponentially with the number of UEs.
+The implication is that only suboptimal methods are feasible in practice. We will present one such algorithm in this section, and it will be utilized for performance evaluation in later sections. The algorithm will iteratively assign pilots to the UEs by always selecting the one that leads to the least pilot contamination. This is a so-called greedy algorithm and comes with no performance guarantees, but it will effectively avoid worst-case situations where closely spaced UEs (i.e., UEs with similar SNRs) are assigned to the same pilot. It is also practically attractive since the pilot assignment decision for a UE is made locally at a neighboring AP, instead of involving all APs in the network.
+We will provide a literature review of alternative pilot assignment methods in Section~\ref{sec:pilot-assignment-advanced} on p.~\pageref{sec:pilot-assignment-advanced}.
+
+\enlargethispage{\baselineskip} 
+
+The formation of the \gls{DCC} is tightly connected to the pilot assignment. We noted earlier in this section that a single-antenna AP can only reasonably serve one UE per pilot, namely the one having the strongest channel gain. The reason is that this UE would cause strong pilot contamination to all the pilot-sharing UEs if the AP tried to serve some of those UEs as well. Consequently, a basic algorithm for cluster formation is to first assign pilots to the UEs and then let each AP serve exactly $\tau_p$ UEs; for every pilot, the AP serves the UE with the strongest channel gain among the subset of UEs that have been assigned that pilot. 
+This is most likely a suboptimal algorithm, particularly for multiple-antenna APs which could use spatial correlation to distinguish between UEs that send the same pilot and thereby serve multiple UEs per pilot if they have nearly non-overlapping eigenspaces (recall Figure~\ref{fig:basic-NMSE-spatial-correlation-effect-pilot-contamination}). However, it makes good practical sense since every AP can make its clustering decisions locally.
+This is the clustering algorithm that will be utilized for performance evaluation in later sections. We will provide a literature review of alternative methods in Section~\ref{sec:selecting-DCC-advanced} on p.~\pageref{sec:selecting-DCC-advanced}.
+
+
+\subsubsection{An Algorithm for Joint Pilot Assignment and Cluster Formation}
+
+The basic pilot assignment algorithm consists of two steps. First, the $\tau_p$ UEs with indices from $1$ to $\tau_p$ are assigned mutually orthogonal pilots: UE $k$ uses pilot $k$ for $k=1,\ldots,\tau_p$.
+The remaining UEs, with indices from $\tau_p+1$ to $K$, are then assigned pilots one after the other. UE $k$ begins by determining which AP it has the strongest channel to. The index of this AP is computed as
+\begin{equation} \label{eq:Master-AP}
+\ell = \underset{l\in\{1,\ldots,L\}}{\mathrm{arg \, max}} \,\,\,  \beta_{kl}.
+\end{equation}
+Since AP $\ell$ is expected to contribute strongly to the service of UE $k$, it is preferable to assign UE $k$ to the pilot for which AP $\ell$ experiences the least pilot contamination. Hence, for each pilot $t$, the AP can compute the sum of the average channel gains $\beta_{i \ell}$ of the UEs that have already been assigned to that pilot. The AP then identifies the index of the pilot where the pilot interference is minimized:
+\begin{equation} \label{eq:preferred-pilot}
+\tau = \underset{t\in\{1,\ldots,\tau_p\}}{\mathrm{arg \, min}} \,\,\, \condSum{i=1}{t_i = t}{k-1} \beta_{i \ell}.
+\end{equation}
+This pilot is assigned to the UE and the algorithm then continues with the next UE. When all the UEs have been assigned to pilots, the clusters can be created. Each AP goes through each pilot and identifies which of the UEs have the largest channel gain among those using that pilot. The AP will serve that UE.
+The procedure is summarized in Algorithm~\ref{alg:basic-pilot-assignment}.
+
+\begin{algorithm}
+	\caption{Basic pilot assignment and cooperation clustering} \label{alg:basic-pilot-assignment}
+	\begin{algorithmic}[1]
+	\State {\bf Initialization:} Set $\mathcal{M}_1 = \ldots = \mathcal{M}_K = \emptyset$
+	\For{$k=1,\ldots,\tau_p$} 
+		\State $t_k \gets k$ \Comment{Assign orthogonal pilots to first $\tau_p$ UEs}
+	\EndFor
+	\For{$k=\tau_p+1,\ldots,K$}
+		\State $\ell \gets \underset{l\in\{1,\ldots,L\}}{\mathrm{arg \, max}} \,\,\, \beta_{kl}$ \Comment{Find the best AP for UE $k$}
+		\State $\tau \gets \underset{t\in\{1,\ldots,\tau_p\}}{\mathrm{arg \, min}} \,\,\, \condSum{i=1}{t_i = t}{k-1} \beta_{i \ell}$ \Comment{Find pilot with least interference at AP $\ell$}
+		\State $t_k \gets \tau$ \Comment{Assign pilot $\tau$ to UE $k$}
+	\EndFor
+	\For{$l=1,\ldots,L$}
+		\For{$t=1,\ldots,\tau_p$}
+			\State $i \gets \underset{k\in\{1,\ldots,K\} : t_k = t}{\mathrm{arg \, max}}  \,\,\, \beta_{k l}$ \Comment{Find UE that AP $l$ serves on pilot $t$}
+			\State $\mathcal{M}_i \gets \mathcal{M}_i  \cup \{ l \}$
+		\EndFor
+	\EndFor
+		\State {\bf Output:} Pilot assignment $t_1,\ldots,t_K$ and DCCs $\mathcal{M}_1,\ldots,\mathcal{M}_K $
+	\end{algorithmic}
+\end{algorithm}
+
+
+This algorithm resembles the ones proposed in \cite{Bjornson2020a}, \cite{Chen2016a}. The key idea was that whenever a new UE is admitted to the network, it begins by identifying the AP that it has the strongest channel gain to. In practical systems, the APs are periodically broadcasting synchronization signals to convey basic access information. The channel gains can be measured based on these signals. The accessing UE computes $\ell$ according to \eqref{eq:Master-AP} and appoints AP $\ell$ as its \emph{Master AP}. Note that this selection is made in a user-centric manner.
+The UE also uses the broadcasted signal to synchronize to the AP. The UE can contact its Master AP via a standard random access procedure \cite{sanguinetti13bis}, \cite{Sesia09}. 
+The Master AP computes the preferred pilot $\tau$ using \eqref{eq:preferred-pilot} and informs the surrounding APs of the existence of the new UE. The surrounding APs can then determine if they should change which UEs to serve on pilot $\tau$. This is a dynamic variation of Algorithm~\ref{alg:basic-pilot-assignment} that can be applied when new UEs are entering the system. It can also be applied when a UE has moved to such a large extent that its channel statistics have changed and, therefore, it can be treated as a new UE \cite{Bjornson2020a}, \cite{Chen2016a}. The three main steps of this initial access algorithm are illustrated in Figure~\ref{fig:cellfree_formation}.
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section4/cellfree_formation}
+	\put(0,44){\small{\textbf{Step 1:}}}
+	\put(0,41){\small{UE appoints Master AP}}
+	\put(35,44){\small{\textbf{Step 2:}}}
+	\put(35,41){\small{Pilot assignment}}
+	\put(35,38){\small{invitation to other APs}}
+	\put(68,44){\small{\textbf{Step 3:}}}
+	\put(68,41){\small{Formation of UE cluster}}
+	\end{overpic} \vspace{-5mm}
+	\caption{The procedure from  \cite{Bjornson2020a} for joint initial access, pilot assignment, and cluster formation. This is one way of implementing the steps in Algorithm~\ref{alg:basic-pilot-assignment} in a dynamic fashion.}
+	\label{fig:cellfree_formation}  
+\end{figure}
+
+\enlargethispage{\baselineskip} 
+
+The algorithm described above is distributed in the sense that each UE is managed separately and each AP makes its pilot assignment decisions and cluster formation locally. A key challenge for any distributed cluster formation algorithm, including Algorithm~\ref{alg:basic-pilot-assignment}, is the risk that some UEs will not be served by any AP. This can happen when a particular AP has the strongest channel to more than $\tau_p$ UEs, while it is only allowed to serve at most $\tau_p$ of them.
+A solution to this problem is to require that each UE $k$ is served by at least one AP, namely AP $\ell$ that is selected according to \eqref{eq:Master-AP} \cite{Bjornson2020a}. This will lead to pilot contamination but at least guarantees that each UE is being served.
+Since the intended operating regime of Cell-free Massive MIMO is the ultra-dense regime of $L \gg K$, each AP will on average only have the strongest channel to $K/L < 1$ UEs. Hence, if $\tau_p=10$, there is a very low risk that one AP will have the strongest channel to more than ten UEs, but it can happen.
+
+
+\begin{remark}[Pilot decontamination] \label{remark:decontamination}
+Specific signal processing algorithms have been developed for situations where pilot contamination is the main performance-limiting factor. The general aim is to expand the dimension of the pilot sequences and we will briefly describe three main categories of such \emph{pilot decontamination} approaches. The first category utilizes channel statistics, particularly spatial channel correlation, to assign pilots to UEs to proactively limit the pilot contamination effect. Some key references from the Cellular Massive MIMO literature are \cite{BjornsonHS17}, \cite{Huh2012a}, \cite{Yin2013a}, \cite{Xu2015a}, but these are not directly applicable to cell-free networks where each AP has a small number of antennas. Approaches developed for cell-free networks will be described in Section~\ref{sec:pilot-assignment-advanced} on p.~\pageref{sec:pilot-assignment-advanced}.
+The second approach is to make use of the uplink data as additional pilots, which is known as semi-blind or data-aided estimation \cite{Carvalho1997a}. The main complication is that the data is unknown, but since long sequences of random data samples are fairly orthogonal, the transmitted signals will fall into different subspaces that can be identified by the receiving AP.
+Some key references from the Cellular Massive MIMO literature are \cite{Ma2014a}, \cite{Mueller2014b}, \cite{Neumann2014a}, \cite{Ngo2012a}, \cite{Vinogradova2016a}, \cite{Yin2016a}. The existing algorithms rely \linebreak on asymptotic properties that occur when $N$ and $\tau_c$ are jointly growing large, thus they are not applicable in cell-free networks where~$N$~is~small. The third approach is to superimpose low-power pilot sequences onto the uplink data, thereby making the pilot length equal to the number of uplink samples per coherence block. The benefit is that many more orthogonal pilot sequences can be generated, while the drawback is that the pilots and data will now mutually interfere. There are situations where it brings benefits, as exemplified in \cite{Upadhya2014a}, \cite{Upadhya2017b}, \cite{Verenzuela2017a}, \cite{Verenzuela2020a} for Cellular Massive MIMO. However, it cannot increase the capacity scaling at high SNR, which is achievable by reserving certain dimensions for pilots \cite{Zheng2002a}. We will not cover any of these methods in detail in this monograph, because it will later become apparent that pilot contamination is not a main limiting factor in Cell-free Massive MIMO.
+\end{remark}
+
+
+\newpage
+\section{Summary of the Key Points in Section~\ref{c-channel-estimation}}
+\label{c-channel-estimation-summary}
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+\item Channel estimation is fundamental to perform coherent transmission processing both between AP antennas and across cooperating APs. Since the channels are constant throughout one coherence block and change from one block to another, they need to be estimated once per each
+coherence block.
+
+\item Channel estimation is carried out by sending uplink pilots. The estimates can be either computed at the CPU or at the APs. Both options give the same estimation quality.
+
+\item The MMSE estimator exploits channel statistics to obtain good estimates. The interference generated by pilot-sharing UEs not only reduces the estimation quality but also makes the channel estimates statistically dependent. This phenomenon is called pilot contamination.
+
+
+
+\item Spatial correlation is helpful to improve the estimation quality. With pilot contamination, the correlation between channel estimates is low when the correlation matrices of the pilot-sharing UEs are sufficiently different.
+ 
+\item The estimation accuracy achieved with many single-antenna APs is higher than in the case of a single AP with a large co-located array. The highest estimation accuracy is achieved when the UE is served only by the APs that are close to it. However, coherent transmission processing among APs makes the network robust to lower-quality channel estimates.
+
+\item As a rule-of-thumb, the pilots should be assigned to the UEs so that each AP is close to (i.e., has a high effective SNR to) at most one UE per pilot. Optimal assignment is impractical but a sequential algorithm was provided in Algorithm~\ref{alg:basic-pilot-assignment}.
+
+\end{itemize}
+
+\end{mdframed}
+
+ 
+
+
+
+
+
+
+

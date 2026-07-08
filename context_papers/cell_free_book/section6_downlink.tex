@@ -1,0 +1,770 @@
+%!TEX root = cell-free-book.tex
+
+\chapter{Downlink Operation}
+\label{c-downlink} 
+
+
+This section describes two different downlink implementations of User-centric Cell-free Massive \gls{MIMO}, which are the counterparts of the two uplink operations described in Section~\ref{c-uplink}. Section~\ref{sec:level4-downlink} considers centralized operation in which the precoding is carried out at the CPU, 
+based on the channel estimates that are obtained from the uplink pilot signals gathered from all APs. In this case, the CPU performs all the signal processing for channel estimation and precoding. The achievable SE is derived and different unscalable and scalable centralized transmit precoding schemes are presented. An uplink-downlink duality result is presented to motivate the precoding selection. 
+Distributed operation is then considered in Section~\ref{sec:level2-downlink}. In this case, each AP applies precoding on the basis of locally obtained channel estimates, while the CPU is only encoding the data. The SE is analyzed and different local precoding schemes are presented. A performance comparison is provided in Section~\ref{sec:downlink-performance-comparison}, where the different schemes are analyzed in terms of SE.
+The key points are summarized in Section~\ref{c-downlink-summary}.
+
+\section{Centralized Downlink Operation}
+\label{sec:level4-downlink}
+
+As in the uplink, the most advanced downlink implementation of Cell-free Massive MIMO is a fully centralized operation, where the APs only act as remote-radio heads or relays that transmit signals that the CPU has generated and sent out over the fronthaul links. To explain the setup in further detail, we first recall the downlink system model from Section~\ref{sec:downlink-system-model-ch2} on p.~\pageref{sec:downlink-system-model-ch2}. 
+The received downlink signal at UE $k$ is 
+\begin{align}  \label{eq:downlink-received-UEk}
+y_k^{\rm{dl}} = \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \vect{x}_l + n_k = \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \left( \sum_{i=1}^{K} \vect{D}_{il}  \vect{w}_{il} \varsigma_i \right)+ n_k
+\end{align}
+where $n_k \sim \CN(0,\sigmaDL)$ is the receiver noise and
+\begin{align} 
+\vect{x}_l = \sum_{i=1}^{K} \vect{D}_{il}  \vect{w}_{il} \varsigma_i
+\label{eq:DCC-transmit-downlink2}
+\end{align}
+is the signal transmitted by AP $l$. This signal is created as the sum of the UEs' signals where each term intended for UE $i$ consists of the unit-power downlink data signal $\varsigma_i \in \mathbb{C}$ (with $\mathbb{E} \{|\varsigma_i|^2 \} = 1$) and the effective transmit precoding vector
+\begin{equation} 
+\vect{D}_{il}  \vect{w}_{il} = \begin{cases} \vect{w}_{il} & l \in \mathcal{M}_i \\
+\vect{0}_{N} & l \not \in \mathcal{M}_i.
+\end{cases} \label{eq:effective-precoder}
+\end{equation}
+Recall that $ \vect{D}_{il}=\vect{0}_{N \times N}$ implies $\vect{D}_{il}  \vect{w}_{il}=\vect{0}_N$, thus AP $l$ will only transmit to UE $i$ in the downlink if $ \vect{D}_{il} \neq \vect{0}_{N\times N}$.
+By utilizing the effective precoding vectors defined in \eqref{eq:effective-precoder}, the signal in \eqref{eq:DCC-transmit-downlink2} can be equivalently expressed as a summation only over the $| \mathcal{D}_l |$ UEs served by AP $l$:
+\begin{align} 
+\vect{x}_l = \sum_{i=1}^{K} \vect{D}_{il}  \vect{w}_{il} \varsigma_i  = \sum_{i \in \mathcal{D}_l}  \vect{w}_{il} \varsigma_i.
+\label{eq:DCC-transmit-downlink3}
+\end{align}
+However, we will utilize the original formulation in \eqref{eq:DCC-transmit-downlink2} since it allows us to write the received signal in \eqref{eq:downlink-received-UEk} in compact form as
+\begin{align}
+y_k^{\rm{dl}} =  \sum_{i=1}^{K} \begin{bmatrix} \vect{h}_{k1} \\ \vdots \\ \vect{h}_{kL} \end{bmatrix}^{\Htran} 
+ \begin{bmatrix} \vect{D}_{i1}  \vect{w}_{i1} \\ \vdots \\ \vect{D}_{iL}  \vect{w}_{iL} \end{bmatrix}
+ \varsigma_i + n_k =  \sum_{i=1}^{K} \vect{h}_k^{\Htran} \vect{D}_i \vect{w}_i \varsigma_i + n_k \label{eq:downlink-received-UEk-centralized}
+\end{align}
+where $\vect{h}_k=\left[\vect{h}_{k1}^{\Ttran} \, \ldots \, \vect{h}_{kL}^{\Ttran}\right]^{\Ttran} \in \mathbb{C}^{LN}$ is the collective channel to UE $k$ from all APs, $\vect{w}_i = \left[\vect{w}_{i1}^{\Ttran} \, \ldots \, \vect{w}_{iL}^{\Ttran}\right]^{\Ttran} \in \mathbb{C}^{LN}$ is the collective precoding vector assigned to UE $i$, and the block-diagonal matrix $\vect{D}_i = \diag(\vect{D}_{i1},\ldots,\vect{D}_{iL})$ identifies which APs are transmitting to UE $i$.
+ 
+ 
+ 
+
+
+ 
+ 
+The system model formulation in \eqref{eq:downlink-received-UEk-centralized} provides a network-wide perspective on the downlink transmission
+and is particularly useful when describing the centralized operation. 
+The CPU estimates the downlink channels by exploiting the uplink-downlink channel reciprocity, which says that the uplink and downlink channels are identical within a coherence block.\footnote{Even if the physical channel is the same in the uplink and the downlink, different pieces of transceiver hardware are being used in the two directions. This can create a mismatch between the uplink and downlink channels in practice. This mismatch can be estimated and compensated for using reciprocity calibration algorithms. We will not cover that in this monograph but refer to \cite{Guillaud2005a}, \cite{Nishimori2001a}, \cite{Rogalin2014a}, \cite{Shepard2012a}, \cite{Vieira2017a}, \cite{Vieira2014b}, \cite{Zetterberg2011a} for details and algorithms.}
+Hence, we can utilize the estimation results from Section~\ref{sec:MMSE-channel-estimation} on p.~\pageref{sec:MMSE-channel-estimation} to compute the MMSE estimates of the collective channels in the downlink.
+The estimates are utilized by the CPU  to compute the collective precoding vectors $\{ \vect{D}_i \vect{w}_i:i=1,\ldots,K\}$ for all the $K$ UEs in the network. 
+The signal $\vect{x}_l$ in \eqref{eq:DCC-transmit-downlink2} is generated for each AP using these precoding vectors and the downlink data $\{\varsigma_i:i=1,\ldots,K\}$. Each AP $l$ must only be aware of its $N$-dimensional piece $\vect{D}_{il}  \vect{w}_{il}$ of the collective precoding vector $\vect{D}_{i}  \vect{w}_{i}$ of UE $i$, but the CPU can design the collective vector so that the different pieces fit well together. In particular, the CPU can select the precoding so that the APs can cancel out each others' interference in a way that each AP is unable to figure out individually. This feature is illustrated in Figure~\ref{figure:distributed-beamforming}, where three APs are transmitting to the yellow UE but the signals are creating interference to the red UE. If the interference from the APs are represented by $a,b,c \in \mathbb{C}$, then the CPU can adjust the APs' transmit powers and phases so that $a+b+c \approx 0$. Hence, a viable solution is that each AP creates a large amount of interference but it is canceled by an equally strong amount of interference with the opposite sign from another AP: $b = -a$ and $|a|=|b| \gg 0$.
+Such multi-AP interference cancelation is not possible to implement in a distributed operation where the APs are unaware of each others' channels, making $a,b,c \approx 0$ the only viable way to limit the interference.
+We will return to the centralized and distributed precoding design later in this section. 
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section6/distributed-beamforming}
+		\put(11,26){$a$}
+		\put(22,21){$b$}
+		\put(9,16){$c$}
+		\put(49,27){\small{Centralized interference cancelation:}}
+		\put(49,10){\small{Distributed interference cancelation:}}
+		\put(62,22){$a+b+c \approx  0$}
+		\put(60,5){$a \approx 0$, $b \approx 0$, $c \approx 0$}
+	\end{overpic}  
+	\caption{When three APs transmit to a UE, they will cause interference to other neighboring UEs. In the centralized operation, the CPU can design the precoding so that the APs cancel out others' interference contributions: $a+b+c \approx 0$. In a distributed operation, where $a,b,c$ are selected without cooperation, the only way to cancel interference is to make the individual contributions small: 
+		$a \approx 0$, $b \approx 0$, $c \approx 0$.}
+	\label{figure:distributed-beamforming}  
+\end{figure}
+
+
+
+
+
+Figure~\ref{figure:distributed_centralized_downlink}(a) illustrates how the downlink signal processing is carried at the CPU in the centralized operation.
+We will describe the centralized operation as if the CPU performs the baseband processing while the conversion from digital baseband to analog passband signals is carried out at each AP, but it is also possible that each AP receives a passband signal from the CPU, which is then amplified before transmission.\footnote{This can be implemented using radio-over-fiber technology.}
+
+
+ 
+\enlargethispage{\baselineskip} 
+
+The expression in \eqref{eq:downlink-received-UEk-centralized} is mathematically equivalent to the signal model of a downlink single-cell Massive MIMO system with correlated fading \cite[Sec.~2.3.2]{massivemimobook} if one treats the CPU as a transmitter equipped with $LN$ antennas.
+However, some key differences exist as also previously described in the uplink:
+
+\begin{enumerate}
+
+\item Multiple UEs that are managed by the CPU are using the same pilot, which is normally avoided in single-cell systems.
+
+\item The antennas are distributed at different geographical locations. Hence, the collective channel is distributed as $\vect{h}_k \sim \CN(\vect{0}_{LN}, \vect{R}_{k})$ where the spatial correlation matrix $\vect{R}_{k} = \diag(\vect{R}_{k1}, \ldots,   \vect{R}_{kL}) \in \mathbb{C}^{LN \times LN}$ has a block-diagonal structure, which is normally not the case in single-cell systems. 
+
+\item Many elements of the effective precoding vector $\vect{D}_k\vect{w}_k$ are zero, namely the ones corresponding to APs that are not serving UE $k$.
+
+\item The precoding vectors should be chosen to satisfy per-AP power constraints, instead of a total power constraint as in single-cell Massive MIMO systems. More precisely, we require that
+\begin{equation} \label{eq:downlink-power-constraint}
+\mathbb{E} \left\{ \| \vect{x}_l \|^2 \right\} \leq \rhomax, \quad l=1,\ldots,L
+\end{equation}
+where $\rhomax \geq 0$ denotes the maximum downlink transmit power of an AP. For notational convenience, $\rhomax$ is assumed to be the same for all APs. Note that the expectation in \eqref{eq:downlink-power-constraint} is over both the data signals and channel realizations. The motivation is that we consider a system where the available bandwidth resources are divided into many coherence blocks.  The AP's power amplifier will simultaneously transmit signals over these many blocks with independent channel realizations, thus we can exploit the ability to assign different amounts of energy to different coherence blocks by using a power constraint of the type in \eqref{eq:downlink-power-constraint}.
+\end{enumerate}
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section6/distributed_centralized_downlink}
+		\put(10,28.5){$\vect{x}_l$}
+		\put(0,36){\small{AP $l$}}
+		\put(32,24){\small{CPU}}
+		\put(70,28.5){$\varsigma_1,\ldots,\varsigma_K$}
+		\put(15,13){\small{Data encoding}}
+		\put(15,10){\small{Transmit precoding}}
+		\put(51.5,20){\small{Transmit precoding}}
+		\put(94,24){\small{CPU}}
+		\put(62,36){\small{AP $l$}}
+		\put(76.5,8){\small{Data encoding}}
+		\put(10,0){\small{(a) Centralized operation}}
+		\put(60,0){\small{(b) Distributed operation}}
+	\end{overpic}  
+	\caption{The downlink signal processing tasks can be divided between the APs and CPU in different ways. In the centralized operation, the data encoding and transmit precoding are done at the CPU. In the distributed operation, everything except the data encoding is done at the APs.}
+	\label{figure:distributed_centralized_downlink}  
+\end{figure}
+
+These differences play an important role in the operation of cell-free networks and differentiate the SE analysis in this monograph from what can be found in the literature on Cellular Massive MIMO.
+
+
+
+
+\subsection{Spectral Efficiency With Centralized Operation}
+\label{sec:level4-SE-DL}
+
+We will now derive an achievable SE expression that applies when using any precoding scheme.
+The received signal in \eqref{eq:downlink-received-UEk-centralized} for UE $k$ can be divided into three terms:
+\begin{align} 
+y_k^{\rm{dl}}=\underbrace{\vphantom{\sum_{i=1,i\ne k}^{K}} \vect{h}_{k}^{\Htran} \vect{D}_{k}  \vect{w}_{k} \varsigma_k}_{\textrm{Desired signal}} + \underbrace{\condSum{i=1}{i \neq k}{K}  \vect{h}_{k}^{\Htran}\vect{D}_{i}  \vect{w}_{i} \varsigma_i}_{\textrm{Inter-user interference}} + \underbrace{ \vphantom{\sum_{i=1,i\ne k}^{K}} n_k.}_{\textrm{Noise}} \label{eq:DCC-downlink-three-parts}
+\end{align}
+The UE wants to extract the data from the first term under the presence of inter-user interference and noise, which are represented by the latter two terms. The expression $\vect{h}_{k}^{\Htran} \vect{D}_{k}  \vect{w}_{k}$ that is multiplied with the desired signal $\varsigma_k$ is called the \emph{effective downlink channel}. This terminology~refers to the fact that the precoding is effectively turning the multiple-antenna channel $\vect{h}_{k}$ into the effective single-antenna channel $\vect{h}_{k}^{\Htran} \vect{D}_{k}  \vect{w}_{k}$. The CPU has partial knowledge about the effective channel. It knows the precoding vector (since it is the one selecting it) and it also knows the partial MMSE estimate
+\begin{equation} \label{eq:estimates-central-2}
+\vect{D}_k \widehat{\vect{h}}_{k} 
+= \begin{bmatrix} \vect{D}_{k1} \widehat{\vect{h}}_{k1} \\ \vdots \\  \vect{D}_{kL} \widehat{\vect{h}}_{kL} 
+\end{bmatrix} 
+\sim \CN \left( \vect{0}_{LN}, \eta_k \tau_p \vect{D}_{k} \vect{R}_{k} \vect{\Psi}_{t_k}^{-1} \vect{R}_{k} \vect{D}_{k} \right)
+\end{equation}
+of the channel. This partial MMSE channel estimate was previously defined in \eqref{eq:estimates-central} along with the corresponding estimation error $\vect{D}_k\widetilde{\vect{h}}_k = \vect{D}_k\vect{h}_k - \vect{D}_k\widehat{\vect{h}}_{k} \sim \CN(\vect{0}_{LN},\vect{D}_k\vect{C}_k)$  with $\vect{C}_k = \diag(\vect{C}_{k1}, \ldots, \vect{C}_{kL})$.
+
+UE $k$ can transmit in the uplink without knowing the channel but it cannot decode the downlink data without utilizing some information about the effective channel $\vect{h}_{k}^{\Htran} \vect{D}_{k}  \vect{w}_{k}$. We have not defined any functionality for estimating this term. This is not as strange as it might seem but it is a common practice in communication theory to only send pilot signals in one direction (e.g., the uplink) and then let the entity that obtains those estimates transmit in such a way that the effective channel becomes (approximately) a positive scalar that the receiver can estimate without the need for sending pilot signals.
+
+\begin{remark}[Pilots in only uplink direction] \label{remark:pilot-directions}
+Consider a scalar channel $g \in \mathbb{C}$ which is  known at the AP but not at the UE. The AP can then precode the data signal $\varsigma$ using $g^\star/|g|$ so that the received signal becomes $g g^\star/|g| \varsigma = |g| \varsigma$. The UE still does not know the channel, but it knows that the effective channel $|g|$ is positive and it knows the power of the data signal $\varsigma$. The UE can therefore deduce the effective channel by computing the sample average power of the received signal over the received data signals in a coherence block (where the channel $|g|$ is fixed but $\varsigma$ is changing) \cite{Ngo2017a}. However, if the channel is only partially known at the AP (e.g., due to estimation errors or imperfect hardware calibration between uplink and downlink), then it might be necessary to transmit one or multiple downlink pilots as well \cite{Interdonato2019b} (e.g., dedicated demodulation reference signals or using a differential modulation scheme). For historical reasons, this is commonly done in practical networks but will not be considered in this monograph.
+\end{remark}
+
+We will compute an SE expression for the case when the UE knows the average value $\mathbb{E}\left\{\vect{h}_{k}^{\Htran}\vect{D}_{k}\vect{w}_k\right\}$ of the effective channel. This is a deterministic number and can, thus, be easily obtained in practice; deterministic numbers are always assumed known in the capacity analysis since the data transmission spans over infinitely many transmission symbols and coherence blocks.
+We cannot reuse the capacity bound that was provided in Theorem~\ref{proposition:uplink-capacity-general} on p.~\pageref{proposition:uplink-capacity-general} for the centralized operation in the uplink, but instead, we will utilize the alternative SE expression in Theorem~\ref{proposition:uplink-capacity-general-UatF} on p.~\pageref{proposition:uplink-capacity-general-UatF}. We then obtain the following result.
+
+\begin{theorem} \label{theorem:downlink-capacity-level4}
+	An achievable SE of UE $k$ in the downlink with centralized operation is
+	\begin{equation} \label{eq:downlink-rate-expression-level4}
+	\begin{split}
+	\mathacr{SE}_{k}^{({\rm dl},\cent)} = \frac{\tau_d}{\tau_c} \log_2  \left( 1 + \mathacr{SINR}_{k}^{({\rm dl},\cent)}  \right) \quad \textrm{bit/s/Hz}
+	\end{split}
+	\end{equation}
+	where $\mathacr{SINR}_{k}^{({\rm dl},\cent)}$ is the effective SINR
+	\begin{equation} \label{eq:downlink-instant-SINR-level4}
+	\mathacr{SINR}_{k}^{({\rm dl},\cent)} =  \frac{ \left| \mathbb{E}\left \{ \vect{h}_{k}^{\Htran}\vect{D}_{k}{\vect{w}}_{k}\right \} \right|^2  }{  \sum\limits_{i=1}^{K} \mathbb{E} \left\{ \left|  \vect{h}_{k}^{\Htran} \vect{D}_{i} {\vect{w}}_{i} \right|^2 \right\} -  \left| \mathbb{E} \left\{  \vect{h}_{k}^{\Htran} \vect{D}_{k} {\vect{w}}_{k} \right\} \right|^2 +  \sigmaDL.
+	}
+	\end{equation}
+\end{theorem}
+\begin{proof}
+The proof is given in Appendix~\ref{proof-of-theorem:downlink-capacity-level4} on p.~\pageref{proof-of-theorem:downlink-capacity-level4}.
+\end{proof}
+
+The pre-log factor ${\tau_d}/{\tau_c}$ in \eqref{eq:downlink-rate-expression-level4} is the fraction of each coherence block that is used for downlink data transmission. 
+The term $\mathacr{SINR}_{k}^{({\rm dl},\cent)}$ in \eqref{eq:downlink-instant-SINR-level4} takes the form of an effective SINR, which means that the SE matches the capacity of a deterministic single-antenna single-user AWGN channel with an SNR that equals $\mathacr{SINR}_{k}^{({\rm dl},\cent)}$. It also means that the data signal can be encoded and the received signal can be decoded as if we would be communicating over such an AWGN channel. Hence, there is a known way to achieve the SE stated in Theorem~\ref{theorem:downlink-capacity-level4}.
+The numerator of \eqref{eq:downlink-instant-SINR-level4} contains the square of the average effective channel. The denominator equals the total power  $\mathbb{E}\{ | y_k^{\rm{dl}}|^2\} = \sum_{i=1}^{K} \mathbb{E} \{ \left|  \vect{h}_{k}^{\Htran} \vect{D}_{i} {\vect{w}}_{i} \right|^2 \} +  \sigmaDL$ of the received signal minus the useful term from the numerator.
+
+The SE expression in Theorem~\ref{theorem:downlink-capacity-level4} holds for any transmit precoding vector $\vect{w}_{k}$ and selection of the DCC. In fact, it also holds for any channel distribution and not only correlated Rayleigh fading, as assumed in this monograph.
+The expression can be computed for any $\vect{w}_{k}$ by using Monte Carlo methods, which means that each expectation is approximated with the sample average over a large number of random realizations. More precisely, we can generate realizations of the channel estimates in a large set of coherence blocks, compute each term in \eqref{eq:downlink-instant-SINR-level4} for each realization, and then take the average over all these computations. This is the approach that we will use when evaluating the SE numerically later in this section.
+
+\subsection{Centralized Transmit Precoding}
+\label{subsec:centralized-precoding}
+
+The SE expression in Theorem~\ref{theorem:downlink-capacity-level4} depends on the precoding of all UEs in the entire network. This makes the selection of transmit precoding vectors much more complicated than selecting receive combining vectors, which can be designed/optimized for one UE at a time. 
+In particular, we noticed that the uplink SINR in \eqref{eq:uplink-instant-SINR-level4-Rayleigh} took the form of a generalized Rayleigh quotient and, thus, could be maximized with respect to the receive combining in closed form. There is no corresponding result for the downlink.
+The intuition behind this difference is that the precoding determines how the signals are emitted from the APs. For whatever selected precoding, every UE will be interfered with by the transmission to the other UEs, even if the impact can hopefully be made marginal. In contrast, in the uplink, the received signals are not affected by the receive combining. However, after the reception, we take the received signals from a set of APs and process them to detect the signal from a particular UE. We can use the same received signals to detect the signals from another UE using another combining vector. 
+
+The effective downlink SINR in \eqref{eq:downlink-instant-SINR-level4} has a very different structure than the uplink SINR in \eqref{eq:uplink-instant-SINR-level4-UatF} or \eqref{eq:uplink-instant-SINR-level4-Rayleigh},
+ hence, the precoding cannot be optimized on a per-UE basis. In fact, there is not a single collection of optimal precoding vectors but it all depends on what tradeoff between the SEs achieved by the different UEs that we want to achieve.
+Finding the optimal transmit precoding is computationally complicated in most cases \cite{Bjornson2013d} but there is a common heuristic that can be utilized to deduce the structure of the optimal precoding \cite{Bjornson2014d}.
+It is obtained from the following uplink-downlink duality result \cite{Bjornson2020a}, which particularizes the classical duality results \cite{Boche2002a}, \cite{Tse2005a}, \cite{Viswanath2003a} for cell-free network architectures.
+
+\begin{theorem} \label{prop:duality}
+	Let $\{\vect{D}_i{\bf v}_i: i=1,\ldots,K \}$ and $\{p_i: i=1,\ldots,K \}$  denote the set of combining vectors and transmit powers, respectively, used in the uplink. 
+	If the precoding vectors are selected as
+	\begin{equation} \label{eq:precoding-vectors-duality-proposition}
+	\vect{w}_i = \sqrt{\rho_i} \frac{{\bf v}_{i}}{\sqrt{\mathbb{E} \left\{ \| \vect{D}_{i} {\vect{v}}_{i} \|^2 \right\} }} 
+	\end{equation}
+	then there exists a downlink power allocation policy $\{\rho_i:  i=1,\ldots,K\}$
+	with $\sum_{i=1}^{K} \rho_i/\sigmaDL=\sum_{i=1}^{K}p_i/\sigmaUL$ for which 
+	\begin{align}
+	\mathacr{SINR}_{k}^{({\rm dl,\cent})} = \mathacr{SINR}_{k}^{({\rm ul},\centuatf)},\quad k=1,\ldots,K
+	\end{align}
+	where $\mathacr{SINR}_{k}^{({\rm ul},\centuatf)}$ is the effective uplink SINR of UE $k$ from \eqref{eq:uplink-instant-SINR-level4-UatF}.
+\end{theorem}
+\begin{proof}
+The proof is given in Appendix~\ref{proof-of-prop:duality} on p.~\pageref{proof-of-prop:duality}.
+\end{proof}
+
+
+This theorem shows that the effective SINRs that are achieved in the uplink (when using the SE expression from Theorem~\ref{proposition:uplink-capacity-general-UatF} on p.~\pageref{proposition:uplink-capacity-general-UatF}) are also achievable in the downlink. Consequently, we have that an achievable downlink SE for UE $k$ is
+\begin{equation}
+\mathacr{SE}_{k}^{({\rm dl,\cent})} = \frac{\tau_d}{\tau_c} \log_2   \left( 1 + \mathacr{SINR}_{k}^{({\rm ul},\centuatf)}   \right).
+\end{equation}
+To achieve this SE, the precoding must be selected according to \eqref{eq:precoding-vectors-duality-proposition}, which implies that the precoding vector for UE $i$ should be a scaled version of the combining vector that is assigned to this UE in the uplink. The scaling factors $\{\rho_i:i=1,\ldots,K\}$ represent the downlink power allocation.
+The intuition behind the uplink-downlink duality in Theorem~\ref{prop:duality} is that the direction from which the signal is best received in the uplink coincides with the direction in which the signal should be transmitted in the downlink. Note that the word ``direction'' does not refer to a distinct angular direction in our three-dimensional world but the direction of a vector in the $LN$-dimensional vector space where the received and transmitted signals exist.
+
+If the noise is the same in uplink and downlink (i.e., $\sigmaUL = \sigmaDL$), then Theorem~\ref{prop:duality} implies that the total transmit power is the same in both directions but is allocated differently between the UEs. The exact way of selecting the downlink power allocation $\{\rho_i:i=1,\ldots,K\}$ can be found in \eqref{eq:optimal-power-proof} on p.~\pageref{eq:optimal-power-proof} but we will not use this expression because there are multiple reasons why this power allocation is not used in practice.
+On the one hand, each AP might be allowed to transmit with substantially higher power than each UE and we also expect that more APs than UEs exist in cell-free networks. Hence, the total available downlink power might far exceed the total uplink power and this should be utilized to achieve the maximum downlink performance. On the other hand, the power allocation obtained from the uplink-downlink duality might require that some APs transmit with very high power (beyond what is allowed by the power constraint in \eqref{eq:downlink-power-constraint}) while other APs might transmit with very low power. 
+The bottom line is that we will utilize Theorem~\ref{prop:duality} as a motivation to heuristically select the downlink precoding vectors based on the uplink combining vectors according to \eqref{eq:precoding-vectors-duality-proposition}. However, \linebreak we will optimize the downlink transmit power separately instead of relying on the duality theorem. We will consider an arbitrary downlink power allocation in this section and then optimize it in Section~\ref{sec:optimized-power-allocation-downlink} on~p.~\pageref{sec:optimized-power-allocation-downlink}.
+
+\enlargethispage{\baselineskip} 
+
+In Section~\ref{subsec:optimal-receive-combining} on p.~\pageref{subsec:optimal-receive-combining} and Section~\ref{subsec:scalable-combining} on p.~\pageref{subsec:scalable-combining}, we presented several receive combining schemes for the centralized operation which we can utilize as the basis for the downlink precoding, motivated by the uplink-downlink duality. 
+To make the transformation simple, we define the centralized precoding vector for UE $k$ as
+	\begin{equation} \label{eq:precoding-centralized-expression}
+	\vect{w}_k = \sqrt{\rho_k} \frac{\bar{\vect{w}}_k}{\sqrt{\mathbb{E} \left\{ \| \bar{\vect{w}}_k \|^2 \right\} }} 
+	\end{equation}
+where $\rho_k \geq 0 $ is the total transmit power assigned to UE $k$ from all the serving APs and $\bar{\vect{w}}_k \in \mathbb{C}^{LN}$ is an arbitrarily scaled vector that points out the direction of the precoding vector. Note that the normalization in \eqref{eq:precoding-centralized-expression} guarantees that 
+\begin{equation}
+\mathbb{E} \{ \| \vect{w}_k \|^2 \} = \rho_k.
+\end{equation}
+Any choice of $\bar{\vect{w}}_k$ will lead to a precoding scheme but scalability remains to be an important issue in the downlink operation. If we select $\bar{\vect{w}}_k$ based on a scalable uplink combining scheme, then the scalability property carries over to the downlink precoding. 
+
+\subsubsection{MMSE Precoding}
+
+The optimal centralized uplink operation is using MMSE combining as defined in \eqref{eq:MMSE-combining}. Based on the uplink-downlink duality, the downlink counterpart is \emph{MMSE precoding}, which is obtained from \eqref{eq:precoding-centralized-expression} using
+\begin{equation} \label{eq:MMSE-precoding}
+\bar{\vect{w}}_{k}^{{\rm MMSE}} =    p_{k} \left( \sum\limits_{i=1}^{K} p_{i}  \vect{D}_{k} ( \widehat{\vect{h}}_{i} \widehat{\vect{h}}_{i}^{\Htran} + \vect{C}_{i})\vect{D}_{k} + \sigmaUL \vect{I}_{LN} \right)^{\!-1} \vect{D}_{k}\widehat{\vect{h}}_{k}.
+\end{equation}
+While MMSE combining is provably optimal in the uplink, MMSE precoding is only optimal if we want to operate the downlink transmission in the way specified by the duality in Theorem~\ref{prop:duality}. One can then show that MMSE precoding is minimizing a sum MSE between the vector of data signals and the received signal vector of all UEs \cite{Vojcic1998a}.
+In general, we want to make use of the flexibility to allocate the downlink power differently, thus we call MMSE precoding \emph{nearly optimal} rather than optimal. Intuitively, MMSE precoding will balance between transmitting a strong signal to the desired UE and limiting the interference caused to other UEs.
+We will present several simplified precoding methods below and while we expect MMSE precoding to outperform them in terms of SE, there are only theoretical guarantees of this when using the power allocation specified by the duality theorem.
+
+If MMSE combining is used in the uplink, then MMSE precoding can be used in the downlink without incurring any additional computational complexity (except for the scaling in \eqref{eq:precoding-centralized-expression} which can be absorbed into the generation of the data signals). However, we know from Table~\ref{table:complexity-with-level4} on p.~\pageref{table:complexity-with-level4} that the number of complex multiplications, regarding channel estimation and combining vector computation, grows with $K$ when using MMSE combining, thus MMSE precoding is not scalable for networks with a large number of UEs.
+
+\subsubsection{P-MMSE and P-RZF Precoding}
+
+Two scalable combining schemes 
+ were presented in Section~\ref{subsec:scalable-combining} on p.~\pageref{subsec:scalable-combining} as an approximation of the optimal MMSE combining. These were called P-MMSE combining in \eqref{eq:P-MMSE-combining} and P-RZF combining in \eqref{eq:P-RZF-combining_1}. Motivated by the uplink-downlink duality, we can use these to develop two scalable precoding schemes.
+The first one is \emph{P-MMSE precoding}, which is obtained from \eqref{eq:precoding-centralized-expression} using
+\begin{equation} \label{eq:P-MMSE-precoding}
+\bar{\vect{w}}_k^{{\rm P-MMSE}} =    p_k\left(\sum\limits_{i \in \mathcal {S}_k} p_{i}  \vect{D}_{k}\widehat{\vect{h}}_{i} \widehat{\vect{h}}_{i}^{\Htran}\vect{D}_{k} + {\bf{Z}}_{{\mathcal S}_k} + \sigmaUL  \vect{I}_{LN} \right)^{\!-1} \vect{{D}}_{k}\widehat{{\bf h}}_k
+\end{equation}
+where $\mathcal{S}_k$ from \eqref{eq:S_k} is the set of UEs served by partially the same APs as UE $k$ and ${\bf{Z}}_{{\mathcal S}_k} $ was defined in \eqref{eq:Z_k-prime} as the total estimation error correlation matrix related to those UEs. 
+This precoding scheme is expected to behave similarly to MMSE precoding since it has the same structure, except that it neglects UEs that are only served by other APs, in order to reduce the computational complexity. If the DCC is properly designed, then $\mathcal{S}_k$ should include all the UEs that are within the range of influence of the APs that serve UE $k$, making the performance difference between MMSE and P-MMSE precoding small.
+
+The inverse of an $LN \times LN$ matrix must be computed in \eqref{eq:P-MMSE-precoding} but, since only the signals transmitted from the $|\mathcal{M}_k|$ APs that serve UE $k$ matter, we can implement P-MMSE precoding by only inverting an $N |\mathcal{M}_k| \times N |\mathcal{M}_k|$ matrix (see Figure~\ref{figure:block-matrices} on p.~\pageref{figure:block-matrices} for details). If P-MMSE combining is used in the uplink, then we can use P-MMSE precoding in the downlink without  any extra computation.
+
+As in the uplink, we can reduce the computational complexity by using \emph{P-RZF precoding} instead, which is obtained by neglecting the estimation error correlation matrix ${\bf{Z}}_{{\mathcal S}_k} $ in \eqref{eq:P-MMSE-precoding}. This enables us to rewrite the precoding expression in a more efficient form. P-RZF precoding is obtained from \eqref{eq:precoding-centralized-expression} using
+\begin{align} 
+\bar{\vect{w}}_{k}^{{\rm P-RZF}} =  \left [\vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k}\left( \vect{\widehat{H}}^{\Htran}_{\mathcal{S}_k}\vect{{D}}_{k}\vect{\widehat{H}}_{\mathcal{S}_k}+\sigmaUL\vect{{P}}_{\mathcal{S}_k}^{-1} \right)^{-1} \right]_{:,1}  \label{eq:P-RZF-precoding}
+\end{align}
+where we recall that $\vect{\widehat{H}}_{\mathcal{S}_k} \in \mathbb{C}^{LN\times |\mathcal{S}_k|}$ is obtained by stacking all the vectors $\vect{\widehat{h}}_i$ with indices $i\in \mathcal{S}_k$ with the first column being $\vect{\widehat{h}}_k$. Moreover, $\vect{{P}}_{\mathcal{S}_k} \in \mathbb{R}^{|\mathcal{S}_k| \times |\mathcal{S}_k|}$ is a diagonal matrix containing the transmit powers $p_i$ for $i\in \mathcal{S}_k$, listed in the same order as the columns of $\vect{\widehat{H}}_{\mathcal{S}_k}$.
+If P-RZF combining is used in the uplink, then we can use P-RZF precoding in the downlink, without requiring any additional computational complexity. This makes it a scalable precoding scheme.
+
+Note that the names ``P-MMSE'' and ``P-RZF'' are referring to the properties of the combining vector counterparts in the dual uplink. Intuitively, both methods will balance between transmitting a strong signal to the desired UE and limiting the interference that is caused to other UEs. The difference is that the former scheme takes the channel estimation uncertainty into account, while the latter is neglecting it to reduce the computational complexity. 
+
+
+\subsection{Fronthaul Signaling Load for Centralized Operation}
+\label{sec:level4-fronthaul-downlink}
+
+The centralized operation is associated with a fronthaul signaling load since all the computations are made at the CPU. The signaling related to sending the received pilot signals from the APs to the CPU is the same as for fully centralized operation in the uplink; see Section~\ref{sec:level4-fronthaul} on p.~\pageref{sec:level4-fronthaul}. Hence, we will not list them in this section to avoid counting them twice and instead focus on the signaling from the CPU to the APs that is unique to the downlink.
+
+
+The only additional fronthaul signaling in the downlink is to provide each AP $l$ with the transmit signal $\vect{x}_l$ in \eqref{eq:DCC-transmit-downlink2}, which is a superposition of the precoded downlink data signals. There are $\tau_d$ such vectors to transmit per coherence block. Hence, the fronthaul signaling per AP is $\tau_dN$ complex scalars. This value is the same irrespective of the choice of precoding scheme and is summarized in Table~\ref{tab:signaling-level4-downlink}. Interestingly, the APs can be totally unaware of what precoding scheme is used and how many UEs are being served since the CPU is performing all the signal processing in the centralized operation. Note that the fronthaul signaling is independent of $K$ and, thus, it is scalable.
+
+
+
+
+\begin{table}[t]  
+	\caption{Number of complex scalars to be shared over the fronthaul per coherence block in the centralized downlink operation. These scalars are sent from the CPU to the APs.}  \label{tab:signaling-level4-downlink}
+	\centering
+	\begin{tabular}{|c|c|c|} 
+		\hline
+		{Scheme} & {Each coherence block}    \\      \hline\hline 
+		Any precoding &   $\tau_d NL$         \\ \hline    
+	\end{tabular}
+\end{table}
+
+
+
+
+
+
+\section{Distributed Downlink Operation}
+\label{sec:level2-downlink}
+
+A distributed operation is also possible in the downlink where almost all the processing is carried out locally at each AP. The CPU encodes the downlink data signals $\{ \varsigma_i : i =1,\ldots,K\}$ and send them to the serving APs, which carry out the remaining signal processing, as illustrated in Figure~\ref{figure:distributed_centralized_downlink}(b).
+We stress that the CPU is a logical entity; the task of encoding the data signal to a given UE can be carried out anywhere in the network, thus there is no need for having a physical centralized unit.
+A major benefit of the distributed operation is that we can deploy new APs without having to upgrade the computational power of the CPU since each AP contains a local processor that can carry out its associated baseband processing tasks.
+In the distributed operation, each AP $l$ locally designs its transmitted signal
+\begin{align} \label{eq:x_l-level2}
+\vect{x}_l=\sum_{i=1}^K\vect{D}_{il}\vect{w}_{il}\varsigma_{i}
+\end{align}
+that was previously stated in \eqref{eq:DCC-transmit-downlink2}. To this end, AP $l$ computes its local channel estimates as discussed in Section~\ref{sec:MMSE-channel-estimation} on p.~\pageref{sec:MMSE-channel-estimation} and selects the local precoding vectors $\{\vect{w}_{il} : i\in \mathcal{D}_l \}$ based on those estimates.
+
+\enlargethispage{\baselineskip}
+
+Recall that, in the distributed uplink operation, we considered a two-stage operation where each AP is first processing its signals locally, followed by a second step where the CPU weighs the information obtained from the different APs together. We then considered how to optimize the weight vector. A similar operation exists in the downlink but only implicitly. The second stage is namely represented by the power allocation between the different APs, which determines which power each AP should assign to a given UE. This power allocation task is analyzed in Section~\ref{sec:optimized-power-allocation-downlink} on p.~\pageref{sec:optimized-power-allocation-downlink}, while we will consider a heuristic power allocation in this section.
+
+\subsection{Spectral Efficiency With Distributed Operation}
+\label{sec:level2-SE-downlink}
+
+The received signal at UE $k$ is
+\begin{align} 
+y_k^{\rm{dl}} =& \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran}\vect{x}_l + n_k 
+\nonumber \\
+=&\underbrace{ \vphantom{\condSum{i=1}{i \neq k}{K}} \left( \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran}\vect{D}_{kl}  \vect{w}_{kl} \right) \varsigma_k}_{\textrm{Desired signal}}+ \underbrace{\condSum{i=1}{i \neq k}{K} \left( \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran}\vect{D}_{il}  \vect{w}_{il}   \right) \varsigma_i}_{\textrm{Inter-user interference}} + \underbrace{\vphantom{\condSum{i=1}{i \neq k}{K}} n_k}_{\textrm{Noise}} \label{eq:DCC-downlink-level2}
+\end{align}
+which is identical to the case of centralized downlink operation in \eqref{eq:downlink-received-UEk}. The key difference lies in the precoding selection, which now must be carried out locally at each AP using the locally available channel estimates. The information available at the UE for signal detection is the same in both cases. Hence, we can use Theorem~\ref{theorem:downlink-capacity-level4} to also compute the SE achieved by the distributed operation. We will restate the result using the distributed notation containing summations over the APs.
+
+\begin{corollary} \label{theorem:downlink-capacity-level2}
+	An achievable SE of UE $k$ in the distributed operation is
+	\begin{equation} \label{eq:downlink-rate-expression-level2}
+	\begin{split}
+	\mathacr{SE}_{k}^{({\rm dl},\dist)} = \frac{\tau_d}{\tau_c} \log_2  \left( 1 + \mathacr{SINR}_{k}^{({\rm dl},\dist)}  \right) \quad \textrm{bit/s/Hz}
+	\end{split}
+	\end{equation}
+	with the effective SINR given by
+	\begin{equation} \label{eq:downlink-instant-SINR-level2}
+	\mathacr{SINR}_{k}^{({\rm dl},\dist)} =  \frac{ \left|\sum\limits_{l=1}^L  \mathbb{E}\left \{ \vect{h}_{kl}^{\Htran}\vect{D}_{kl}{\vect{w}}_{kl}\right \} \right|^2  }{\sum\limits_{i=1}^{K} \mathbb{E} \bigg\{ \bigg| \sum\limits_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \vect{D}_{il} {\vect{w}}_{il} \bigg|^2 \bigg\} -  \bigg|\sum\limits_{l=1}^L  \mathbb{E} \left\{  \vect{h}_{kl}^{\Htran} \vect{D}_{kl} {\vect{w}}_{kl} \right\} \bigg|^2 +  \sigmaDL
+	}.
+	\end{equation}
+\end{corollary}
+
+The SE of UE $k$ and its effective SINR can be interpreted in the same way as in the centralized case so we will not repeat the discussion here, but instead focus on the local precoding selection.
+
+\subsection{Local Transmit Precoding}
+\label{subsec:distributed-precoding}
+Only a subset of the APs are transmitting a downlink data signal to a particular UE $k$. Hence, the effective precoding vectors $\vect{D}_{kl}\vect{w}_{kl}$ only need to be selected for AP $l \in \mathcal{M}_k$.
+For an AP $l$ that serves UE $k$, we can express the precoding vector as 
+\begin{align} \label{eq:precoding-distributed-expression}
+{\vect{w}}_{kl}= \sqrt{\rho_{kl}}\frac{\bar{\vect{w}}_{kl}}{\sqrt{\mathbb{E}\left\{\left\| \bar{\vect{w}}_{kl}\right\|^2\right\}}}
+\end{align} 
+where $\rho_{kl} \geq 0 $ is the transmit power that AP $l$ assigns to UE $k$ and $\bar{\vect{w}}_{kl} \in \mathbb{C}^{N}$ is an arbitrarily scaled vector pointing out the direction of the precoding vector. 
+Note that the normalization in \eqref{eq:precoding-distributed-expression} makes 
+\begin{equation}
+\mathbb{E} \left\{ \| \vect{w}_{kl} \|^2 \right\} = \rho_{kl}.
+\end{equation}
+Using this notation, we can effectively divide the precoding selection at AP $l$ into the following two subtasks: 
+
+\begin{enumerate}
+
+\item Selecting the directivity of the transmission represented by $\{ \bar{\vect{w}}_{kl} : k \in \mathcal{D}_l \} $; 
+
+\item Selecting the power allocation represented by $\{ \rho_{kl} : k \in \mathcal{D}_l \}$. 
+
+\end{enumerate}
+
+The first task must be carried out in every coherence block, based on the local channel estimates, which change at this pace. In contrast, the power allocation is dominated by large-scale effects (such as pathloss) and we will, therefore, assume that the power allocation is maintained constant over many coherence blocks and computed based on the channel statistics. We will optimize the power allocation in Section~\ref{sec:optimized-power-allocation-downlink} on p.~\pageref{sec:optimized-power-allocation-downlink} and consider scalable heuristic methods in Section~\ref{sec:scalable-power-allocation} on p.~\pageref{sec:scalable-power-allocation}.
+
+In the centralized downlink operation, we used the uplink-downlink duality in Theorem~\ref{prop:duality} to motivate that each centralized precoding vector should be selected to be parallel to the corresponding centralized combining vector. The duality result is not unique to the centralized operation: for any choice of the receive combining vectors and their resulting uplink SINRs, we can achieve the same SINR in the downlink by using the same vectors for precoding. Hence, we can utilize the local combining schemes from Section~\ref{sec:level3-uplink} on p.~\pageref{sec:level3-uplink} and normalize them to obtain local precoding vectors that should serve as reasonable heuristics. 
+The  complexity of computing these vectors is the same as in the uplink. Hence, if the same vectors are used in both directions then there is no extra complexity incurred in the downlink. We will now present the downlink counterparts of the L-MMSE, LP-MMSE, and MR combining schemes that we considered in the uplink.
+
+\subsubsection{L-MMSE Precoding}
+
+The locally optimal operation in the uplink is L-MMSE combining, which was defined in \eqref{eq:L-MMSE-combining-single-AP}. The downlink counterpart is \emph{L-MMSE precoding} and is obtained from \eqref{eq:precoding-distributed-expression} using
+\begin{equation} \label{eq:L-MMSE-precoding}
+\bar{\vect{w}}_{kl}^{{\rm L-MMSE}} =  p_{k}  \left( \sum\limits_{i=1}^{K} p_{i} \left( \widehat{\vect{h}}_{il} \widehat{\vect{h}}_{il}^{\Htran} + \vect{C}_{il} \right) + \sigmaUL  \vect{I}_{N} \right)^{-1}   \vect{D}_{kl}  \widehat{\vect{h}}_{kl}.
+\end{equation}
+We expect this precoding method to provide the highest SE among the distributed alternatives, due to its tight connection to the L-MMSE combining method, but this cannot be formally proved. 
+Roughly the same power gain from coherent precoding can be achieved by centralized MMSE precoding and L-MMSE precoding, if the same APs are utilized. However, there is a major difference when it comes to interference suppression.
+As illustrated in Figure~\ref{figure:distributed-beamforming}, in the centralized operation, the serving APs can cooperate in suppressing interference; for example, by sending interfering signals with opposite phases so they cancel each other at an undesired receiver. Hence, the spatial degrees-of-freedom available for interference suppression is equal to the total number of antennas that is transmitting the signal and given by $N |\mathcal{M}_k|$ for UE $k$.
+In contrast, in the distributed operation, each AP can only control the interference that itself is causing. Each AP has $N$  spatial degrees-of-freedom available for interference suppression, which is expected to be a rather small number since each AP in a Cell-free Massive MIMO system is envisioned to be equipped with few antennas. In fact, each AP might serve more UEs than it has antennas. With the distributed operation, the interference suppression capability does not increase as more APs are assigned to serving the UE.
+
+
+L-MMSE precoding in \eqref{eq:L-MMSE-precoding} is not a scalable scheme since it contains a summation of all UEs in the network (see Table~\ref{table:complexity-with-level3} on p.~\pageref{table:complexity-with-level3} for the exact complexity). 
+Two scalable alternatives are considered next.
+
+\subsubsection{MR Precoding}
+
+The first scalable option is \emph{MR precoding}, which is obtained from \eqref{eq:precoding-distributed-expression} using
+\begin{equation} \label{eq:MR-precoding}
+\bar{\vect{w}}_{kl}^{{\rm MR}} =  \vect{D}_{kl}  \widehat{\vect{h}}_{kl}.
+\end{equation}
+This scheme maximizes the fraction of the transmitted power from AP $l$ that is received at the desired UE (i.e., the numerator of the effective SINR).
+However, MR precoding ignores the interference that the AP is causing, particularly among the UEs that it is serving. 
+The early works on Cell-free Massive MIMO considered MR precoding with $N=1$ \cite{Nayebi2017a}, \cite{Ngo2017b}, in which case each AP has too few antennas to suppress interference. One key benefit of this scheme is that the effective SINR in Corollary~\ref{theorem:downlink-capacity-level2} can be computed in closed form.
+
+
+\begin{corollary} \label{cor:closed-form-dl}
+	Suppose MR precoding, as defined in \eqref{eq:MR-precoding}, is used. The expectations in \eqref{eq:downlink-instant-SINR-level2} then become
+	\begin{equation}  \label{eq:signal-term-MR-closed}
+	\sum\limits_{l=1}^L  \mathbb{E}\left \{ \vect{h}_{kl}^{\Htran}\vect{D}_{kl}{\vect{w}}_{kl}\right \}
+ = \sum_{l=1}^L \sqrt{\rho_{kl} \eta_k \tau_p \tr( \vect{D}_{kl} \vect{R}_{kl} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl})}
+\end{equation}
+\begin{align} & \nonumber
+ \mathbb{E} \left\{ \left| \sum\limits_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \vect{D}_{il} {\vect{w}}_{il} \right|^2 \right\}  = \sum_{l=1}^{L} \rho_{il} \frac{  \tr \left(  \vect{D}_{il} \vect{R}_{il} \vect{\Psi}_{t_i l}^{-1} \vect{R}_{il} \vect{R}_{kl}  \right) }{ \tr( \vect{R}_{il} \vect{\Psi}_{t_i l}^{-1} \vect{R}_{il})} \\ & + \begin{cases}
+\left|  \sum\limits_{l=1}^{L} \sqrt{ \rho_{il} \eta_k \tau_p} \frac{  \tr \left(  \vect{D}_{il} \vect{R}_{il} \vect{\Psi}_{t_i l}^{-1} \vect{R}_{kl}  \right) }{ \sqrt{ \tr( \vect{R}_{il} \vect{\Psi}_{t_i l}^{-1} \vect{R}_{il}) } } \right|^2 &    i \in \mathcal{P}_k
+\\
+0 &  i \notin \mathcal{P}_k. 
+\end{cases} \label{eq:interference-term-MR-closed}
+\end{align} 
+\end{corollary}
+\begin{proof}
+By inserting the MR precoding expression into \eqref{eq:downlink-instant-SINR-level2}, we can observe that the expectations that appear are the same as in Corollary~\ref{cor:closed-form_ul} on p.~\pageref{cor:closed-form_ul} (except that some indices must be interchanged).
+\end{proof}
+
+The expressions in Corollary~\ref{cor:closed-form-dl} can be inserted into the effective SINR in \eqref{eq:downlink-instant-SINR-level2} to obtain a closed-form SE expression. However, the final expression is lengthy. Hence, we will focus on discussing its properties instead of presenting it in a single equation.
+
+The signal term in the numerator of the effective SINR is the square of \eqref{eq:signal-term-MR-closed}. We can recognize $\eta_k \tau_p \vect{R}_{kl} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl}$ from Corollary~\ref{cor:MMSE-estimation} on p.~\pageref{cor:MMSE-estimation} as the correlation matrix of the MMSE channel estimate $\widehat{\vect{h}}_{kl}$. Hence, the signal term can be equivalently expressed as
+\begin{equation}
+\left(\sum_{l=1}^{L}  \sqrt{\rho_{kl} \mathbb{E}\{ \| \vect{D}_{kl} \widehat{\vect{h}}_{kl} \|^2 \} }\right)^2
+\end{equation}
+and grows when the channel estimation quality improves. To make the signal term large, it is important to maximize the estimation quality, which can be achieved by limiting the pilot contamination effect in the ways discussed in Section~\ref{sec:impact-on-estimation-accuracy} on p.~\pageref{sec:impact-on-estimation-accuracy}. The contributions from the serving APs are coherently combined, which is represented by the fact that the square roots of their contributions are added up followed by taking the square of the sum. This operation leads to a power gain as compared to the case when the contributions are added up directly in the power domain. As a simple example of this, suppose $a$ and $b$ are the power of the contributions from two different APs. We can then notice that
+\begin{equation}
+(\sqrt{a}+\sqrt{b})^2 = a+b+2\sqrt{ab} > a+b
+\end{equation}
+for any strictly positive values of $a$ and $b$.
+
+The interference term caused by the signal transmission to UE $i$ is given in \eqref{eq:interference-term-MR-closed}. This expression is more complicated to interpret than the signal term but we can recognize terms of the kind $ \vect{R}_{il} \vect{\Psi}_{t_i l}^{-1} \vect{R}_{il}$ which are proportional to the correlation matrix of the channel estimate $\widehat{\vect{h}}_{il}$. This is natural since this channel estimate is used for MR precoding to UE $i$.
+The first interference term in \eqref{eq:interference-term-MR-closed} contains a product $\vect{R}_{il} \vect{R}_{kl} $ between the correlation matrices of the interfering UE and the desired UE. If these UEs have very different spatial correlation properties (e.g., if the dominant eigenvectors are orthogonal), then the interference will be smaller than if they have matching correlation matrices. There is also an additional interference term, which is only included if UE $i$ uses the same pilot as UE $k$. This term is called coherent interference since it also contains a summation of square roots followed by a squaring. This pilot-contaminated term becomes equal to the signal term if $i=k$.
+
+The effective SINR expression with MR precoding can be substantially simplified in the case of $N=1$ antenna per AP.
+
+	\begin{corollary}
+	If each AP has $N=1$ antenna, then the MMSE estimate of the scalar channel $\vect{h}_{kl}\in \mathbb{C}$ has variance
+	\begin{equation} \label{eq:gamma-notation-repeated}
+	 \gamma_{kl} = \frac{\eta_k \tau_p \beta_{kl}^2 }{ \sum_{i \in \mathcal{P}_k } \eta_i \tau_p \beta_{il} +\sigmaUL }.
+	 \end{equation}
+	The effective SINR in \eqref{eq:downlink-instant-SINR-level2} with MR precoding then becomes
+		\begin{equation} \label{eq:downlink-instant-SINR-level2-closed}
+\mathacr{SINR}_{k}^{({\rm dl},\dist)} =  \frac{  \left( 
+\sum\limits_{l \in \mathcal{M}_k} \sqrt{\rho_{kl} \gamma_{kl}} \right)^2  }{ \sum\limits_{i=1}^{K} \sum\limits_{l \in \mathcal{M}_i} \rho_{il} \beta_{kl} +
+\sum\limits_{i \in \mathcal{P}_k \setminus \{ k \}} \left(  \sum\limits_{l \in \mathcal{M}_i} \sqrt{ \rho_{il} \gamma_{kl}}  \right)^2
++  \sigmaDL
+	}.
+	\end{equation}
+	\end{corollary}
+	\begin{proof}
+	Using the notation in \eqref{eq:gamma-notation-repeated}, the expectations in Corollary~\ref{cor:closed-form-dl} can be rewritten as 
+$\sum_{l=1}^L  \mathbb{E}\left \{ \vect{h}_{kl}^{\Htran}\vect{D}_{kl}{\vect{w}}_{kl}\right \}
+ = \sum_{l \in \mathcal{M}_k} \sqrt{\rho_{kl} \gamma_{kl}}$ and 
+\begin{align} & \nonumber
+ \mathbb{E} \left\{ \left| \sum\limits_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \vect{D}_{il} {\vect{w}}_{il} \right|^2 \right\}  = \sum_{l \in \mathcal{M}_i} \rho_{il} \beta_{kl} + \begin{cases}
+\left|  \sum\limits_{l \in \mathcal{M}_i} \sqrt{ \rho_{il} \gamma_{kl}}  \right|^2 &    i \in \mathcal{P}_k
+\\
+0 & i \notin \mathcal{P}_k.
+\end{cases}
+\end{align} 
+Inserting these values into \eqref{eq:downlink-instant-SINR-level2} yields the SINR expression in \eqref{eq:downlink-instant-SINR-level2-closed}, where absolute values of positive terms have been replaced by parenthesis. 
+	\end{proof}
+
+The closed-form effective SINR in \eqref{eq:downlink-instant-SINR-level2-closed} shows the key behaviors of the cell-free operation even clearer than for $N>1$. The signal term $( 
+\sum_{l \in \mathcal{M}_k} \sqrt{\rho_{kl} \gamma_{kl}} )^2$ in the numerator contains a coherent combination of the signal contributions from all the serving APs, which leads to a power gain.
+ The first term in the denominator contains non-coherent interference, which means that it is a summation of the powers of the individual signals transmitted to all the UEs from their respective serving APs. The second term is the additional coherent interference caused by pilot contamination. The third term is the noise power.
+
+MR precoding is expected to work well if there is a high degree of favorable propagation, which is not guaranteed to be the case in cell-free networks (see Section~\ref{subsec-favorable-propagation} on p.~\pageref{subsec-favorable-propagation}). If each AP is equipped with multiple antennas, then we can use a local precoding scheme that is also capable of suppressing interference. The aforementioned unscalable L-MMSE precoding is an example of this but there are scalable alternatives that are suitable for cell-free networks.
+
+
+
+\subsubsection{LP-MMSE Precoding}
+
+We can achieve a scalable approximation of L-MMSE precoding by only considering the UEs that the AP serves, as was done for the uplink in \eqref{eq:LP-MMSE-combining-single-AP-1}. We call this \emph{LP-MMSE precoding} and obtain it from \eqref{eq:precoding-distributed-expression} using
+\begin{equation} \label{eq:LP-MMSE-precoding-single-AP-1}
+\bar{\vect{w}}_{kl}^{{\rm LP-MMSE}} =  p_{k}  \left( \sum\limits_{i \in \mathcal{D}_l} p_{i} \left( \widehat{\vect{h}}_{il} \widehat{\vect{h}}_{il}^{\Htran} + \vect{C}_{il} \right) + \sigmaUL  \vect{I}_{N} \right)^{\!-1}   \vect{D}_{kl} \widehat{\vect{h}}_{kl}.
+\end{equation}
+If AP $l$ is serving all the UEs in its area of influence, LP-MMSE precoding will be approximately equal to L-MMSE precoding. However, the major benefit is that LP-MMSE was previously shown to be a scalable scheme. If it is used in both uplink and downlink, then no additional  computations are required for creating the downlink precoding vectors.
+
+
+\begin{remark}[Other precoding schemes]
+The literature contains other precoding schemes than those considered in this monograph, in particular, different variations on MMSE and L-MMSE precoding where the regularization terms are selected differently or are removed, as in the case of ZF precoding \cite{Interdonato2020a}, \cite{Nguyen2017a}. Moreover, different APs can use different schemes, to reduce the overall computational complexity or protect certain ``sensitive'' UEs from interference. Interestingly, in the special case when each AP has more antennas than there are pilots (i.e., $N> \tau_p$) and the channels are subject to uncorrelated Rayleigh fading, there are several local ZF schemes for which the SE can be computed in closed form \cite{Interdonato2020a}.
+\end{remark}
+
+
+
+\subsection{Fronthaul Signaling Load for Distributed Operation}
+\label{sec:level2-fronthaul-downlink}
+
+The only downlink processing that is carried out at the CPU in the distributed operation is the encoding of the data signals. The CPU needs to send a portion of the data signals $\{ \varsigma_k : k = 1, \ldots, K\}$ to each AP, corresponding to the UEs that the AP is serving. AP $l$ needs to receive $\tau_d|\mathcal{D}_l|$ complex scalars per coherence block. This number is independent of the choice of precoding scheme. A key difference from the centralized operation is that the fronthaul signaling requirement of an AP is proportional to the number of UEs that it serves rather than the number of antennas.
+The total number of complex scalars is summarized in Table~\ref{tab:signaling-level2-downlink}.
+
+
+\begin{table}[t]  
+	\caption{Number of complex scalars to be shared over the fronthaul per coherence block in the distributed downlink operation. These scalars are sent from the CPU to the APs.}  \label{tab:signaling-level2-downlink}
+	\centering
+	\begin{tabular}{|c|c|c|} 
+		\hline
+		{Scheme} & {Each coherence block}    \\      \hline\hline 
+		Any precoding &  $\tau_d \sum\limits_{l=1}^L |\mathcal{D}_l|$         \\ \hline    
+	\end{tabular}
+\end{table}
+
+
+
+
+
+
+
+\section{Numerical Performance Evaluation}
+\label{sec:downlink-performance-comparison}
+
+We will now compare the downlink SE achieved by the centralized and distributed precoding schemes described earlier in this section. We will continue the running example defined in Section~\ref{sec:running-example} on p.~\pageref{sec:running-example}.
+There are many power allocation parameters that need to be selected to run simulations. We will consider power allocation optimization in detail in Section~\ref{sec:optimized-power-allocation-downlink} on p.~\pageref{sec:optimized-power-allocation-downlink}, while only heuristic power allocation schemes are utilized in this section. We will elaborate more on heuristic power allocation in Section~\ref{sec:scalable-power-allocation} on p.~\pageref{sec:scalable-power-allocation}.
+
+In the centralized operation, we use a specific version of the scalable centralized power allocation in Section~\ref{sec:scalable-power-allocation} on p.~\pageref{sec:scalable-power-allocation} with the transmit power allocated to each UE as
+\begin{align}\label{eq:fractional_power_centralized_DL}
+\rho_k=\rhomax \frac{\left(\sqrt{\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}}\right)^{-1}\!\!\!\left(\sqrt{\omega_k}\right)^{-1}}{\underset{\ell\in \mathcal{M}_k}{\max} \  \sum\limits_{i\in \mathcal{D}_{\ell}}   \left(\sqrt{\sum\limits_{l\in\mathcal{M}_i}\beta_{il}}\right)^{-1}\!\!\!\sqrt{\omega_i}}
+\end{align}
+with
+\begin{align}
+\omega_k = \underset{\ell\in\mathcal{M}_k}{\max} \ \mathbb{E} \left\{ \left\| \bar{\vect{w}}_{k\ell}^{\prime} \right\|^2 \right\}
+\end{align} 
+where $\bar{\vect{w}}_{k\ell}^{\prime} \in \mathbb{C}^{N}$ is the portion of the normalized centralized precoding vector $\frac{\bar{\vect{w}}_k}{\sqrt{\mathbb{E} \left\{ \| \bar{\vect{w}}_k \|^2 \right\} }}$ from \eqref{eq:precoding-centralized-expression} that corresponds to AP $\ell$. The precoding scheme will determine how this power is distributed between the different APs, but it is typically the closest APs that contribute with the majority of the power. The normalization factor in the denominator is selected to make sure that none of the APs will transmit with more power than the maximum value $\rhomax$.  With this scheme, the transmit powers of the UEs are selected inversely proportional to the square-root of their total channel gains from their serving APs. The details of the general version of this scalable power allocation scheme and how each per-AP power constraint is satisfied are shown in  Section~\ref{sec:scalable-power-allocation} on p.~\pageref{sec:scalable-power-allocation}. 
+
+In the distributed operation, a specific version of the distributed power allocation scheme that was proposed in  \cite{Interdonato2019a} will be used:
+\begin{equation} \label{eq:fractional_power_DL-section6}
+\rho_{kl} = \begin{cases} \rhomax \frac{ \sqrt{\beta_{kl}}}{\sum_{i \in \mathcal{D}_l} \sqrt{\beta_{il}}} & k \in \mathcal{D}_l\\
+0 &  k \notin \mathcal{D}_l
+\end{cases}
+\end{equation}
+where the per-AP transmit power constraints are satisfied by construction. With this scheme, each AP will assign more power to the UEs that it has good channels to, than to UEs with worse channels. The general version of this heuristic scheme is discussed in more detail in Section~\ref{sec:scalable-power-allocation} on p.~\pageref{sec:scalable-power-allocation}.
+
+
+Unless otherwise stated, the main simulation parameters are as follows. There are $K=40$ UEs 
+ and the pilot sequence length is $\tau_p=10$. The remaining $\tau_d=\tau_c-\tau_p=190$ transmission symbols of each coherence block are used for downlink data only. The Gaussian local scattering model is used to generate the spatial correlation matrices with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. 
+We use the same Monte Carlo simulation methodology as described in Section~\ref{sec:uplink-performance-comparison} on p.~\pageref{sec:uplink-performance-comparison} to generate the numerical results. In each figure, the legend will indicate the schemes that are being used.  We use ``(DCC)'' to denote the DCC implementation with Algorithm~\ref{alg:basic-pilot-assignment} on p.~\pageref{alg:basic-pilot-assignment}  and ``(All)'' to denote the case where all APs serve all UEs.
+
+\subsection{Benchmark Schemes}
+\label{sec:genie-aided-downlink}
+
+The SE expressions provided in Theorem~\ref{theorem:downlink-capacity-level4} and Corollary~\ref{theorem:downlink-capacity-level2} are computed under the assumption that the receiving UE is applying a simple receiver structure that treats the average effective channel $\mathbb{E}\left \{ \vect{h}_{k}^{\Htran}\vect{D}_{k}{\vect{w}}_{k}\right \}$ as the true channel. To evaluate the tightness of this capacity bound, we will compare it with a benchmark where the UE has perfect channel knowledge, which has been obtained in some genie-aided manner. If the gap between the expressions is small, then the previously provided SEs are good performance metrics. We note that the effective downlink SINRs in the centralized and distributed operations, given in \eqref{eq:downlink-instant-SINR-level4} and \eqref{eq:downlink-instant-SINR-level2}, respectively, have the same structure. The difference is in the selection of the transmit precoding vectors $\{{\vect{w}}_{il}:i\in \mathcal{D}_l,l=1,\ldots,L\}$. Hence, we will obtain a common genie-aided SE expression, which can be used in both cases.
+
+If the channels $\{\vect{h}_{kl}:k\in \mathcal{D}_l,l=1,\ldots,L\}$ are known at UE $k$, we can rewrite the received signal at UE $k$ in \eqref{eq:downlink-received-UEk} as
+\begin{align} 
+y_k^{\rm{dl}}& =\underbrace{ \vphantom{\condSum{i=1}{i \neq k}{K}} \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \vect{D}_{kl}  {\vect{w}}_{kl} \varsigma_k}_{\textrm{Desired signal}} + \underbrace{\condSum{i=1}{i \neq k}{K}  \sum_{l=1}^{L} \vect{h}_{kl}^{\Htran}\vect{D}_{il}  {\vect{w}}_{il} \varsigma_i}_{\textrm{Interference}} +\underbrace{ \vphantom{\condSum{i=1}{i \neq k}{K}} n_k}_{\textrm{Noise}} .\label{eq:DCC-downlink-2-genie-aided}
+\end{align}
+The first term contains the desired signal, while we treat the remaining terms as noise in line with the capacity bounds considered previously in this section. We then have the following genie-aided SE expression.
+
+\begin{corollary} \label{corollary-genie-aided-downlink}
+	A genie-aided SE of UE $k$ is
+	\begin{equation} \label{eq:genie-aided-downlink-SE}
+	\mathacr{SE}_{k}^{({\rm gen-dl})} = \frac{\tau_d}{\tau_c} \mathbb{E} \left\{ \log_2  \left( 1 + \mathacr{SINR}_{k}^{({\rm gen-dl})}  \right) \right\}
+	\end{equation}
+	where
+	\begin{equation} \label{eq:downlink-instant-SINR-genie-aided}
+	\mathacr{SINR}_{k}^{({\rm gen-dl})} = \frac{ \left|\sum\limits_{l=1}^L   \vect{h}_{kl}^{\Htran}\vect{D}_{kl} {\vect{w}}_{kl} \right|^2  }{  \condSum{i=1}{i \neq k}{K} \bigg| \sum\limits_{l=1}^{L} \vect{h}_{kl}^{\Htran} \vect{D}_{il} {\vect{w}}_{il} \bigg|^2   +  \sigmaDL}.
+	\end{equation}
+\end{corollary}
+\begin{proof}
+	This follows from utilizing Lemma~\ref{lemma:capacity-memoryless-random-interference} on p.~\pageref{lemma:capacity-memoryless-random-interference}.
+\end{proof}
+
+\enlargethispage{1.2\baselineskip} 
+
+\subsection{Performance With Centralized Operation}
+
+In Figure~\ref{figureSec6_1}, we show the \gls{CDF} of the downlink SE per UE in the centralized operation. The randomness  that gives rise to the CDF is due to the AP and UE locations, as well as to the shadow fading realizations. The SE is computed using \eqref{eq:downlink-rate-expression-level4} in Theorem~\ref{theorem:downlink-capacity-level4} for the different centralized precoding schemes described in Section~\ref{sec:level4-downlink}: MMSE, P-MMSE, and P-RZF. We stress that these are three heuristic precoding schemes that are motivated, via the uplink-downlink duality in Theorem~\ref{prop:duality}, by the good performance of their uplink counterparts. Although the strict duality is only valid for specific transmit power coefficients, these precoding schemes perform satisfactorily also for other power allocations. In this part, we use the heuristic power allocation scheme in \eqref{eq:fractional_power_centralized_DL}.
+
+
+\begin{figure}[p!]
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure3a}
+		\end{overpic} \label{figureSec6_1a}
+		\caption{$L=400$, $N=1$.} 
+		\vspace{4mm}
+	\end{subfigure} 
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure3b}
+		\end{overpic} \label{figureSec6_1b}
+		\caption{$L=100$, $N=4$.} 
+	\end{subfigure} 
+	\caption{ CDF of the downlink SE per UE in the centralized operation. We consider $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. Different precoding schemes are compared.}\label{figureSec6_1}
+\end{figure}
+
+Figure~\ref{figureSec6_1}(a) considers the scenario with $L=400$ APs and $N=1$ antenna per AP and Figure~\ref{figureSec6_1}(b) considers the scenario with $L=100$ APs with $N=4$ antennas per AP. For both scenarios, the key observation is that MMSE precoding using all the APs provides smaller SE than the schemes  where the DCC framework is used to restrict how many UEs that each AP is serving. Transmitting from all the APs is not an efficient way when it comes to the downlink operation. Instead, selecting the best APs is a more efficient way of achieving a power allocation that suppresses interference. 
+The difference between MMSE, P-MMSE, and P-RZF is almost negligible.
+Recall that MMSE precoding is not a scalable scheme but, fortunately, the fully scalable P-MMSE and P-RZF precoding schemes provide almost the same SE. 
+
+When we switch to the second scenario in Figure~\ref{figureSec6_1}(b) with less densely deployed APs, we see a SE drop for all UEs, except in the upper tail. Hence, we conclude that the former scenario with many single- antenna APs is more desirable for the centralized downlink operation. This is in line with our previous observations in Section~\ref{centralized-operation-uplink} on p.~\pageref{centralized-operation-uplink} for the centralized uplink operation.
+
+
+\begin{figure}[t!]\centering
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure4}
+	\end{overpic} 
+	\caption{CDF of the downlink SE per UE in the centralized operation of the same scenario as in Figure~\ref{figureSec6_1}(b). We consider $L=100$, $N=4$, $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. The SE expression from \eqref{eq:downlink-rate-expression-level4} is compared with genie-aided SE in \eqref{eq:genie-aided-downlink-SE}.}    \vspace{+2mm}
+	\label{figureSec6_1x} 
+\end{figure}
+
+\subsubsection{Tightness of the SE Expression}
+
+The  SE expression for centralized operation in \eqref{eq:downlink-rate-expression-level4} is derived under the assumption that the receiver treats the average effective channel as the true channel. This results in a valid lower bound on the capacity but there is a risk that an improved receiver will perform better, particularly, if there is a low degree of channel hardening.
+To quantify the tightness of the SE expression in \eqref{eq:downlink-rate-expression-level4}, Figure~\ref{figureSec6_1x} considers the same simulation setup as in Figure~\ref{figureSec6_1}(b) but also includes the genie-aided SEs from \eqref{eq:genie-aided-downlink-SE}, which are obtained when the UEs have perfect CSI. We consider the scalable P-MMSE and P-RZF precoding schemes. In both cases, the performance gap to the genie-aided curve is virtually non-existing. Hence, similar to the uplink, we conclude that a centralized operation leads to a high degree of channel hardening in the running example, so that it is sufficient for the receiver to only know the average effective channel when detecting data.
+However, one can create simulation setups where the gap is larger (cf.~\cite{Chen2018b}) and then the downlink channel estimation methods discussed in Remark~\ref{remark:pilot-directions} are needed to close the gap.
+
+
+
+\subsection{Performance With Distributed Operation}
+
+We will now consider the distributed operation. Figure~\ref{figureSec6_3} shows the CDF of the SE per UE in the same scenarios as in Figure~\ref{figureSec6_1} with the heuristic power allocation method stated in \eqref{eq:fractional_power_DL-section6}.
+Figure~\ref{figureSec6_3}(a) assumes $L=400$ and $N=1$, while Figure~\ref{figureSec6_3}(b) considers $L=100$ and $N=4$. In both scenarios, the L-MMSE precoding scheme that uses all the APs results in significantly lower SE compared to the DCC implementation with L-MMSE and its scalable version LP-MMSE. This unexpected result is caused by the assumed power allocation scheme and can be explained as follows. In general, most of the UEs have negligibly small channel gains to a particular AP and, hence, transmitting to all the UEs is like screaming and anyway only being heard by the closest UEs. The AP is essentially taking power that could have been used to serve the nearby UEs and assign it to faraway UEs, which mainly results in extra interference to the nearby UEs.
+In this case, the DCC essentially provides an improved heuristic power allocation scheme where the power is allocated only to the UEs that are assigned to an AP with good channel conditions \cite{Buzzi2017b}.
+
+\begin{figure}[p!]
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure5a}
+		\end{overpic} \label{figureSec6_3a}
+		\caption{$L=400$, $N=1$.} 
+		\vspace{4mm}
+	\end{subfigure} 
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure5b}
+		\end{overpic} \label{figureSec6_3b}
+		\caption{$L=100$, $N=4$.} 
+	\end{subfigure} 
+	\caption{CDF of the downlink SE per UE in the distributed operation. We consider $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. Different precoding schemes are compared.}\label{figureSec6_3}
+\end{figure}
+
+Similar to the uplink, both figures demonstrate that we can achieve roughly the same SE by using the scalable LP-MMSE precoder instead of the unscalable L-MMSE precoder. When comparing the two scenarios, we notice that the performance is greatly improved when considering fewer APs with multiple antennas.
+This is an expected result since both L-MMSE and LP-MMSE are taking the interference and estimation errors into account and they can suppress interference better with $N=4$ antennas per AP. 
+The improvements are largest in the upper tail of the CDF curves, where interference is the limiting factor, and this also means that the SE curves are more spread out with $N=4$.
+These conclusions are, qualitatively speaking, in line with those made for the uplink in Section~\ref{sec:uplink-performance-comparison} on p.~\pageref{sec:uplink-performance-comparison}.
+Finally, we note that the aforementioned properties do not apply to MR, which performs almost equally bad in both scenarios.
+
+
+
+\begin{figure}[t!]\centering
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure6}
+	\end{overpic} 
+	\caption{CDF of the downlink SE per UE in the distributed operation in the same scenario of Figure~\ref{figureSec6_3}(b). We consider $L=100$, $N=4$, $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. The SE expression from \eqref{eq:downlink-rate-expression-level2} is compared with genie-aided SE in \eqref{eq:genie-aided-downlink-SE}.}    \vspace{+2mm}
+	\label{figureSec6_3x} 
+\end{figure}
+
+\subsubsection{Tightness of the SE Expression}
+
+
+As in the centralized case, the SE expression used in the distributed operation assumes that the UEs have only access to the mean of the effective channels. To quantify the tightness of the provided SE results, compared to what could be achieved with the refined downlink channel estimation schemes described in Remark~\ref{remark:pilot-directions}, we will compare with the genie-aided SE in \eqref{eq:genie-aided-downlink-SE}, which assumes the same precoding schemes are used at the APs but the UEs are having access to perfect CSI when detecting the downlink signals.
+
+Figure~\ref{figureSec6_3x} shows the CDF of the SE with the scalable precoding schemes from Figure~\ref{figureSec6_3}(b) with $L=100$ and $N=4$.
+The genie-aided results match rather well with the achievable SE values provided by \eqref{eq:downlink-rate-expression-level2} when using LP-MMSE precoding. 
+The gap is slightly larger than in the centralized case (see Figure~\ref{figureSec6_1x}) but nevertheless small.
+Hence, for LP-MMSE precoding, we can conclude that the provided SE expression is both practically achievable and fairly close to what could be achieved with perfect CSI at the UEs.
+
+
+\begin{figure}[p!]
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=\columnwidth,tics=10]{images/section6/section6_figure_signalgain}
+		\put(19,34){MR}
+		\put(34,28){LP-MMSE}
+		\put(21,33){\vector(-1,-1){5}}
+		\put(35,27){\vector(-1,-1){5}}
+		\end{overpic} \label{figureSec6_signalgain}
+		\caption{Variations in the received signal power.} 
+		\vspace{4mm}
+	\end{subfigure} 
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=\columnwidth,tics=10]{images/section6/section6_figure_interfgain}
+		\put(20,35){LP-MMSE}
+		\put(34,17){MR}
+		\put(21,34){\vector(-1,-1){5}}
+		\put(35,16){\vector(-1,-1){5}}
+		\end{overpic} \label{figureSec6_interfgain}
+		\caption{Variations in the received interference power.} 
+	\end{subfigure} 
+	\caption{Distribution of the signal and interference powers when using MR or LP-MMSE precoding in a simple setup with $L=1$ AP, $N=2$ antennas, $K=2$ UEs, perfect CSI, and uncorrelated Rayleigh fading channels. The distributions are widely different: LP-MMSE gives rise to bounded support while MR provides large variations, which makes it harder to find tight capacity bounds.}\label{figureSec6_signalgain_interfgain}
+\end{figure}
+
+There is a substantial gap between the achievable and genie-aided SE expressions when using MR precoding. To explain the intuition behind this result, Figure~\ref{figureSec6_signalgain_interfgain} shows the variations in signal and interference power in a toy example with $L=1$ AP, $N=2$ antennas, $K=2$ UEs, perfect CSI, and uncorrelated Rayleigh fading channels. Figure~\ref{figureSec6_signalgain_interfgain}(a) shows the PDF of the signal power (normalized by the noise power) when considering different channel realizations and either MR or LP-MMSE precoding. MR provides almost twice the average signal power as compared with LP-MMSE, but even when accounting for that, it is clear that LP-MMSE has bounded support while MR has a distribution with a long tail. Similar behaviors can be observed in Figure~\ref{figureSec6_signalgain_interfgain}(b), where the interference power caused to the other UE is considered. LP-MMSE gives substantially smaller values, due to its interference suppression, and also a distribution with bounded support, while MR gives rise to large variations. 
+It is the large variations in the signal and interference power that cause the gap between the achievable and genie-aided SE expressions, which implies that more refined downlink estimation schemes or capacity bounds are needed when using MR; see \cite{Caire2017a}, \cite{Chen2018b}, \cite{Interdonato2019b}. Note that these results are in line with the uplink counterpart from Section~\ref{sec:uplink-performance-comparison} on p.~\pageref{sec:uplink-performance-comparison}.
+
+
+
+\subsection{Impact of the Number of UEs}
+
+
+\begin{figure}[p!]
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure7a}
+		\end{overpic} \label{figureSec6_4a}
+		\caption{The average SE per UE.} 
+		\vspace{4mm}
+	\end{subfigure} 
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure7b}
+		\end{overpic} \label{figureSec6_4b}
+		\caption{The average sum SE.} 
+	\end{subfigure} 
+	\caption{The average downlink SE per UE and the sum SE as a function of the number of UEs $K$ for different operations of Cell-free Massive MIMO. We consider $L=100$, $N=4$, $\tau_p=10$, and spatially correlated Rayleigh fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$.}\label{figureSec6_4}
+\end{figure}
+
+
+We will now analyze the impact of the number of UEs on network performance. The setup with $L=100$ APs with $N=4$ antennas per AP is considered.
+We plot the average SE per UE in Figure~\ref{figureSec6_4}(a) whereas the average sum SE is reported in Figure~\ref{figureSec6_4}(b). Centralized operation with P-MMSE or P-RZF precoding is compared with distributed operation with LP-MMSE or MR precoding. 
+The centralized schemes outperform the distributed ones, in accordance with the previous results. P-MMSE provides a slightly larger SE than P-RZF, as also observed in Figure~\ref{figureSec6_1}. In addition, LP-MMSE provides substantially higher SE than MR, since it can suppress interference. Note that the pilot length is $\tau_p=10$ irrespective of the number of UEs. Hence, the pilot contamination increases with $K$, but despite the extra interference, we observe no more than a two-fold reduction in SE per UE when we increase the number of UEs from $K=20$ and $K=100$ in Figure~\ref{figureSec6_4}(a). 
+The benefit of multiplexing more UEs is that the sum SE increases almost linearly with $K$ in Figure~\ref{figureSec6_4}(b). This shows how a cell-free network is capable of serving a huge number of UEs. 
+
+
+
+
+\subsection{Impact of Spatial Correlation}
+
+We conclude this section by analyzing the impact that spatial channel correlation has on the setup with $L=100$, $N=4$, and $K=40$. The ASD is the same in the azimuth and elevation domains: $\sigma_{\varphi}=\sigma_{\theta}$.
+Figure~\ref{figureSec6_5} shows the average SE per UE as a function of the ASD, for different precoding schemes.
+For each scheme, the corresponding straight dotted line shows the performance achieved when having uncorrelated Rayleigh fading (i.e., no spatial correlation). The lines corresponding to the uncorrelated Rayleigh fading follow the same order as the other lines for each scheme. We notice that spatial correlation degrades the average SE in the distributed operation while it is advantageous in the centralized case, since a smaller ASD corresponds to a more highly correlated channel. This is consistent with previous observations in the uplink; see Figure~\ref{figureSec5_6} on p.~\pageref{figureSec5_6}.
+When the ASD increases, the average SE approaches the reference case with no spatial correlation.
+
+
+
+\begin{figure}[t!]\centering
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section6/section6_figure8}
+	\end{overpic} 
+	\caption{The average downlink SE per UE as a function of ASD for azimuth and elevation angles, $\sigma_{\varphi}=\sigma_{\theta}$ for different operations of Cell-free Massive MIMO. We consider $L=100$, $N=4$, $K=40$, and $\tau_p=10$. The results for uncorrelated Rayleigh fading are shown as reference by the dotted lines.}  
+	\label{figureSec6_5} 
+\end{figure}
+
+\enlargethispage{\baselineskip}
+
+Recall that there are several tradeoffs in connection with spatial correlation. In Section~\ref{sec:hardening-favorable} on p.~\pageref{sec:hardening-favorable}, we showed that the degree of channel hardening decreases with an increasing spatial correlation, which is a negative impact of correlation.
+There are also some benefits from correlation.
+The level of favorable propagation between two UEs is maximized when the UEs' channels are highly spatially correlated but have very different dominant eigenspaces. Furthermore, the channel estimation quality is improved with increased spatial correlation, as analyzed in Section~\ref{sec:impact-of-spatial-correlation} on p.~\pageref{sec:impact-of-spatial-correlation}. 
+When putting these properties together, it is clear that the negative effects of spatial correlation dominate over the positive effects when using a distributed operation where each AP selects a low-dimensional precoding vector that cannot exploit the spatial correlation to a sufficient extent.
+
+Finally, we note that the gap between P-MMSE and P-RZF is slightly larger under spatial correlation than with uncorrelated fading. Recall that the difference between these schemes is that P-MMSE is utilizing the estimation error correlation matrices $\vect{C}_k$, which affects the precoding direction in the correlated fading case. However, under uncorrelated fading, they are scaled identity matrices that can be lumped together with the noise term, thereby reducing their impact.
+
+We compared the fronthaul signaling load with the centralized and distributed uplink operations in Fig.~\ref{figureSec5_8}(a) on p.~\pageref{figureSec5_8a}. We notice that the fronthaul signaling loads for data and pilots are the same in the downlink as in the uplink 
+when $\tau_d=\tau_u$. This is seen by comparing Tables~\ref{tab:signaling-level4-downlink} and \ref{tab:signaling-level2-downlink} with Table~\ref{tab:signaling-level4-level3} on p.~\pageref{tab:signaling-level4-level3}. Hence, we will not provide any additional numerical results related to this.
+
+
+\newpage
+
+\section{Summary of the Key Points in Section~\ref{c-downlink}}
+\label{c-downlink-summary}
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+\item The downlink of a cell-free network can be implemented with either centralized or distributed operation.
+
+\item In the centralized operation, the CPU is selecting the precoding vectors and computes the signals to be transmitted, while the APs are only taking care of the physical transmission. This operation enables centralized precoding where the signals transmitted from multiple APs can be coherently received at desired UEs while also suppressing each other at the undesired UEs.
+
+\item The downlink SE with the centralized operation is given in Theorem~\ref{theorem:downlink-capacity-level4}. The optimal precoding is computationally intractable to obtain, but the uplink-downlink duality in Theorem~\ref{prop:duality} establishes that a scaled version of the uplink combining vector is a good heuristic for the corresponding downlink precoding vector. The MMSE, P-MMSE, and P-RZF precoding schemes are defined in this way, whereof the latter two admit scalable implementations.
+
+\item In the distributed operation, each AP is receiving the downlink data from the CPU and designs the locally transmitted signal using local precoding based on the locally available channel estimates. 
+The signals transmitted from the serving APs are coherently received at the desired UE, but the interference suppression capability is reduced compared to the centralized operation since each AP can only suppress the interference that itself is generating. This is a limiting factor since each AP is envisioned to have few antennas.
+
+\end{itemize}
+
+\end{mdframed}
+
+\newpage
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+
+\item The downlink SE with the distributed operation is given in Corollary~\ref{theorem:downlink-capacity-level2}. The uplink-downlink duality motivates using the local combining vectors from the uplink as precoding vectors in the downlink. L-MMSE, LP-MMSE, and MR precoding are defined in this way, whereof the latter two admit scalable implementations.
+
+\item We compared the performance of different centralized and distributed implementations of cell-free networks using the running example. In line with the uplink, scalable precoding schemes in both centralized and distributed operations can achieve almost the same SE as their unscalable counterparts, but with much lower complexity.
+
+\item The precoding schemes are motivated by the uplink-downlink duality, thus there is no guarantee that the optimal combining scheme (from the virtual uplink system) provides the highest performance when used for precoding in the downlink.
+
+\item In the centralized operation, it is preferable to have many single-antenna APs when there is a fixed total number of  antennas, just as in the uplink.
+In the distributed operation, UEs with good channel conditions benefit from having a smaller number of multi-antenna APs, which can use local precoding schemes such as LP-MMSE to suppress interference.
+
+\item Increasing the number of UEs in the network improves the sum SE in both the centralized and distributed operations, although the average SE per UE decreases due to the extra interference. Scalable cell-free networks have the capability of serving a large number of UEs with a fixed complexity.
+
+\end{itemize}
+
+\end{mdframed}
+

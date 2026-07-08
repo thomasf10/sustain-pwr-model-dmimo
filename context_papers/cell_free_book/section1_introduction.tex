@@ -1,0 +1,680 @@
+%!TEX root = cell-free-book.tex
+
+\chapter{Introduction and Motivation}
+\label{c-introduction} 
+
+The purpose of mobile networks is to provide devices with wireless access to a variety of data services anywhere in a wide geographical area. For many years, the main service of these networks was voice calls, but nowadays transmission of data packets is the dominant service \cite{EricssonMobility}. Hence, the service quality of contemporary networks is mainly determined by the data rate (measured in bit per second) that can be delivered at different locations in the coverage area. The range of  wireless transmission is determined by the propagation environment. Since the received signal power decays quadratically, or even faster, with the propagation distance, a traditional mobile network infrastructure consists of a set of geographically distributed transceivers that the connecting device can choose between. These are typically deployed at elevated locations (e.g., in masts and at rooftops) to provide unobstructed propagation to many places in the area. Each transceiver will be called an \emph{\gls{AP}} and each user device will be called a \emph{\gls{UE}} in this monograph.
+
+Current mobile networks are built as \emph{cellular networks}, which means that each \gls{UE} connects to one \gls{AP}, namely the one that provides the strongest signal. The \gls{UE} locations for which a particular \gls{AP} is selected is called a \emph{cell}. Figure~\ref{fig:cellular-basics} shows the basic infrastructure of a cellular network with four \glspl{AP}, each equipped with a planar antenna array containing both the antenna elements and the associated radio units (also known as transceiver chains). The antenna elements emit and receive \gls{RF} waves, while the radios generate the analog RF signals to be emitted and process the received RF signals. The radios are connected to a baseband unit that processes the transmitted and received signals in the digital domain. This monograph is focused on the digital signal processing associated with the baseband, thus we will simply refer to each radio and its associated antenna element(s) as \emph{an antenna}. The exact hardware implementation is thereby abstracted away. It is the number of such antennas that determines the dimensionality of the signals that will be generated and processed in the baseband.
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section1/cellular}
+		\put(59,13){AP}
+		\put(59,42){AP}
+		\put(32,13){AP}
+		\put(32,42){AP}
+		\put(0,11){Wired backhaul}
+		\put(-2,2){Wireless backhaul}
+		\put(86.5,27.5){Core}
+		\put(84.5,23.5){network}
+	\end{overpic} 
+	\caption{Cellular network with four \glspl{AP}, which are all connected to the core network via wired backhaul. Some \glspl{AP} are also interconnected by wireless backhaul.} 
+	\label{fig:cellular-basics} 
+\end{figure}
+
+The square area around each \gls{AP} illustrates the cell that the AP provides service to. In reality, the cells will not have symmetric shapes (such as squares, triangles, or hexagons), but it is commonly illustrated like that when describing the fundamentals. The infrastructure of contemporary cellular networks can be divided into two parts: an edge and a core. The edge consists of \glspl{AP} and other hardware units that are directly involved in the physical-layer communication with the \glspl{UE}. The core network facilitates all the services requested by the UEs, including routing of data packages and connection to the Internet. The connections between the edge and core are called \emph{backhaul} links and can either be fully wired (e.g., using fiber cables) or partially wireless (e.g., using fixed microwave links). Figure~\ref{fig:cellular-basics} shows an example where the \glspl{AP} to the right are connected via wired backhaul links to the core network. The \glspl{AP} to the left are connected wirelessly to the  \glspl{AP} to the right, thus their backhaul traffic flows over both wireless and wired links.
+
+
+\begin{figure}[t!]
+	\centering 
+        \begin{subfigure}[b]{\columnwidth} \centering
+	\begin{overpic}[width=.8\columnwidth,tics=10]{images/section1/cellular_rates}
+\end{overpic} 
+                \caption{Each \gls{AP} has a 9\,dBi fixed-gain antenna.}    \vspace{+2mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=.8\columnwidth,tics=10]{images/section1/cellular_rates_MIMO}
+\end{overpic} 
+                \caption{Each \gls{AP} is equipped with 64 omni-directional antennas.} 
+        \end{subfigure} 
+	\caption{Example of the downlink data rate achieved by a \gls{UE} at different locations in the cellular network in Figure~\ref{fig:cellular-basics}, assuming each \gls{AP} transmits with full power.
+	The cell-edge SNR is 0\,dB in (a) and the power is assumed to decay as the distance to the power of four. The bandwidth is 10\,MHz, and the maximum \gls{SE} is 8\,bit/s/Hz. The key observation is that the rates vary substantially in the network.} 
+	\label{fig:cellular-rates} 
+\end{figure}
+
+\enlargethispage{\baselineskip} 
+
+An important consequence of the fact that the received signal power rapidly decays with the propagation distance is that the \glspl{UE} that happen to be close to an \gls{AP} (i.e., in the cell center) will experience a higher \gls{SNR} than those that are close to the edge between two cells. A $10\,000$ times (40\,dB) difference is common between the cell center and cell edge. Moreover, \glspl{UE} at the cell edge are also affected by interference from neighboring \glspl{AP}, thus the \gls{SINR} can be substantially lower than the \gls{SNR} at these locations. The data rate is an increasing function of the \gls{SINR}, thus there are large rate variations in each cell. Figure~\ref{fig:cellular-rates}(a) exemplifies this behavior by showing the data rate achieved in the downlink by a \gls{UE} at different locations, when each \gls{AP} uses a traditional fixed-gain antenna and transmits with maximum power. When the \gls{UE} is close to one of the \glspl{AP}, it achieves the maximum rate that is supported by the system, which is 80\,Mbit/s in this example. In contrast, \glspl{UE} at the cell edges achieve rates below 1\,Mbit/s. This is insufficient for many data services but is nevertheless enough for making voice calls. Depending on the codec, a voice call requires as little as 10-100\,kbit/s and this is supported everywhere in this example.
+Cellular networks were initially designed with this property in mind; we needed the \gls{SNR} to be above a threshold everywhere in the coverage area to prevent dropped calls, but there was no benefit from being far above that threshold. This basic property has  changed entirely when we started using cellular technology for data transmission.
+Since the \glspl{UE} request the same data services everywhere in the coverage area, cell-center \glspl{UE} only need to be connected part of the time, while the cell-edge \glspl{UE} must be turned on for a much larger fraction of time (if the requested service can even be provisioned). Hence, at a given time instance, the majority of active \glspl{UE} are at the cell edges and their performance will determine how the customers perceive the service quality of the network as a whole.
+
+The large data rate variations are inherent to the cellular network architecture and remain even if the \glspl{AP} are equipped with advanced hardware, such as \emph{Massive \gls{MIMO}} \cite{massivemimobook}, \cite{Marzetta2010a}, \cite{Marzetta2016a}. The \gls{MIMO} technology enables each \gls{AP} to use an array of antennas (with integrated radios) to serve multiple \glspl{UE} in its cell by directional transmission, which also increases the \gls{SNR} and reduces inter-cell interference.
+More precisely, in the uplink, multiple \glspl{UE} transmit data to the \glspl{AP} in the same time-frequency resource. The \glspl{AP} exploit the massive number of channel observations (made on the receive antennas) to apply linear receive combining, which discriminates the desired signal from the interfering signals using the spatial domain. 
+In the downlink, the \glspl{UE} are coherently served by all the antennas, in the same time-frequency resource, but separated in the spatial domain by receiving very directive signals. 
+ Figure~\ref{fig:cellular-rates}(b) shows the downlink data rate achieved by a \gls{UE} at different locations when each \gls{AP} has an array of 64 antennas. The data rates are generally higher than in Figure~\ref{fig:cellular-rates}(a). The cell-center area where the maximum data rate is delivered grows and large improvements are also seen at the  cell-edge \glspl{UE}, since beamforming from the antenna array at the \gls{AP} can increase the \gls{SNR} without increasing the inter-cell interference. Despite these gains, there are still substantial rate variations in each cell. Each AP could, in principle, optimize its transmit power to even out the differences (e.g., by reducing the power when serving UEs in the cell center) but this is undesirable since it results in serving all the UEs using the relatively low rates that can be delivered at the cell edge.
+ 
+ \enlargethispage{\baselineskip} 
+ 
+Current cellular networks can achieve high peak data rates in the cell centers, but the large variations within each cell make the service quality unreliable. Even if the rates are sufficiently high at, say, 80\% of the locations in a cell, this is not sufficient when we are creating a society where wireless access is supposed to be ubiquitous. When payments, navigation, entertainment, and control of autonomous vehicles are all relying on wireless connectivity, we must raise the uniformity of the data service quality. 
+In summary, the primary goal for future mobile networks should not be to increase the peak rates, but the rates that can be guaranteed to the very vast majority of the locations in the geographical coverage area. 
+The cellular network architecture was not designed for high-rate data services but for low-rate voice services, thus it is time to look beyond the cellular paradigm and make a clean-slate network design that can reach the performance requirements of the future. 
+This monograph considers the cell-free network architecture that is designed to reach the aforementioned goal of uniformly high data rates everywhere.
+
+The cell-free concept for wireless communication networks is defined in Section~\ref{sec:cell-free-networks}, which briefly describes how to operate such networks. Section~\ref{sec:historical-background} puts the new technology into a historical perspective. Section~\ref{sec:benefits-cellular-networks} describes three basic benefits that cell-free networks have compared to   cellular networks. The key points are summarized in Section~\ref{c-introduction-definition-summary}.
+
+
+\section{Cell-Free Networks}\label{sec:cell-free-networks}
+
+We will now describe the basic architecture and terminology of a  cell-free network. The system and channel propagation models, including the mathematical notation, will be introduced in Section~\ref{c-cell-free-definition} on p.~\pageref{c-cell-free-definition}.
+
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=0.9\columnwidth,tics=10]{images/section1/cellfree}
+		\put(80,40){CPU}
+		\put(3,24){AP}
+		\put(7,61.5){Backhaul}
+		\put(78.5,61.5){Fronthaul}
+		\put(46,65.5){Core}
+		\put(44,61.5){network}
+	\end{overpic} 
+	\caption{Illustration of a cell-free network with many geographically distributed APs connected to CPUs via fronthaul links. The CPUs are connected to the core network via backhaul links. The \glspl{AP} are jointly serving all the \glspl{UE} in the coverage area.} 
+	\label{fig:cell-free} 
+\end{figure}
+
+A cell-free network consists of $L$ geographically distributed \glspl{AP} that are jointly serving the \glspl{UE} that reside in the area. Each \gls{AP} is connected via a \emph{fronthaul} to a \gls{CPU}, which is responsible for the \gls{AP} cooperation. There can be multiple \glspl{CPU} all connected via fronthaul links, which can be wired or wireless. An illustration of a cell-free network with single-antenna \glspl{AP} is provided in Figure~\ref{fig:cell-free}. A cell-free network can be divided into an edge and a core, just as cellular networks. The \glspl{AP} and \glspl{CPU} are at the edge and the connections between them are called fronthaul links, while the connections between the edge and core are still called backhaul links. Hence, the \glspl{CPU} are connected to the core network via backhaul links, which are used to send/receive data from the Internet and other sources, to facilitate various data services. In contrast, the fronthaul links can be used for: 1) sharing physical-layer signals that will be transmitted in the downlink; 2) forwarding received uplink data signals that are yet to be decoded; and 3) sharing \gls{CSI} related to the physical channels. The fronthaul also facilitates phase-synchronization between geographically distributed \glspl{AP}, for example, by providing a common phase reference.
+
+A particular fronthaul topology is illustrated in Figure~\ref{fig:cell-free}, where some \glspl{AP} are directly connected to a \gls{CPU} while other \glspl{AP} are connected via a neighboring \gls{AP}.
+We stress that this is only for illustration purposes. No specific assumption on the topology will be made in this monograph, 
+except that the fronthaul links exist, have infinite capacity, negligible latency, and introduce no errors. This allows us to quantify~the ultimate physical-layer performance of the cell-free network architecture. 
+Practical constraints on the fronthaul infrastructure are briefly reviewed in Section~\ref{sec:implementation-constraints} on p.~\pageref{sec:implementation-constraints}.
+We also note that a \gls{CPU} may not be a separate physical unit but may be viewed as a logical entity; for example, the \glspl{CPU} may represent a set of local processors that can be either located at a subset of the \glspl{AP} or at other physical locations, and which are connected via fronthaul links. 
+Aligned with the ongoing cloudification of wireless networks \cite{6882182}, \cite{Peng2016a}, known as \emph{\gls{C-RAN}}, the \gls{CPU}-related processing tasks can be distributed between the local processors in different ways \cite{Bjornson2013d}.
+
+
+
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=0.9\columnwidth,tics=10]{images/section1/cellfree_distribution}
+		\put(46,64){Core network}
+		\put(0,38){CPUs}
+		\put(0,18){APs}
+		\put(16,1){UE 1}
+		\put(37,1){UE 2}
+		\put(65,1){UE 3}
+	\end{overpic} 
+	\caption{Illustrations of the different layers in a cell-free network. Each \gls{UE} connects to a subset of the \glspl{AP}, which is illustrated by the shaded regions. Each \gls{AP} is connected to one \gls{CPU} via fronthaul. The \glspl{CPU} are interconnected either directly or via the core network.} 
+	\label{fig:cell-free_distribution_processing} 
+\end{figure}
+
+Generally speaking, C-RAN is a network deployment architecture where a group of APs is connected to the same CPU, which carry out most of the APs' baseband processing. By sharing computational resources, the total computational capacity can be reduced since it is unlikely that all APs need the maximum capacity simultaneously. One can also make use of general-purpose hardware and open protocols. Recently, the C-RAN abbreviation has started to stand for \emph{centralized RAN}, since the word ``cloud'' gives the impression that the CPU is owned by another vendor than the wireless network and can be located anywhere in the world. However, to meet the latency constraints of baseband processing, the CPU is rather an edge-cloud processor located in the same geographical area as the APs.
+Many different physical-layer technologies can be implemented using the C-RAN architecture. So far, it has mainly been used for cellular networks but it is also the foundation for cell-free networks.
+Figure~\ref{fig:cell-free_distribution_processing} gives a schematic view of a cell-free network that uses the C-RAN architecture. It is divided into different layers: the core network, the \gls{CPU} layer, the \gls{AP} layer, and the \gls{UE} layer.
+Each \gls{UE} is served by a subset of the \glspl{AP}, for example, all the neighboring ones. These subsets are illustrated by the shaded regions in Figure~\ref{fig:cell-free_distribution_processing}.
+For each \gls{UE}, one of the selected \glspl{AP} is the so-called \emph{Master \gls{AP}} that is responsible for serving the \gls{UE} and appointing a \gls{CPU} where the uplink data decoding and downlink data encoding will be carried out. That \gls{CPU} delivers the downlink data to all \glspl{AP} that are transmitting to the \gls{UE} and combines/fuses the uplink received signals obtained at those \glspl{AP} in a final decoding step. 
+A \gls{UE} can be served by \glspl{AP} connected to different \glspl{CPU}; there exists a fronthaul link between every pair of \glspl{AP} even if it might go via other entities.
+The signal processing required for communication can be divided between the \glspl{AP} and \gls{CPU} in different ways, which will be explored in later sections of this monograph. 
+As the \gls{UE} moves around, the Master \gls{AP} assignment, selection of \gls{CPU}, and selection of cooperating \glspl{AP} may change dynamically.
+
+\enlargethispage{\baselineskip} 
+
+The word ``cell-free'' signifies that no cell boundaries exist from a \gls{UE} perspective during uplink and downlink transmission since all \glspl{AP} that affect a \gls{UE} will take an active part in the communication. For example, when a \gls{UE} transmits an uplink data signal then all \glspl{AP} that receive it, with an \gls{SNR} that is above a threshold, will collaborate in decoding the signal. The partially overlapping shaded regions in Figure~\ref{fig:cell-free_distribution_processing} can be created in that way.
+The network is jointly serving all the $K$ \glspl{UE} that are active in the coverage area of the network, even if not all \glspl{AP} might serve every single \gls{UE}. The differences between cellular and cell-free networks exist at the infrastructure and signal processing side, but can be transparent to the \glspl{UE}. It should be possible for the same \gls{UE} to connect to both types of networks without upgrading its software.
+
+
+\begin{figure}[t!]
+	\centering 
+	\begin{subfigure}[b]{\columnwidth} \centering
+		\begin{overpic}[width=.8\columnwidth,tics=10]{images/section1/cellfree_rates}
+		\end{overpic} 
+		\caption{Cell-free network.}    \vspace{+1mm}
+	\end{subfigure} 
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=.8\columnwidth,tics=10]{images/section1/smallcell_rates}
+		\end{overpic} 
+		\caption{Cellular network with the same AP locations.} 
+	\end{subfigure} 	
+	\caption{Example of the downlink data rate achieved by a \gls{UE} at different locations in a network with 64 \glspl{AP} with omni-directional antennas deployed on a square grid and jointly transmitting to the UE. The propagation parameters are otherwise the same as in Figure~\ref{fig:cellular-rates}. A cell-free network operation is considered in (a), while a cellular network operation is considered in (b). The key observation is that only the cell-free operation can provide almost uniformly high data rates in the entire network.} 
+	\label{fig:cellfree-rates} 
+\end{figure}
+
+
+
+
+To give a first impression of the goal of creating cell-free networks, Figure~\ref{fig:cellfree-rates}(a) shows the downlink data rate achieved by a \gls{UE} at different locations in a setup that resembles the cellular example in Figure~\ref{fig:cellular-rates}. For simplicity, an ideal deployment with 64 \glspl{AP} deployed on an $8 \times 8$ square grid is considered.
+The figure shows that the rates vary between 52 and 80\,Mbit/s everywhere in the coverage area. One contributing factor is the denser deployment, which greatly reduces the average propagation distance between a \gls{UE} and the closest \gls{AP}.
+ However, the main reason is that all the surrounding \glspl{AP} are jointly transmitting to the \gls{UE}, thereby alleviating the inter-cell interference issue that is one of the main causes of the large rate variations in cellular networks.
+This is evident when comparing Figure~\ref{fig:cellfree-rates}(a) with Figure~\ref{fig:cellfree-rates}(b), where a cellular network with the same AP locations is considered. The inter-cell interference then gives rise to large rate variations. 
+
+
+
+
+
+\section{Historical Background}\label{sec:historical-background}
+
+The cellular architecture has played a key role in enabling mobile communications, from the early concepts developed in the 1950s and 1960s \cite{Bullington1953a}, \cite{Frefkiel1970a}, \cite{Schulte1960a} to the first commercial deployment in 1979 \cite{Kinoshita2018a}.
+The motivating factor of building a cellular network was to make efficient use of the limited frequency spectrum by enabling many concurrent transmissions in the geographical area covered by the network. To control the interference between the transmissions, the coverage area was divided into predefined geographical zones, known as cells, where a fixed \gls{AP} takes care of the service. In the beginning, a predefined frequency plan was utilized so that adjacent cells use different frequency resources, thereby limiting the inter-cell interference. Over the years, commercial cellular networks have been densified by deploying more \glspl{AP} per area unit \cite{Cooper2010a}. By using steerable multi-antenna panels at each \gls{AP}, instead of fixed-beam antennas, the interference between adjacent cells can be partially controlled so that the traditional frequency plans can be alleviated. 
+Depending on the deployment scenario (e.g., indoor/outdoor, frequency band, coverage area, and distance from the AP to the closest UE location), different types of AP hardware are utilized \cite{Kamel2016a}. The resulting parts of the cellular networks are sometimes categorized as microcells, picocells, and femtocells. We will use the overarching term \emph{small cells} when referring to such networks \cite{Hoydis2011c}.
+The use of smaller and smaller cells has been an efficient way to increase the network capacity, in terms of the number of bits per second that can be transferred in a given area. 
+Ideally, the network capacity grows proportionally to the number of \glspl{AP} (with active \glspl{UE}), but this trend gradually tapers off due to the increasing inter-cell interference \cite{Andrews2017a}, \cite{Zhou2003a}. After a certain point, further network densification can actually reduce rather than increase the network capacity. 
+This is particularly the case in the \emph{ultra-dense network} regime \cite{Hwang2013a}, \cite{Kamel2016a}, \cite{Stefanatos2014a}, where the number of \glspl{AP} is larger than the number of \emph{simultaneously active} \glspl{UE}. Even if each \gls{AP} would have a handful of antennas, this is not enough to suppress all the interference in such a dense scenario.
+A cell-free network is an attempt to move beyond those limits \cite{Chen2016a}, \cite{Interdonato2018}, \cite{Ngo2017b}, \cite{Zhang2020a}, \cite{Zhang2019a}. Before explaining how that can be achieved, we will give a detailed historical background.
+
+
+\begin{figure} 
+        \centering \vspace{-4mm}
+        \begin{subfigure}[b]{\columnwidth} \centering
+	\begin{overpic}[width=.9\columnwidth,tics=10]{images/section1/figure_interference_channel}
+ \put(5,4){Transmitter 1}
+  \put(5,14){Transmitter 2}
+   \put(5,25){Transmitter 3}
+   \put(73,4){Receiver 1}
+   \put(73,14){Receiver 2}
+   \put(73,25){Receiver 3}
+\end{overpic} 
+                \caption{An \emph{interference channel} representing how cellular networks are conventionally operated. Each receiver wants to decode the data sent from its transmitter, subject to the dashed interfering signals from simultaneous transmissions.}    \vspace{+4mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=.9\columnwidth,tics=10]{images/section1/figure_multiaccess_channel}
+ \put(5,4){Transmitter 1}
+  \put(5,14){Transmitter 2}
+   \put(5,25){Transmitter 3}
+   \put(75,17){Receiver that}
+   \put(75,13){decodes all}
+   \put(75,9){signals jointly}
+\end{overpic} 
+                \caption{A \emph{multiaccess channel} representing how distributed receive antennas can cooperate to jointly decode the signals from all transmitters. The information contained in all received signals can be utilized. There are no unusable interfering signals. This describes the ideal uplink operation of a cell-free network.}  \vspace{+4mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering
+	\begin{overpic}[width=.9\columnwidth,tics=10]{images/section1/figure_broadcast_channel}
+   \put(3,17){Transmitter}
+   \put(3,13){that sends all}
+   \put(3,9){signals jointly}
+   \put(73,4){Receiver 1}
+   \put(73,14){Receiver 2}
+   \put(73,25){Receiver 3}
+\end{overpic} 
+                \caption{A \emph{broadcast channel} representing how distributed transmit antennas can cooperate to jointly send the signals to all receivers. The signals sent from all antennas can be utilized at each receiver. There are no unusable interfering signals. This describes the ideal downlink operation of a cell-free network.}    \vspace{+2mm}
+        \end{subfigure} 
+        \caption{A cellular network is conventionally operated as an interference channel, which is shown in (a). To alleviate inter-cell interference, the uplink of a cell-free network is instead operated as the multiaccess channel shown in (b) and the downlink is operated as the broadcast channel shown in (c).} 
+        \label{figure_interference_MAC_broadcast}  
+\end{figure}
+
+
+\enlargethispage{\baselineskip} 
+
+As mentioned earlier, a key property of conventional cellular networks is that each \gls{UE} is assigned to one cell and only served by its \gls{AP}. This is known as an \emph{interference channel} in information theory and is illustrated in Figure~\ref{figure_interference_MAC_broadcast}(a) for the case of three single-antenna transmitters and three single-antenna receivers. Each receive antenna obtains  a signal containing the information sent from one desired transmitter (solid line) plus two interfering signals (dashed lines) sent from the undesired transmitters. 
+Even in the absence of noise, identifying the desired signal is like solving an ill-conditioned linear system of equations with three unknowns but only one equation.
+Hence, the inter-cell interference is unusable in this case; it only limits the performance.
+When operating such a cellular network, the transmit powers might be adjusted to determine which of the cells will be most affected by the interference. There is no other cooperation between the \glspl{AP}; neither \gls{CSI} nor transmitted/received signals are shared between cells.
+These assumptions were challenged by Wyner in \cite{Wyner1994a} from 1994, where the uplink was studied and the benefit of jointly decoding the data from all \glspl{UE} using the received signals in all cells was explored. In this way, the interference channel is turned into a \emph{multiaccess channel}, where all the receive antennas collaborate. Even if each antenna receives a superposition of multiple signals, there is no unusable interference but the task of the receiver is to extract the information contained in all the received signals.
+This alternative way of operating the system is illustrated in Figure~\ref{figure_interference_MAC_broadcast}(b). In this example, the receiver has access to three observations that contain linear combinations of the three desired signals. 
+In the absence of noise, signal detection can be viewed as solving a linear system of equations with three unknowns and three equations, which is a well-conditioned problem.
+Importantly, the interference is not only canceled by this approach, but the observations made at multiple receive antennas are combined to increase the \gls{SNR} compared to the case where there was no interference between the transmissions \cite{Gesbert2010a}. \emph{Interference is turned from being bad to being good!}
+
+
+
+Similarly, Shamai and Zaidel proposed a downlink co-processing framework in \cite{Shamai2001a} from 2001. Using information-theoretic terminology, the cellular downlink was transformed from an interference channel to a \emph{broadcast channel}, where all the geographically distributed transmit antennas collaborate. This case is illustrated in Figure~\ref{figure_interference_MAC_broadcast}(c). Each antenna  transmits a linear combination of the downlink signals intended for the UEs in all cells, where the linear combination is designed based on the channels to limit inter-cell interference. 
+For example, in the setup shown in Figure~\ref{figure_interference_MAC_broadcast}(c) with three geographically distributed transmitters (\glspl{AP}) and three distributed receivers (\glspl{UE}), \gls{ZF} precoding can be utilized to completely avoid interference. This is not possible in the interference channel in Figure~\ref{figure_interference_MAC_broadcast}(a), where each signal is only sent from one transmitter and no precoding can be used.
+
+\enlargethispage{\baselineskip} 
+
+While the premise of  \cite{Shamai2001a}, \cite{Wyner1994a} was to add co-processing to an existing cellular network, the idea of building a cell-free network from the outset was pioneered by Zhou, Zhao, Xu, Wang, and Yao in \cite{Zhou2003a} from 2003. Their concept was called \emph{Distributed Wireless Communication System} and resembles the architecture described in Section~\ref{sec:cell-free-networks} with geographically distributed antennas and processing, and a \gls{CPU} that controls the system. The paper proposes that a \gls{UE} should not be served by all the antennas but only by the nearest set of distributed antennas, as illustrated by the shaded regions in Figure~\ref{fig:cell-free_distribution_processing}. This is an early step towards a user-centric assignment of network infrastructure, where each \gls{UE} is served by the user-preferred set of \glspl{AP} instead of by a predefined set. Similar ideas appeared for soft handoff in \gls{CDMA} systems \cite{Viterbi1994a}, where UEs at cell edges are jointly served by all the nearest \glspl{AP}.
+
+Many other researchers contributed to this topic during the 2000s and a variety of terminologies have been used to refer to systems where the \glspl{AP} are jointly processing the transmitted and received signals. We will provide some key examples in this paragraph, without attempting to provide an exhaustive list. 
+Non-linear co-processing schemes were developed by Jafar, Foschini, and Goldsmith  \cite{Jafar2004a} with the goal of enabling new \glspl{UE} to be added to a cellular network without affecting the rates of existing \glspl{UE}.
+Cooperative downlink processing with multi-antenna \glspl{AP} was studied by Zhang and Dai in \cite{Zhang2004a}. 
+The concept of \emph{Group Cell} was introduced by Zhang, Tao, Zhang, Wang, Li, and Wang in \cite{Zhang2005b} to serve mobile UEs by multiple cells to enable smooth handover during mobility. Multi-cell detection features were also discussed using the group cell name \cite{Tao2005a}.
+Coherent coordinated transmission from the \glspl{AP} based on linear \gls{ZF} precoding and non-linear dirty paper coding was studied by Foschini, Karakayali, and Valenzuela in \cite{Foschini2006a}, \cite{Karakayali2006a}.
+The term \emph{Network MIMO} was coined by Venkatesan, Lozano, and Valenzuela in \cite{Venkatesan2007a} to describe a cellular network where all the \glspl{AP} within the range of a \gls{UE} share their received signals over a backhaul network, to turn the cellular uplink from an interference channel to a multiaccess channel.
+Soft handover between distributed antennas in \gls{OFDM} systems was studied by T\"olli, Codreanu, and Juntti in \cite{Tolli2008a}. While \gls{AP} cooperation with infinite-capacity backhaul links was assumed in the above-mentioned works, implementation of joint uplink detection with limited-capacity backhaul was considered by Sanderovich, Somekh, Poor, and Shamai in \cite{Sanderovich2009a}, while the downlink counterpart was studied by Simeone, Somekh, Poor, and Shamai in \cite{Simeone2009a}. 
+Iterative data detection methods, where the \glspl{AP} exchange soft information to reduce the inter-cell interference, were considered by Khattak, Rave, and Fettweis in \cite{Khattak2008a}.
+Finally, Bj\"ornson, Zakhour, Gesbert, and Ottersten showed in \cite{Bjornson2010c} that coherent joint transmission can be implemented in \gls{TDD} systems without sharing \gls{CSI} between the \glspl{AP}, at the cost of increased interference since the \gls{AP} cannot cancel each others' signals at undesired receivers.
+
+
+\subsection{Towards Standardization in 4G}
+
+The multi-cell cooperation concepts were considered in the 4G standardization of LTE-Advanced in the late 2000s \cite{Parkvall2008a}, under the umbrella term of \emph{\gls{CoMP}} transmission/reception. 
+The co-processing of data at multiple \glspl{AP}, which is the focus of this monograph, is called \emph{\gls{JP}} in \gls{CoMP} \cite{Boldi2011a}. Other \gls{CoMP} options are coordinated scheduling/precoding where each cell only serves its own \glspl{UE}, which fall into the category of methods that can be also implemented in conventional cellular networks. Both centralized and decentralized architectures for facilitating \gls{JP} were explored in the context of \gls{CoMP}. In the centralized approach, the cooperating \glspl{AP} are connected to a \gls{CPU} (which might be co-located with an \gls{AP}) and send their information to it. Hence, the \glspl{AP} can be also viewed as relays that facilitate communication between \glspl{UE} and the \gls{CPU} \cite{Estella2019a}.
+In the decentralized approach, the cooperating \glspl{AP} only acquire \gls{CSI} from the \glspl{UE} \cite{Papadogiannis2009a}, but data must still be shared between \glspl{AP}.
+
+
+\begin{figure} 
+        \centering \vspace{-4mm}
+        \begin{subfigure}[b]{\columnwidth} \centering
+	\begin{overpic}[width=.75\columnwidth,tics=10]{images/section1/history_cellular_network}
+\end{overpic} 
+                \caption{A conventional cellular network, where each \gls{UE} is only served by one \gls{AP}.}    \vspace{+2mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=.75\columnwidth,tics=10]{images/section1/history_network_centric}
+\end{overpic} 
+                \caption{A network-centric implementation of \gls{CoMP} in a cellular network, where the \glspl{AP} are divided into disjoint clusters. The \glspl{UE} in a cluster are jointly served by the \glspl{AP} in that cluster.}  \vspace{+2mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering
+	\begin{overpic}[width=.75\columnwidth,tics=10]{images/section1/history_user_centric}
+\end{overpic} 
+                \caption{A user-centric implementation of \gls{CoMP} in a cellular network, where each \gls{UE} selects a set of preferred \glspl{AP} that will serve it. This is the approach taken also in cell-free networks.}    \vspace{+1mm}
+        \end{subfigure} 
+        \caption{Comparison between a conventional cellular network and two ways of implementing multi-cell cooperation.} 
+        \label{figure_cellular_clusters}  
+\end{figure}
+
+
+
+
+\subsubsection{Network-Centric Clustering}
+\enlargethispage{\baselineskip} 
+Since each \gls{UE} in a conventional cellular network would only be affected by interference from its own cell and a set of neighboring cells, it is only the corresponding cluster of \glspl{AP} that needs to cooperate to alleviate inter-cell interference for this \gls{UE}. 
+Different ways to implement the \gls{AP} clustering was explored alongside the development of LTE-Advanced \cite{Boldi2011a}.
+The starting point for the clustering is that a cellular network already exists and needs to be improved. We will use the example in Figure~\ref{figure_cellular_clusters}(a) to explain the clustering approaches.
+The first option is \emph{network-centric clustering} where the \glspl{AP} are divided into disjoint clusters \cite{Huang2009b}, \cite{Marsch2008a}, \cite{Zhang2009b}, each serving a disjoint set of \glspl{UE}. For example, groups of three neighboring cells can be clustered into a joint region, as illustrated by the colored regions in  Figure~\ref{figure_cellular_clusters}(b). Compared to the conventional cellular network in Figure~\ref{figure_cellular_clusters}(a), the cell edges within each cluster are removed, but interference will still occur between clusters. Hence, \glspl{UE} that are close to a cluster edge might not benefit from the network-centric clustering. 
+The clusters can be changed over time or frequency in an effort to make sure that most of the served \glspl{UE} are in the center of a cluster and not at the edges \cite{Cayirci2002a}, \cite{Jungnickel2014a}, \cite{Marsch2011a}, \cite{Papadogiannis2009a}.
+The network-centric clustering is conceptually similar to having a conventional cellular network where each cell contains a set of distributed antennas that are controlled by a single \gls{AP} \cite{Choi2007a}. Each cell in such a setup corresponds to one cluster in the network-centric clustering.
+
+
+\subsubsection{User-Centric Clustering}
+
+Another option is \emph{user-centric clustering} where each \gls{UE} selects a set of preferred  \glspl{AP}  \cite{Bjornson2011a}, \cite{Bjornson2013d}, \cite{Chen2016a}, \cite{Garcia2010a}, \cite{Kaviani2012a}, \cite{Xu2013a}, \cite{Zhang2005b}. This is illustrated for five \glspl{UE} in  Figure~\ref{figure_cellular_clusters}(c), where each colored region corresponds~to the set of \glspl{AP} selected by the corresponding \gls{UE}. Note that the sets are partially overlapping between neighboring \glspl{UE}, thus disjoint \gls{AP} clusters cannot be created to achieve the same result. Irrespective of the \gls{UE}'s location, user-centric clustering will guarantee the control~of interference.
+In this monograph, we will make use of the \emph{\gls{DCC}} framework for user-centric clustering,~which was introduced by Bj{\"{o}}rnson, Jald{\'e}n, Bengtsson, and Ottersten in \cite{Bjornson2011a}.
+
+If the clusters are well designed, user-centric clustering outperforms network-centric clustering since the latter is essentially a special case of the former.
+However, both approaches are complicated to add to an existing cellular network since the interfaces between the \glspl{AP} must be standardized to enable cooperation among \gls{AP} equipment from different vendors. When potential solutions were simulated in the 4G standardization body, the performance gains were often so small that the additional control signaling might remove the gains \cite{Boldi2011a}. 
+An important reason was that the algorithms were jointly designed for \gls{FDD} and \gls{TDD} systems, thus they could not exploit the particular features that only exist in one of these duplexing modes. In particular, \gls{CSI} for downlink precoding had to be sent around between the \glspl{AP} over low-latency backhaul links to make the system work \cite{Fantini2016a}. It is only in a pure \gls{TDD} implementation exploiting uplink-downlink channel reciprocity that the \gls{CSI} necessary for downlink precoding can be obtained at each \gls{AP} without backhaul signaling \cite{Bjornson2010c}. We return to this later in this section.
+\enlargethispage{\baselineskip} 
+
+In Release 10 of LTE-Advanced, only a special case of network-centric clustering was supported \cite{Boldi2011a}: each cluster consists of \glspl{AP} that are deployed on the same physical site to cover different geographical sectors. Such clustering can only limit the interference between cell sectors, but not between \glspl{UE} at cell edges. Despite the lack of standardization, the major vendors of \gls{AP} hardware have made proprietary implementations of \gls{CoMP} with \gls{JP} that can only be applied among their own \glspl{AP}. 
+These solutions are often implemented using the \gls{C-RAN} architecture, which was briefly introduced in Section~\ref{sec:cell-free-networks}. In this cellular context, a set of neighboring \glspl{AP} is connected via a low-latency fronthaul to an edge-cloud processor where the baseband processing is carried out. \gls{CoMP} algorithms can be conveniently implemented in such a setup.
+It is not publicly known what \gls{CoMP} methods are used by different vendors and how well the implementations perform.
+However, the pCell technology from Artemis \cite{Perlman2015a} is claimed to utilize user-centric clustering.
+
+
+\subsection{Cellular Massive \gls{MIMO} in 5G}
+
+Instead of focusing on \gls{CoMP}, the new feature in the 5G cellular networks is Massive \gls{MIMO}. This concept was introduced by Marzetta in \cite{Marzetta2010a} from 2010 and essentially means that each \gls{AP} \emph{operates individually} and is equipped with an array of a very large number of active low-gain antennas that can be individually controlled using separate radios (transceiver chains). This stands in contrast to the passive high-gain antennas traditionally used in cellular networks, which might have similar physical dimensions but only a single radio.
+Massive \gls{MIMO} has its roots in \emph{space-division multiple access} \cite{Anderson1991a}, \cite{Richard1996a}, \cite{Swales1990a}, \cite{Winters1987a}, which was introduced in the 1980s and 1990s to enable multiple \glspl{UE} to be served by an \gls{AP} at the same time and frequency. The antenna arrays enable directional transmission to each \gls{UE} (and directional reception from them), thus \glspl{UE} located at different locations in the same cell can be served simultaneously with little interference.
+This technology has later been known as multi-user \gls{MIMO}.
+
+\enlargethispage{\baselineskip} 
+
+\subsubsection{Benefits}
+
+The characteristic feature of Massive \gls{MIMO}, compared to traditional multi-user MIMO, is that each \gls{AP} has many more antennas than there are active \glspl{UE}  in the cell. Two important propagation phenomena~appear in those cases \cite{Larsson2014a}, \cite{Rusek2013a}: \emph{channel hardening} and \emph{favorable propagation}. The former means that fading channels behave almost as deterministic channels if the antenna signals are processed properly to neutralize~the small-scale fading. In principle, the processing makes use of the massive spatial diversity offered by having many antennas. 
+Favorable propagation means that the channels of spatially separated \glspl{UE} are nearly orthogonal in the spatial domain, since transmission and reception are very spatially directive. We will describe these phenomena in detail in Section~\ref{sec:hardening-favorable} on p.~\pageref{sec:hardening-favorable}.
+Motivated by the second phenomenon, it was initially claimed that low-complexity interference-ignoring signal processing methods, such as \gls{MR} processing, are close-to-optimal when each \gls{AP} is equipped with a large number of antennas.
+It has later been established that more advanced linear signal processing methods,  such as \emph{\gls{MMSE} processing}, are needed to make efficient use of Massive \gls{MIMO} \cite{BjornsonHS17}, \cite{Hoydis2013a}, \cite{Neumann2017a}, \cite{Sanguinetti2019a}. In essence, this means that interference must be actively suppressed (one cannot rely on it disappearing automatically when there are many antennas), but the loss in desired signal power is small and there is little need for non-linear methods such as successive interference cancellation \cite{massivemimobook}.
+
+A rigorous framework for analyzing the achievable data rates under imperfect \gls{CSI} was developed in the Massive \gls{MIMO} literature and is summarized in recent textbooks, such as \cite{massivemimobook}, \cite{Marzetta2016a}. Many tools from this framework will be also utilized in later sections of this monograph.
+
+\subsubsection{Limitations}
+
+As illustrated in Figure~\ref{fig:cellular-rates} earlier in this chapter, Massive \gls{MIMO} can increase the data rates in a cellular network compared to conventional technology, but large rate variations and inter-cell interference will still remain. Moreover, the 64-antenna panels that have been deployed in 5G cellular networks are not \glspl{ULA}, as is normally explicitly or implicitly assumed in the Massive \gls{MIMO} literature \cite{massivemimobook}, \cite{Marzetta2016a}, but compact planar arrays that can be deployed in the same way as conventional antennas. 
+Since the horizontal width of an array determines its ability to separate \glspl{UE} located in different azimuth angles with respect to the array (i.e., wider arrays mean better spatial resolution), the service quality provided by planar arrays is far from what is presented in the literature \cite{Aslam2019a}, \cite{Bjornson2019d}.
+In summary, Massive \gls{MIMO} is a solution to some of the interference problems that are faced in conventional cellular networks. However, a cellular deployment of physically wide horizontal  \glspl{ULA} is practically questionable since it greatly deviates from the form factor of conventional cellular \glspl{AP}. Even if this practical barrier is overcome, the large variations in the distance to the served \glspl{UE} will still lead to large rate variations of the kind illustrated in Figure~\ref{fig:cellular-rates}. Hence, a different deployment architecture is required to deliver a more uniform service quality over the coverage~area.
+
+
+\subsection{Cell-Free Networks Beyond 5G}
+\label{subsec-history-cellfree}
+
+The \emph{cell-free} terminology was coined by Yang and Marzetta in \cite{Yang2013b} from 2013, while the name \emph{Cell-free Massive \gls{MIMO}} first appeared in \cite{Ngo2015a} by Ngo, Ashikhmin, Yang, Larsson, and Marzetta from 2015. 
+While most of the research described earlier adds multi-cell cooperation to an existing cellular network architecture, Cell-free Massive \gls{MIMO} instead follows in the footsteps of the Distributed Wireless Communication System concept from \cite{Zhou2003a}, where a network consisting of distributed cooperating antennas is designed from the outset. 
+The word ``massive'' refers to an envisioned operating regime with many more \glspl{AP} than \glspl{UE} \cite{Ngo2015a}, and is as an analogy to the conventional Massive MIMO regime in cellular networks; that is, having many more antennas at the infrastructure side than UEs to be served. Interestingly, the envisioned operating regime coincides with that of ultra-dense networks \cite{Hwang2013a}, \cite{Kamel2016a}, \cite{Stefanatos2014a}, but with the core difference that the APs are cooperating to form a distributed antenna array. The original motivation of Cell-free Massive \gls{MIMO} was to provide an almost uniformly high service quality in a given geographical area \cite{Ngo2015a}, as illustrated in Figure~\ref{fig:cellfree-rates}. 
+
+\enlargethispage{\baselineskip} 
+
+\subsubsection{Background}
+
+The cell-free architecture, shown in Figure~\ref{fig:cell-free} and Figure~\ref{fig:cell-free_distribution_processing}, was analyzed in the early works \cite{Nayebi2017a}, \cite{Ngo2017b} with the focus on a distributed operation where the \glspl{AP} perform all the signal processing tasks, except for those that critically require central coordination. The system operates in \gls{TDD} mode, which means that the uplink and downlink take place in the same frequency band but are separated in time. Hence, the downlink/uplink channels can be jointly estimated by sending known pilot signals from the \glspl{UE} to the \glspl{AP}. In this way, each \gls{AP} obtains local \gls{CSI} regarding the channels between itself and the different \glspl{UE}. In the downlink setup studied in \cite{Nayebi2017a}, \cite{Ngo2017b}, each data signal is encoded at a \gls{CPU} and sent over the fronthaul to the \glspl{AP}, which transmit the signals using \gls{MR} precoding based on the locally available \gls{CSI}. Similarly, in the uplink, each \gls{AP} applies \gls{MR} combining locally and sends its soft data estimates over the fronthaul to the \gls{CPU}, which makes the final decoding without having access to any \gls{CSI}.
+This concept is well aligned with the cellular joint transmission framework from \cite{Bjornson2010c}, where the \glspl{AP} only make use of local \gls{CSI} obtained from uplink pilots in \gls{TDD} mode. 
+Variations of this type of distributed processing can be found in \cite{Bashar2019a}, \cite{Bjornson2019c}, \cite{Buzzi2017a}, \cite{Fan2019a}, \cite{Ozdogan2018a}, \cite{Yang2019a}, \cite{Zhang2018a}. One key insight from the more recent works is that the performance can be greatly improved by using \gls{MMSE} processing instead of \gls{MR} \cite{Bjornson2019c}, which is in line with what has also been observed in the Cellular Massive \gls{MIMO} literature \cite{BjornsonHS17}, \cite{Sanguinetti2019a}.
+Hence, even if favorable propagation effects can be observed also in cell-free networks with many distributed antennas \cite{Chen2018b}, it remains important to design the signal processing schemes to actively suppress interference.
+
+
+The data rates can be also improved by semi-centralized implementations, potentially, at the cost of additional fronthaul signaling. One option is to provide the \gls{CPU} with statistical \gls{CSI} so that it can optimize how the uplink data estimates from the \glspl{AP} are combined by taking their relative accuracy into account \cite{Adhikary2017a}, \cite{Bjornson2019c}, \cite{Nayebi2016a}, \cite{Ngo2018b}. 
+For example, an \gls{AP} that is close to the \gls{UE} should have more influence than an \gls{AP} that is further away or that is subject to strong interference.
+Another option is to let the \gls{CPU} take care of all the processing while the \glspl{AP} only act as relays \cite{Bashar2018a}, \cite{Bjornson2019c}, \cite{Chen2018b}, \cite{Nayebi2016a}, \cite{Riera2018a}, \cite{Yang2019a}. These different options will be analyzed in detail in later sections of this monograph.
+
+\subsubsection{The Roots of Cell-Free Massive MIMO}
+
+The first papers on Cell-free Massive \gls{MIMO} assumed all \glspl{UE} are served by all \glspl{AP}, while the user-centric clustering from the \gls{CoMP} literature was first considered in the cell-free context in \cite{Buzzi2017a}, \cite{Buzzi2017b}. A new practical implementation of such clustering was proposed in \cite{Interdonato2019a}, by first dividing the \glspl{AP} into clusters in a network-centric fashion and then let each \gls{UE} select a preferred subset of the network-centric clusters. A framework for creating the user-centric clusters in a decentralized fashion was proposed in \cite{Bjornson2020a}, where the scalability of the different signal processing tasks was also analyzed. Similar user-centric clustering concepts exist in the literature on ultra-dense networks \cite{Chen2016a}.
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=.65\columnwidth,tics=10]{images/section1/venn-diagram}
+		\put(42,47){Cell-free}
+		\put(42.5,42){Massive}
+		\put(43.5,37){MIMO}
+		\put(8,28){Ultra-dense}
+		\put(8,23){network}
+		\put(69,28){CoMP with}
+		\put(69,23){joint trans-}
+		\put(69,18){mission}
+		\put(30,78){Physical layer from}
+		\put(26,73){Cellular Massive MIMO}
+	\end{overpic} 
+	\caption{Cell-free Massive MIMO can be defined as the intersection between three technology components: The physical layer from Cellular Massive MIMO, the  joint transmission concept for distributed APs in the CoMP literature, and the deployment regime of ultra-dense networks.} 
+	\label{fig:venn-diagram} 
+\end{figure}
+
+
+
+Many of the concepts described in the Cell-free Massive \gls{MIMO} literature have previously (or simultaneously) appeared and been analyzed in the cellular literature; for example, in some of the papers mentioned earlier in this section. 
+With this in mind, there are two approaches to defining Cell-free Massive \gls{MIMO}. 
+The first approach is to specify its unique characteristics. As illustrated by the Venn diagram in Figure~\ref{fig:venn-diagram}, it can be viewed as the intersection between the physical layer from the Cellular Massive MIMO literature, the joint transmission concept for distributed APs in the CoMP literature, and the deployment regime of ultra-dense networks. This corresponds to the inner region in the diagram. In other words, we take the best aspects from three technologies, combine them into a single network, and then jointly optimize them to achieve an ultimate embodiment of a wireless network. The second approach is to view Cell-free Massive \gls{MIMO} as the union of the three circles; that is, an overarching concept focused on cell-free networks but which contains conventional Massive MIMO, conventional CoMP, and conventional ultra-dense networks as three special cases. The presentation of the technical content of this monograph will follow the first approach, thus it is that narrow definition that should be remembered when reading the term ``Cell-free Massive MIMO'' in later sections.
+We will focus on describing the foundations of Cell-free Massive \gls{MIMO}, including the state-of-the-art signal processing and optimization methods. We will focus on how a user-centric viewpoint can be used to identify a scalable implementation, which are two dimensions that are not captured by the Venn diagram. We will compare the achievable performance with that of Cellular Massive MIMO and small cells, which we will extract as two special cases from our analytical formulas. The presentation is not based on a particular set of papers, but is an attempt to summarize the topic as a whole.
+
+\enlargethispage{2\baselineskip} 
+
+\section{Three Benefits over Cellular Networks} \label{sec:benefits-cellular-networks}
+
+We will end this section by showcasing three major benefits that cell-free networks have compared to conventional cellular networks. More precisely, we compare the setups illustrated in Figure~\ref{fig:basic-comparison-cellular-cellfree}. The first one is a single-cell setup with a 64-antenna Massive \gls{MIMO} \gls{AP}, the second one consists of 64 small cells deployed on a square grid, and the last one is a cell-free network where the same 64 \gls{AP} locations are used. The comparison of these setups will be made by presenting basic mathematical expressions and simulation results, while a more in-depth analysis of cell-free networks will be provided in later sections.
+
+
+\subsection{Benefit 1: Higher \gls{SNR} With Smaller Variations}\label{sec:benefits-distributed-antennas}
+
+The first benefit of the cell-free architecture is that it achieves a higher and more uniform  \gls{SNR} within the coverage area than conventional cellular networks.
+To explain this, we assume there is only one active \gls{UE} in the network and quantify the \gls{SNR} that the \gls{UE} achieves in the uplink, when the \gls{UE}'s transmit power is $p$ and the noise power is $\sigmaUL$.
+In each of the three setups in Figure~\ref{fig:basic-comparison-cellular-cellfree}, there are $64$ antennas. 
+The received power is substantially lower than the transmit power in wireless communications. For the sake of argument, we model the \emph{channel gain} (also known as pathloss or large-scale fading coefficient) for a propagation distance $d$ as (in decibels)
+\begin{equation}\label{eq:large-scale-model-simple}
+\beta(d) \,  [\textrm{dB}] = -30.5 - 36.7 \log_{10}\left( \frac{d}{1\,\textrm{m}} \right).\end{equation}
+The first term says that 30.5\,dB of the power is lost at 1\,m distance while the second term says that another 36.7\,dB of power is lost for every ten-fold increase in the propagation distance. All channels are deterministic and thus known to the transmitters and receivers in this section. A more realistic channel model is provided in Section~\ref{sec:channel-modeling} on p.~\pageref{sec:channel-modeling} and is then used in the remainder of the monograph.
+
+
+\begin{figure}[t!]
+	\centering  \vspace{-4mm}
+        \begin{subfigure}[b]{\columnwidth} \centering
+	\begin{overpic}[width=.4\columnwidth,tics=10]{images/section1/setup_cellular}
+\end{overpic} 
+                \caption{One cell with a 64-antenna \gls{AP} in a cellular setup.}    \vspace{+2mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=.4\columnwidth,tics=10]{images/section1/setup_smallcells}
+\end{overpic} 
+                \caption{Cellular setup with 64 single-antenna \glspl{AP}.} 
+        \end{subfigure}
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=.4\columnwidth,tics=10]{images/section1/setup_cellfree}
+\end{overpic} 
+                \caption{Cell-free setup with the same \gls{AP} locations as in (b).} 
+        \end{subfigure} 
+	\caption{Three basic setups are compared in Section~\ref{sec:benefits-cellular-networks}: Two cellular networks and one cell-free network (connected to the CPU via fronthaul links, not shown for simplicity).} 
+	\label{fig:basic-comparison-cellular-cellfree} 
+\end{figure}
+
+
+
+
+\subsubsection{Massive \gls{MIMO} Setup}
+
+We first consider the single-cell Massive \gls{MIMO} setup in Figure~\ref{fig:basic-comparison-cellular-cellfree}(a), where the \gls{AP} is equipped with $M=64$ antennas. This represents one cell in a cellular network.
+We denote by $\vect{g} = [g_1 \, \ldots \, g_M]^{\Ttran} \in \mathbb{C}^M$ the channel response between the \gls{UE} and the $M$ antennas.
+The received uplink signal $\vect{y}^{\textrm{MIMO}} \in \mathbb{C}^M$ at the \gls{AP} is
+\begin{equation} \label{eq:basic-uplink}
+\vect{y}^{\textrm{MIMO}} = \vect{g} s + \vect{n}
+\end{equation}
+where $s \in \mathbb{C}$ is the information signal with transmit power $\mathbb{E}\{ | s|^2 \} = p$ and $\vect{n} \sim \CN ( \vect{0}_M, \sigmaUL \vect{I}_M )$ is the receiver noise.
+
+The main task for the \gls{AP} is to estimate $s$ and this can be done by applying a receive combining vector $\vect{v} \in \mathbb{C}^M$ to \eqref{eq:basic-uplink}, which leads to
+\begin{equation} \label{eq:s-estimate-MIMO}
+\hat{s}^{\textrm{MIMO}}  = \vect{v}^{\Htran} \vect{y}^{\textrm{MIMO}}  =  \vect{v}^{\Htran} \vect{g} s + \vect{v}^{\Htran}\vect{n}.
+\end{equation}
+From this expression, it is clear that the \gls{SNR} is
+\begin{equation} \label{eq:mMIMO-basic}
+ \frac{\mathbb{E}\{ | \vect{v}^{\Htran} \vect{g} s|^2   \} }{ \mathbb{E} \{ | \vect{v}^{\Htran}\vect{n} |^2 \}} = \frac{p}{\sigmaUL} \frac{ | \vect{v}^{\Htran} \vect{g} |^2   }{ \| \vect{v} \|^2}.
+\end{equation}
+The \gls{AP} can select $\vect{v}$ based on the channel $\vect{g}$ to maximize the \gls{SNR}. It follows from the Cauchy-Schwartz inequality that \eqref{eq:mMIMO-basic} is maximized when $\vect{v}$ and $\vect{g}$ are parallel vectors. In particular, the unit-norm \gls{MR} combining vector $\vect{v} = \vect{g} / \| \vect{g} \|$ can be used to obtain the maximum \gls{SNR}
+\begin{equation}
+\mathacr{SNR}^{\textrm{MIMO}}  = \frac{p}{\sigmaUL} \| \vect{g}\|^2.
+\end{equation}
+Since all the antennas are co-located in a big array at the \gls{AP}, there is the same propagation distance $d$ from the \gls{UE} to all antennas. Hence, $|g_m|^2 = \beta(d) $ for $m=1,\ldots,M$ using the channel gain model in \eqref{eq:large-scale-model-simple}.
+We then obtain
+\begin{equation} \label{eq:SNR-simple-mMIMO}
+\mathacr{SNR}^{\textrm{MIMO}}  = \frac{p}{\sigmaUL} M \beta(d)
+\end{equation}
+which shows that, in a single-cell Massive \gls{MIMO} system, the \gls{SNR} is proportional to the number of antennas, $M$.
+
+\subsubsection{Cellular Setup With Small Cells}
+
+In the cellular setup in Figure~\ref{fig:basic-comparison-cellular-cellfree}(b), there are $L=64$ geographically distributed \glspl{AP}. Each one has a single antenna and the \gls{UE} will only be served by one of them. We let $h_l\in \mathbb{C}$ denote the channel response between the \gls{UE} and AP $l$. In the uplink, the received signal $y_l^{\textrm{small-cell}} \in \mathbb{C}$ at AP $l$ is 
+\begin{equation} \label{eq:basic-uplink-small-cell}
+y_l^{\textrm{small-cell}} = h_l s + n_l
+\end{equation}
+where $s \in \mathbb{C}$ denotes the information signal that satisfies $\mathbb{E}\{ | s|^2 \} = p$ and $n_l \sim \CN ( 0, \sigmaUL )$ is the receiver noise.
+The \gls{SNR} at \gls{AP} $l$ is
+\begin{equation}
+\mathacr{SNR}_l^{\textrm{small-cell}} =   \frac{\mathbb{E}\{ | h_l  s|^2   \} }{ \mathbb{E} \{ | n_l |^2 \}}  = \frac{p}{\sigmaUL} |h_l|^2.
+\end{equation}
+The \gls{UE} needs to choose only one of the \glspl{AP} since this is a conventional cellular network with no cooperation among \glspl{AP}. The \gls{UE} will naturally select the one providing the largest \gls{SNR}. Hence, the \gls{SNR} experienced by the UE becomes
+\begin{align}  \notag
+\mathacr{SNR}^{\textrm{small-cell}} &= \max_{l \in \{1,\ldots,L\} }
+\mathacr{SNR}_l^{\textrm{small-cell}} \\ & =  \frac{p}{\sigmaUL} \max_{l \in \{1,\ldots,L\} } |h_l|^2. \label{eq:SNR-simple-small}
+\end{align}
+If we let $d_l$ denote the distance between the \gls{UE} and \gls{AP} $l$, then $|h_l |^2 = \beta(d_l)$ and the \gls{SNR} in \eqref{eq:SNR-simple-small} can be rewritten as
+\begin{equation}
+\mathacr{SNR}^{\textrm{small-cell}} =  \frac{p}{\sigmaUL} \max_{l \in \{1,\ldots,L\} } \beta(d_l).
+\end{equation}
+
+
+\subsubsection{Cell-Free Setup}
+
+In the cell-free setup in Figure~\ref{fig:basic-comparison-cellular-cellfree}(c), we have the same $L$ \glspl{AP} as in the previous small-cell setup, but the \glspl{AP} are now cooperating to serve the \gls{UE}. We can write the received signals in \eqref{eq:basic-uplink-small-cell} jointly as
+\begin{equation} \label{eq:basic-uplink-cell-free}
+\vect{y}^{\textrm{cell-free}} = \vect{h} s + \vect{n}
+\end{equation}
+where $\vect{h} = [ h_1 \, \ldots \, h_L ]^{\Ttran}$ and $\vect{n} = [ n_1 \, \ldots \, n_L ]^{\Ttran}$.
+Similar to the single-cell Massive \gls{MIMO} case above, a receive combining vector $\vect{v} \in \mathbb{C}^L$ can be applied to \eqref{eq:basic-uplink-cell-free} in an effort to estimate $s$. This leads to
+\begin{equation}
+\hat{s}^{\textrm{cell-free}}  = \vect{v}^{\Htran} \vect{y}^{\textrm{cell-free}}   =  \vect{v}^{\Htran} \vect{h} s + \vect{v}^{\Htran}\vect{n}.
+\end{equation}
+Since this equation has the same structure as \eqref{eq:s-estimate-MIMO}, it follows that \gls{MR} combining with $\vect{v} = \vect{h} / \| \vect{h} \|$ provides the maximum \gls{SNR}:
+\begin{equation} \label{eq:SNR-simple-cell-free}
+\mathacr{SNR}^{\textrm{cell-free}}  = \frac{p}{\sigmaUL} \| \vect{h}\|^2 =  \frac{p}{\sigmaUL}\sum_{l=1}^L  |h_l|^2.
+\end{equation}
+If we compare this expression with that for the small-cell network in \eqref{eq:SNR-simple-small}, we observe that the cell-free network obtains an \gls{SNR} proportional to $\sum_{l=1}^L  |h_l|^2$, while the small-cell setup only contains the largest term in that sum.
+Hence, the cell-free network will always obtain a larger \gls{SNR}, but the difference will be small if there is one term that is much larger than the sum of the others.
+
+\enlargethispage{\baselineskip} 
+
+If we instead compare the cell-free setup with the single-cell Massive \gls{MIMO} setup, the main difference is due to the channels $\vect{h}$ and $\vect{g}$. The \glspl{SNR} are proportional to $\| \vect{h}\|^2$ and $\| \vect{g}\|^2$, respectively. We cannot conclude from the mathematical expressions which of these squared norms is the largest. It will depend on the \gls{UE} location. Therefore, we need to continue the comparison using simulations. Recall that $d_l$ denotes the distance between \gls{AP} $l$ and the \gls{UE}, thus we can also write \eqref{eq:SNR-simple-cell-free} as
+ 
+\begin{equation} \label{eq:SNR-simple-cell-free2}
+\mathacr{SNR}^{\textrm{cell-free}}  =\frac{p}{\sigmaUL}\sum_{l=1}^L  \beta(d_l).
+\end{equation}
+
+\subsubsection{Numerical Comparison}
+
+\enlargethispage{\baselineskip} 
+
+We will now compare the three setups in Figure~\ref{fig:basic-comparison-cellular-cellfree} by simulation when the total coverage area is $400$\,m $\times\,$ $400$\,m. We will drop one \gls{UE} uniformly at random in the area and compute the uplink \glspl{SNR} as described above, assuming the transmit power is $p=10$\,dBm and the noise power is $\sigmaUL = -96$\,dBm, which are reasonable values when the bandwidth is 10\,MHz.
+When computing the propagation distances, we assume the \glspl{AP} are deployed 10\,m above the \glspl{UE}.
+
+
+Figure~\ref{fig:section1_figure9} shows the \gls{CDF} of the \gls{SNR} achieved by 
+the \gls{UE} at different random locations. In the single-cell Massive \gls{MIMO} case, there are 50\,dB \gls{SNR} variations, where the largest values are achieved when the \gls{UE} is right underneath the \gls{AP} and the smallest values are achieved when the \gls{UE} is in the corner.
+The \gls{SNR} variations are much smaller for the cell-free network, since the distances to the closest \gls{AP} is generally much shorter than in the Massive \gls{MIMO} case. Moreover, the \gls{SNR} is higher at the vast majority of \gls{UE} locations. If we look at the 95\% likely \gls{SNR}, indicated by the dashed line where the CDF value is 0.05, there is an 18\,dB difference. More precisely, the cell-free network guarantees an SNR of 24.5\,dB (or higher) at  95\% of all \gls{UE} locations, while Massive \gls{MIMO} only guarantees 6.5\,dB. It is only in the upper end of the \gls{CDF} curves (representing the most fortunate \gls{UE} locations) that Massive \gls{MIMO} is the preferred option. This represents the case when the \glspl{UE} are very close to the 64-antenna Massive \gls{MIMO} array, while a \gls{UE} can only be close to a few \gls{AP} antennas at a time in the cell-free network.
+
+
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section1/section1_figure9}
+		\put(24,12){95\% likely}
+		\put(13,9.65){$- - - - - - - - - - - - $}
+	\end{overpic}  
+	\caption{The \gls{SNR} achieved by a \gls{UE} in each of the setups illustrated in Figure~\ref{fig:basic-comparison-cellular-cellfree}. The  \gls{UE} location is selected uniformly at random in the area, which gives rise to the \glspl{CDF}.} 
+	\label{fig:section1_figure9} 
+\end{figure}
+
+
+As expected from the analytical expressions, the cell-free network always achieves a higher \gls{SNR} than the corresponding small-cell setup. The difference is negligible in the upper end of the \gls{CDF} curves, when the \gls{UE} is very close to only one of the \glspl{AP} so there is a single dominant term in \eqref{eq:SNR-simple-cell-free2}, while there is a 4\,dB gap in the 95\% likely \gls{SNR}. Based on this example, we can conclude that distributed antennas are preferred over large co-located arrays, but the cell-free architecture only has a minor benefit compared to the cellular small-cell network having the same \gls{AP} locations. To observe a more convincing practical benefit of the cell-free approach, we need to consider a setup with multiple \glspl{UE} so that there is interference between the concurrent transmissions.
+
+
+\subsection{Benefit 2: Better Ability to Manage Interference}
+\label{subsec:benefit2}
+
+We will now demonstrate that cell-free networks have the ability to manage interference, which is what small-cell networks are lacking. For the sake of argument, we once again consider the uplink of the three setups shown in Figure~\ref{fig:basic-comparison-cellular-cellfree} but now with $K=8$ \glspl{UE}.
+We let $p$ denote the transmit power used by each \gls{UE}, while $\sigmaUL$ denotes the noise power. 
+
+\subsubsection{Massive \gls{MIMO} Setup}
+
+In the single-cell Massive \gls{MIMO} setup in Figure~\ref{fig:basic-comparison-cellular-cellfree}(a), we let $\vect{g}_k \in \mathbb{C}^M$ denote the channel from \gls{UE} $k$ to the \gls{AP}. Similar to \eqref{eq:basic-uplink}, the received uplink signal becomes
+\begin{equation} \label{eq:basic-uplink-multiuser}
+\vect{y}^{\textrm{MIMO}} = \sum_{i=1}^{K} \vect{g}_i s_i + \vect{n}
+\end{equation}
+where $s_i \in \mathbb{C}$ is the information signal transmitted by \gls{UE} $i$ (with $\mathbb{E}\{ | s_i|^2 \} = p$) and $\vect{n} \sim \CN ( \vect{0}_M, \sigmaUL \vect{I}_M )$ is the receiver noise. The \gls{AP} applies the receive combining vector $\vect{v}_k \in \mathbb{C}^M$ to the received signal in \eqref{eq:basic-uplink-multiuser} in an effort to obtain the estimate 
+\begin{equation} \label{eq:s-estimate-MIMO-multiuser}
+\hat{s}_k^{\textrm{MIMO}}  = \vect{v}_k^{\Htran} \vect{y}^{\textrm{MIMO}}  =   \sum_{i=1}^{K} \vect{v}_k^{\Htran} \vect{g}_i s_i + \vect{v}_k^{\Htran}\vect{n}
+\end{equation}
+of the signal $s_k$ from \gls{UE} $k$. The corresponding \gls{SINR} is
+\begin{align} \notag
+\mathacr{SINR}_k^{\textrm{MIMO}} &\!= \frac{\mathbb{E}\{ | \vect{v}_k^{\Htran} \vect{g}_k s_k  |^2 \}}{ \mathbb{E} \left\{ \left|
+\condSum{i=1}{i \neq k}{K} \vect{v}_k^{\Htran} \vect{g}_i s_i \!+\! \vect{v}_k^{\Htran}\vect{n}
+\right|^2 \right\} } \!=\! \frac{| \vect{v}_k^{\Htran} \vect{g}_k|^2 p }{\vect{v}_k^{\Htran} \left( p  \condSum{i=1}{i \neq k}{K} \vect{g}_i \vect{g}_i^{\Htran} \!+\! \sigmaUL \vect{I}_M  \right) \vect{v}_k} \\
+&\leq p \vect{g}_k^{\Htran} \left( p  \condSum{i=1}{i \neq k}{K} \vect{g}_i \vect{g}_i^{\Htran} + \sigmaUL \vect{I}_M  \right)^{-1}\!\!\!\!\!\! \vect{g}_k \label{eq:SINRk-basic-uplink-multiuser}
+\end{align}
+where the upper bound is achieved by  \cite[Lemma B.10]{massivemimobook}
+\begin{align}
+\vect{v}_k = \left(  p  \condSum{i=1}{i \neq k}{K} \vect{g}_i \vect{g}_i^{\Htran} + \sigmaUL \vect{I}_M  \right)^{-1} \!\!\!\!\!\!\vect{g}_k.
+\end{align}
+We will provide a more detailed derivation later in this monograph. For now, the important thing is that the maximum uplink \gls{SINR} of \gls{UE} $k$ is given by \eqref{eq:SINRk-basic-uplink-multiuser}.
+
+\enlargethispage{\baselineskip} 
+
+\subsubsection{Cellular Setup With Small Cells}
+
+In the small-cell setup in Figure~\ref{fig:basic-comparison-cellular-cellfree}(b), we let $h_{kl} \in \mathbb{C}$ denote the channel response between \gls{UE} $k$ and AP $l$. Similar to \eqref{eq:basic-uplink-small-cell}, the received uplink signal at AP $l$ becomes 
+\begin{equation} \label{eq:basic-uplink-small-cell-multiuser}
+y_l^{\textrm{small-cell}} = \sum_{i=1}^{K} h_{il} s_i + n_l
+\end{equation}
+where $s_i \in \mathbb{C}$ denotes the information signal from \gls{UE} $i$ (with $\mathbb{E}\{ | s_i|^2 \} = p$) and $n_l \sim \CN ( 0, \sigmaUL )$ is the receiver noise.
+The \gls{SINR} at \gls{AP} $l$ with respect to the signal from \gls{UE} $k$ is
+\begin{equation}
+\mathacr{SINR}_{kl}^{\textrm{small-cell}} =  
+\frac{\mathbb{E}\{ | h_{kl} s_k  |^2 \}}{ \mathbb{E} \left\{ \left|
+\condSum{i=1}{i \neq k}{K}  h_{il} s_i + n_l
+\right|^2 \right\} }  = \frac{p |h_{kl}|^2}{p\condSum{i=1}{i \neq k}{K} | h_{il}|^2 +\sigmaUL}. \vspace{-1mm}
+\end{equation}
+Each \gls{UE} selects to receive service from the AP  that provides the largest \gls{SINR}. Hence, the \gls{SINR} of \gls{UE} $k$ is
+\begin{align}  \label{eq:basic-small-cell-SINR-multiuser}
+\mathacr{SINR}_k^{\textrm{small-cell}} = \max_{l \in \{1,\ldots,L\} }
+\mathacr{SINR}_{kl}^{\textrm{small-cell}}.
+\end{align}
+The preferred \gls{AP} might not be the one with the largest \gls{SNR} due to the interference. It can happen that one \gls{AP} serves multiple \glspl{UE}.
+
+\vspace{-3mm}
+\enlargethispage{\baselineskip} 
+\subsubsection{Cell-Free Setup}
+
+In the cell-free setup in Figure~\ref{fig:basic-comparison-cellular-cellfree}(c), the $L$ \glspl{AP} from the small-cell setup are cooperating in detecting the information sent from the $K$ \glspl{UE}. We can write the received signals in \eqref{eq:basic-uplink-small-cell-multiuser} jointly as
+\begin{equation} \label{eq:basic-uplink-cell-free-multiuser}
+\vect{y}^{\textrm{cell-free}} = \sum_{i=1}^{K} \vect{h}_i s_i + \vect{n}
+\end{equation}
+where $\vect{h}_i = [ h_{i1} \, \ldots \, h_{iL} ]^{\Ttran}$ and $\vect{n} = [ n_1 \, \ldots \, n_L ]^{\Ttran}$.
+Similar to the single-cell Massive \gls{MIMO} case, a receive combining vector $\vect{v} _k \in \mathbb{C}^L$ is applied to \eqref{eq:basic-uplink-cell-free-multiuser} to detect the signal from \gls{UE} $k$. This leads to the estimate
+\begin{equation} \label{eq:s-estimate-cellfree-multiuser}
+\hat{s}_k^{\textrm{cell-free}}  = \vect{v}_k^{\Htran} \vect{y}^{\textrm{cell-free}}  =   \sum_{i=1}^{K} \vect{v}_k^{\Htran} \vect{h}_i s_i + \vect{v}_k^{\Htran}\vect{n}
+\end{equation}
+of $s_k$. The corresponding \gls{SINR} is
+\begin{align} \notag
+\mathacr{SINR}_k^{\textrm{cell-free}} &= \frac{\mathbb{E}\{ | \vect{v}_k^{\Htran} \vect{h}_k s_k  |^2 \}}{ \mathbb{E} \left\{ \left|
+\condSum{i=1}{i \neq k}{K} \vect{v}_k^{\Htran} \vect{h}_i s_i + \vect{v}_k^{\Htran}\vect{n}
+\right|^2 \right\} } = \frac{| \vect{v}_k^{\Htran} \vect{h}_k|^2 p }{\vect{v}_k^{\Htran} \left( p  \condSum{i=1}{i \neq k}{K} \vect{h}_i \vect{h}_i^{\Htran} + \sigmaUL \vect{I}_M  \right) \vect{v}_k} \\
+&\leq p \vect{h}_k^{\Htran} \left( p  \condSum{i=1}{i \neq k}{K} \vect{h}_i \vect{h}_i^{\Htran} + \sigmaUL \vect{I}_M  \right)^{-1} \!\!\!\!\!\!\vect{h}_k \label{eq:SNR-simple-cell-free-multiuser}
+\end{align}
+where the upper bound is achieved by \cite[Lemma B.10]{massivemimobook}
+\begin{align}
+\vect{v}_k = \left( p  \condSum{i=1}{i \neq k}{K} \vect{h}_i \vect{h}_i^{\Htran} + \sigmaUL \vect{I}_M  \right)^{-1} \!\!\!\!\!\!\vect{h}_k.
+\end{align} 
+Compared to the single \gls{UE} case studied earlier, it is harder to utilize the \gls{SINR} expressions derived in this section to deduce which setup will provide the best performance. Intuitively, the cell-free setup will provide higher \gls{SINR} than the small-cell setup since we are using the optimal combining vector, while one suboptimal option is to let $\vect{v}_k$ contain $1$ at the position representing the \gls{AP} with the highest local \gls{SINR} and $0$ elsewhere. That suboptimal selection would lead to the same SINR as in the small-cell setup. To compare the cell-free setup with the single-cell Massive \gls{MIMO} setup, we need to run simulations since the \gls{SINR} expressions in \eqref{eq:SINRk-basic-uplink-multiuser} and \eqref{eq:SNR-simple-cell-free-multiuser} have a similar form, but contain channel vectors that are generated differently.
+
+
+\subsubsection{Numerical Comparison}
+
+We will now simulate the performance of this multi-user setup using the channel gain model in \eqref{eq:large-scale-model-simple} and the same parameter values as in Figure~\ref{fig:section1_figure9}. More precisely, if the propagation distance is $d$, then the channel is generated as $\sqrt{\beta(d)} e^{\imagunit \phi}$ where $\phi$ is an independent random variable uniformly distributed between $0$ and $2\pi$. This variable models the random phase shift between the transmitter and receiver. This phase was omitted in the previous simulation since the result was determined only by the norms of the channels. However, it is important to include the phases when considering multi-user interference, which is also determined by the directions of the channel vectors.
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section1/section1_figure10}
+	\put(25,12){95\% likely}
+	\put(13,9.7){$- - - - - - - - - - - - $}
+	\end{overpic} 
+	\caption{The \gls{SINR} achieved by an arbitrary \gls{UE} in each of the setups illustrated in Figure~\ref{fig:basic-comparison-cellular-cellfree}. There are $K=8$ \glspl{UE} that are distributed uniformly at random in the area. This gives rise to the CDF.} 
+	\label{fig:section1_figure10} 
+\end{figure}
+
+Figure~\ref{fig:section1_figure10} shows the \gls{CDF} of the \gls{SINR} achieved by a randomly selected \gls{UE} in a random realization of the $K=8$ uniformly distributed \gls{UE} locations. As compared to Figure~\ref{fig:section1_figure9}, all the curves are moved to the left in Figure~\ref{fig:section1_figure10} due to the interference among the \glspl{UE}. The Massive \gls{MIMO} case is barely affected by the interference, which demonstrates that this technology has the ability to separate the \glspl{UE}' channels spatially using the large array of co-located antennas. However, due to the large variations in distances to the \gls{AP}, there are 50\,dB variations in the \gls{SINR} between different \gls{UE} locations.
+The cell-free network is also barely affected by the interference, but one can see a tiny lower tail that corresponds to the random event that two \glspl{UE} are randomly deployed at almost the same location.
+
+The major difference from the single-\gls{UE} case is that the small-cell curve is moved far to the left and the 95\%-likely \gls{SINR} is even lower than with Massive \gls{MIMO}. The reason is that each \gls{AP} only has a single antenna and thus cannot suppress inter-cell interference. The cell-free setup is greatly outperforming the small-cell setup in this multi-user setup. This is what will occur in practice since mobile networks are deployed to serve multiple \glspl{UE} in the same geographical area.
+
+
+
+\subsection{Benefit 3: Coherent Transmission Increases the \gls{SNR}}
+
+The previous two benefits were exemplified in the uplink but there are also counterparts in the downlink, which lead to similar results but for partially different reasons. One important difference is that the received power in the uplink increases with the number of receive antennas (i.e., a larger fraction of the transmit power is collected), thus it is always beneficial to have more antennas. Consider now a downlink scenario where we can deploy any number of antennas, but constrain the total downlink transmit power to be constant (to not change the energy consumption). We then need to determine how the power should be divided between the \glspl{AP} to maximize the \gls{SNR}.
+Suppose a \gls{UE} is in the vicinity of two \glspl{AP} but one has a substantially better channel. It might then seem logical that all the transmit power should be assigned to the \gls{AP} with the better channel, but we will show that this is not the optimal strategy.
+
+\enlargethispage{\baselineskip} 
+Suppose, for the sake of argument, that AP 1 has the channel response $h_1=\sqrt{\alpha}$ to the \gls{UE}, while AP 2 has the channel response $h_2=\sqrt{\alpha/2}$. If we compare the channel gains $|h_1|^2=\alpha$ and $|h_2|^2=\alpha/2$, it is clear that AP 1 has the best channel.
+Let $\rho$ denote the total downlink transmit power and $\sigmaDL$ denote the receiver noise power. If only \gls{AP} 1 transmits to the \gls{UE}, then the \gls{SNR} at the receiver is
+\begin{equation}
+\frac{\rho \alpha}{\sigmaDL}.
+\end{equation}
+However, if \gls{AP} 1 instead transmits with power $2\rho/3$ and \gls{AP} 2 transmits with power $\rho/3$, which also corresponds to a total power of $\rho$, then the \gls{SNR} is
+\begin{equation}\label{eq:downlink-SNR}
+\frac{1}{\sigmaDL} \left( \sqrt{\frac{2\rho}{3}} h_1 + \sqrt{\frac{\rho}{3}} h_2 \right)^2 =1.5 \frac{\rho \alpha}{\sigmaDL}.
+\end{equation}
+Hence, the \gls{SNR} is higher when we transmit from both \glspl{AP}. This is a consequence of the coherent combination (i.e., constructive interference) of the signals from the two \glspl{AP}. The power gain is reminiscent of the beamforming gain from co-located arrays, where the transmit power is stronger in some angular directions than in other ones, but the physical interpretation is somewhat different. 
+The coherent combination of signals that are transmitted from different geographical points does not give rise to beam patterns but rather local signal amplification in a region around the receiver.
+Moreover, all the antennas in a co-located array will experience (roughly) the same channel gain so it is logical that they should be jointly utilized for coherent transmission. In contrast, distributed antennas can experience very different channel gains but are anyway useful for coherent transmission.
+
+We will now illustrate that the signal focusing obtained by a distributed array does not give rise to signal beams.
+Figure~\ref{fig:distributed-focusing} shows the \gls{SNR} variations when transmitting from $M=40$ antennas that are equally spaced along the perimeter of a square. The adjacent antennas are one-wavelength-spaced and transmit with equal power. The received power decays as the square of the propagation distance (as would be the case in free space). If a narrowband signal is considered, the received signals will be phase-shifted (time-delayed) by the ratio between the propagation distance and the signal's wavelength. For the sake of argument, the distances in Figure~\ref{fig:distributed-focusing} are therefore measured as fractions of the wavelength (each side of the square is ten wavelengths). To achieve a coherent combination at the point of the receiver, each antenna must phase-shift (time-delay) its signal before transmission to make sure that all the $M$ signals are reaching the receiver perfectly synchronized.
+
+\begin{figure}[t!]
+	\centering  \vspace{-4mm}
+        \begin{subfigure}[b]{\columnwidth} \centering
+	\begin{overpic}[width=.8\columnwidth,tics=10]{images/section1/section1_figure11a}
+\end{overpic} 
+                \caption{View with normalized \gls{SNR} (between 0 and 1) on the vertical axis.}    \vspace{+2mm}
+        \end{subfigure} 
+        \begin{subfigure}[b]{\columnwidth} \centering 
+	\begin{overpic}[width=.8\columnwidth,tics=10]{images/section1/section1_figure11b}
+\end{overpic} 
+                \caption{Same as in (a) but viewed from above.} 
+        \end{subfigure} 
+	\caption{The received signal power at different locations when transmitting from one-wavelength-spaced antennas along the walls (each marked with a star). The antennas transmit with equal power and the signals are phase-shifted to achieve coherent combination at the point where the normalized \gls{SNR} is 1.} 
+	\label{fig:distributed-focusing} \vspace{-4mm}
+\end{figure}
+
+
+In Figure~\ref{fig:distributed-focusing}(a), we show the \glspl{SNR} measured at different locations when focusing all the signals into a single point. The \gls{SNR} values are normalized so that they are equal to 1 at the point-of-interest (i.e., the location of the receiver) and smaller elsewhere. We observe that the \gls{SNR} is much larger at that point than on all the surrounding points, where the 40 signals are not coherently combined. There are some points near the edges of the simulation area where the \gls{SNR} is also strong but this is not due to a coherent combination of multiple signal components. Instead, it is because these points are close to some of the transmit antennas. Figure~\ref{fig:distributed-focusing}(b) shows the same results but from above. The figure reveals that the \gls{SNR} is strong in a circular region around the point-of-interest. The diameter of this region is roughly half-a-wavelength. In summary, the signal focusing from distributed arrays will not give rise to angular beams (as in Cellular Massive MIMO) but local signal focusing around the receiver in a region that is smaller than the wavelength. When considering a three-dimensional propagation environment, the \gls{SNR} will be large within a sphere around the point-of-interest with the diameter being half-a-wavelength. When transmitting multiple signals, we can focus each one at a different point and if these points are several wavelengths apart, the mutual interference will be small according to Figure~\ref{fig:distributed-focusing}.
+
+
+
+\newpage
+
+\section{Summary of the Key Points in Section~\ref{c-introduction}}
+\label{c-introduction-definition-summary}
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+\item Traditional wireless networks use the cellular architecture. The cellular approach was conceived for providing wide-area coverage to low-rate voice services. Each \gls{AP} is surrounded by \glspl{UE} at very different distances, having widely different \glspl{SNR}. This architecture is badly suited for providing ubiquitous access to high-rate data services.
+
+\item The cell-free architecture turns the situation around: each \gls{UE} is surrounded by \glspl{AP}. Each \gls{AP} has relatively simple hardware and cooperates with surrounding APs to jointly serve the UEs in their area of influence. A cell-free network is user-centric if each UE is served by its nearest APs.
+
+\item The name \emph{Cell-free Massive MIMO} signifies that it is the combination of three previously known components: The physical layer of Massive MIMO, the vision of creating ultra-dense networks with many more APs than UEs, and the coordinated multipoint methods for achieving a cell-free network. The main novelty lies in how to co-design these components to achieve a user-centric operation that is sufficiently scalable to enable large-scale deployments.
+
+\item The first key benefit of the cell-free architecture is the smaller SNR variations compared to cellular networks with a sparse deployment of APs and Massive MIMO.
+
+\item The second key benefit is the ability to manage interference by joint processing at multiple APs, which is not done in cellular networks with an equally dense AP deployment.
+
+\item The third key benefit is that coherent transmission increases the SNR. It is better to involve APs with weaker channels in the transmission than only using the AP with the best channel.
+
+\end{itemize}
+
+\end{mdframed}

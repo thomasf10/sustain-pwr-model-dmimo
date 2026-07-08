@@ -1,0 +1,598 @@
+\documentclass[SIG,biber]{nowfnt} 
+
+\usepackage[utf8]{inputenc}
+
+
+
+\usepackage{amsmath}
+\usepackage{rotating}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{longtable}
+\usepackage{subcaption}
+\usepackage{bookmark}
+\usepackage{overpic}
+\definecolor{blue}{RGB}{0,0,255}
+
+
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{psfrag}
+\usepackage{url}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{lipsum}
+\usepackage[chapter]{algorithm}
+\usepackage{algpseudocode}
+
+
+
+
+\mdfdefinestyle{GrayFrame}{%
+    outerlinewidth=0pt,
+    roundcorner=10pt,
+    innertopmargin=\baselineskip,
+    innerbottommargin=\baselineskip,
+    innerrightmargin=20pt,
+    innerleftmargin=4pt,
+    backgroundcolor=yellow!25!white}      
+    
+    
+    
+
+\newcommand{\mathacr}[1]{\mathsf{#1}}
+\newcommand{\argmax}[1]{{\underset{{#1}}{\mathrm{arg\,max}}}}
+\newcommand{\argmin}[1]{{\underset{{#1}}{\mathrm{arg\,min}}}}
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\maximize}[1]{{\underset{{#1}}{\mathrm{maximize}}}}
+\newcommand{\minimize}[1]{{\underset{{#1}}{\mathrm{minimize}}}}
+\newcommand{\condSum}[3]{\overset{#3}{\underset{\underset{#2}{#1}}{\sum}}}
+\newcommand{\condProd}[3]{\overset{#3}{\underset{\underset{#2}{#1}}{\prod}}}
+
+
+\def\Psiv{\vect{\Psi}}
+\def\diag{\mathrm{diag}}
+\def\eig{\mathrm{eig}}
+\def\kron{\otimes}
+\def\tr{\mathrm{tr}}
+\def\rank{\mathrm{rank}}
+\def\Htran{\mbox{\tiny $\mathrm{H}$}}
+\def\Ttran{\mbox{\tiny $\mathrm{T}$}}
+\def\CN{\mathcal{N}_{\mathbb{C}}} 
+\def\taupu{\tau_{p}} 
+\def\bphiu{\boldsymbol{\phi}} 
+\def\bphid{\boldsymbol{\varphi}} 
+\def\Ktot{K_{\mathrm{tot}}}
+\def\Pu{\mathcal{P}} 
+\def\sigmaDL{\sigma^2_{\mathrm{dl}}} 
+\def\sigmaUL{\sigma^2_{\mathrm{ul}}} 
+\def\kappatUE{\kappa_t^{\mathrm{UE}}} 
+\def\kapparUE{\kappa_r^{\mathrm{UE}}} 
+\def\kappatBS{\kappa_t^{\mathrm{BS}}} 
+\def\kapparBS{\kappa_r^{\mathrm{BS}}} 
+\def\ple{\alpha} 
+\def\imagunit{\mathsf{j}} 
+\def\Punder{\underline{P}}
+\def\Pover{\overline{P}}
+\def\cent{\mathsf{c}}
+\def\centuatf{\mathsf{c-UatF}}
+\def\dist{\mathsf{d}}
+\def\cell{\textrm{cellular}}
+\def\pmax{p_{\textrm{max}}}
+\def\rhomax{\rho_{\textrm{max}}}
+
+
+
+\usepackage[acronym, nonumberlist, nopostdot]{glossaries}
+\glsdisablehyper 
+\usepackage{glossary-tree}
+\makenoidxglossaries
+\setacronymstyle{long-short}
+\renewcommand*{\glsclearpage}{}
+\renewcommand{\glossarysection}[2][]{}
+\setglossarystyle{long}
+\renewcommand*{\glsgroupskip}{}
+\input{acronyms}
+
+\hyphenation{coop-eration}
+\hyphenation{con-vention}
+\hyphenation{concen-trate}
+\hyphenation{iden-tify}
+\hyphenation{mu-tual}
+
+\title{Foundations of User-Centric Cell-Free Massive MIMO}
+
+
+
+\maintitleauthorlist{
+\"{O}zlem Tu\u{g}fe Demir \\
+KTH Royal Institute of Technology \\
+and Link\"{o}ping University \\
+ozlemtd@kth.se
+\and
+Emil Bj\"{o}rnson \\
+KTH Royal Institute of Technology \\
+and Link\"{o}ping University \\
+emilbjo@kth.se
+\and
+Luca Sanguinetti \\
+University of Pisa \\
+luca.sanguinetti@unipi.it
+}
+
+
+
+
+
+\issuesetup
+{%
+ copyrightowner={\"{O}. T. Demir and E. Bj\"{o}rnson and L. Sanguinetti},
+ volume        = 14,
+ issue         = 3-4,
+ pubyear       = 2021,
+ isbn          = 978-1-68083-790-2,
+ eisbn         = 978-1-68083-791-9,
+ doi           = {10.1561/2000000109},
+ firstpage     = 162, %Explain
+ lastpage      = 472
+ }
+
+
+\addbibresource{IEEEabrv.bib}
+\addbibresource{refs.bib}
+
+\usepackage{mwe}
+
+
+\author[1]{Demir, \"{O}zlem Tu\u{g}fe}
+\author[2]{Bj\"{o}rnson, Emil}
+\author[3]{Sanguinetti,Luca}
+
+\affil[1]{KTH Royal Institute of Technology and Link\"{o}ping University; ozlemtd@kth.se}
+\affil[2]{KTH Royal Institute of Technology and Link\"{o}ping University; emilbjo@kth.se}
+\affil[3]{University of Pisa; luca.sanguinetti@unipi.it\vspace{-0.5cm}}
+
+
+\articledatabox{\nowfntstandardcitation}
+
+\begin{document}
+
+\makeabstracttitle
+\begin{abstract}Imagine a coverage area where each mobile device is communicating with a preferred set of wireless access points (among many) that are selected based on its needs and cooperate to jointly serve it, instead of creating autonomous cells. This effectively leads to a user-centric post-cellular network architecture, which can resolve many of the interference issues and service-quality variations that appear in cellular networks. This concept is called User-centric Cell-free Massive MIMO (multiple-input multiple-output) and has its roots in the intersection between three technology components: Massive MIMO, coordinated multipoint processing, and ultra-dense networks. The main challenge is to achieve the benefits of cell-free operation in a practically feasible way, with computational complexity and fronthaul requirements that are scalable to enable massively large networks with many mobile devices. 
+This monograph covers the foundations of User-centric Cell-free Massive MIMO, starting from the motivation and mathematical definition. It continues by describing the state-of-the-art signal processing algorithms for channel estimation, uplink data reception, and downlink data transmission with either centralized or distributed implementation.
+The achievable spectral efficiency is mathematically derived and evaluated numerically using a running example that exposes the impact of various system parameters and algorithmic choices.
+The fundamental tradeoffs between communication performance, computational complexity, and fronthaul signaling requirements are thoroughly analyzed.
+Finally, the basic algorithms for pilot assignment, dynamic cooperation cluster formation, and power optimization are provided, while open problems related to these and other resource allocation problems are reviewed. 
+All the numerical examples can be reproduced using the accompanying Matlab code.
+\end{abstract}
+
+\include{section1_introduction}
+
+\include{section2_definition}
+
+\include{section3_foundations}
+
+\include{section4_channel_estimation}
+
+\include{section5_uplink}
+
+\include{section6_downlink}
+
+\include{section7_resource_allocation}
+
+
+
+\begin{acknowledgements}
+
+We would first like to thank our students and collaborators in the areas related to this monograph. Without the results, encouragements, and insights obtained through our joint research during the last decade, it wouldn't have been possible to write this monograph.
+We are grateful for the constructive feedback from the reviewers, which helped us to focus our final editing efforts at the right places. In particular, we would like to thank Angel Lozano, Jiayi Zhang, Mahmoud Zaher, and Yasaman Khorsandmanesh for giving detailed comments.
+
+\"{O}zlem Tu\u{g}fe Demir and Emil Bj\"ornson have been supported by the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by the Knut and Alice Wallenberg Foundation. Emil Bj\"ornson has also been supported by the Excellence Center at Link\"oping -- Lund in Information Technology (ELLIIT), the Center for Industrial Information Technology (CENIIT), the Swedish Research Council, and the Swedish Foundation for Strategic Research. Luca Sanguinetti has been partially supported by the University of Pisa under the PRA Research Project CONCEPT, and by the Italian Ministry of Education and Research (MIUR) in the framework of the CrossLab project (Departments of Excellence).
+
+\end{acknowledgements}
+
+
+\appendix
+
+
+
+\chapter{Notation and Abbreviations}
+
+
+\section*{Mathematical Notation}
+
+Upper-case boldface letters are used to denote matrices (e.g., $\vect{X},\vect{Y}$), while column vectors are denoted with lower-case boldface letters (e.g., $\vect{x},\vect{y}$). Scalars are denoted by lower/upper-case italic letters (e.g., $x,y,X,Y$) and sets by calligraphic letters (e.g., $\mathcal{X},\mathcal{Y}$). 
+
+The following mathematical notations are used:
+
+\begin{longtable}{ll}
+   $\mathbb{C}^{N \times M}$ & The set of complex-valued $N \times M$ matrices\\
+   $\mathbb{R}^{N \times M}$ & The set of real-valued $N \times M$ matrices\\
+   $\mathbb{C}^{N},\mathbb{R}^{N}$ & Short forms of $\mathbb{C}^{N \times 1}$ and $\mathbb{R}^{N \times 1}$ for vectors \\
+  $ \mathbb{R}_{\geq 0}^{N}$ & The set of non-negative members of $\mathbb{R}^{N}$\\
+   $x \in \mathcal{S}$ & $x$ is a member of the set $\mathcal{S}$\\
+   $x \not \in \mathcal{S}$ & $x$ is not a member of the set $\mathcal{S}$\\
+   $\{ x \in \mathcal{S} : P \}$ & The subset of $\mathcal{S}$ containing all members \\ & that satisfy a property $P$\\
+   $[\vect{x}]_i$ & The $i$th element of a vector $\vect{x}$ \\
+   $[\vect{X}]_{ij}$ & The $(i,j)$th element of a matrix $\vect{X}$ \\
+   $[\vect{X}]_{:,1}$ & The first column of a matrix $\vect{X}$ \\
+   $\diag(\cdot)$ & $\diag(x_1,\ldots,x_N)$ is a diagonal matrix with \\ & the scalars $x_1,\ldots,x_N$ on the diagonal, \\
+   &   $\diag(\vect{X}_1,\ldots,\vect{X}_N)$ is a block diagonal matrix with  \\
+             &  the matrices $\vect{X}_1,\ldots,\vect{X}_N$ on the diagonal\\
+   $\vect{X}^{\star}$ &  The complex conjugate of $\vect{X}$\\
+   $\vect{X}^{\Ttran}$ &  The transpose of $\vect{X}$\\
+   $\vect{X}^{\Htran}$ &  The conjugate transpose of $\vect{X}$\\
+   $\vect{X}^{-1}$ & The inverse of a square matrix $\vect{X}$\\
+   $\vect{X}^{\frac12}$ & The square-root of a square matrix $\vect{X}$\\
+   $\Re(x)$ & Real part of  $x$ \\
+   $\imagunit$ & The imaginary unit\\
+   $|x|$   &  Absolute value (or magnitude) of a scalar variable $x$\\
+   $e$ & Euler's number ($e \approx 2.718281828$) \\
+   $\log_a(x)$ & Logarithm of $x$ using the base $a >0$\\
+   $\sin(x)$ & The sine function of $x$ \\   
+   $\cos(x)$ & The cosine function of $x$ \\   
+   $\tr( \vect{X})$ & Trace of a square matrix $\vect{X}$ \\
+   $\mathcal{N}(\vect{x},\vect{R})$ & The real Gaussian distribution \\ & with mean $\vect{x}$ and covariance matrix $\vect{R}$ \\
+   $\CN(\vect{0},\vect{R})$ & The circularly symmetric complex Gaussian   \\ &  distribution with zero mean and correlation matrix $\vect{R}$,  \\ & where circular symmetry means that if $\vect{y} \sim \CN(\vect{0},\vect{R})$ \\ & then $e^{\imagunit \phi}\vect{y} \sim \CN(\vect{0},\vect{R})$ for any given $\phi$ \\
+   $\mathbb{E}\{ {x} \}$ & The expectation of a random variable $x$ \\
+   $\mathbb{V}\{ {x} \}$ & The variance of a random variable $x$ \\
+   $\|\vect{x}\|$ & The $L_2$-norm $\|\vect{x}\| = \sqrt{ \sum_i | [\vect{x}]_i |^2 }$ of  a vector $\vect{x}$ \\
+   $\vect{I}_M$ & The $M \times M$ identity matrix \\
+   $\vect{1}_N$ & The $N \times 1$ matrix (i.e., vector) with only ones \\
+   $\vect{1}_{N\times M}$ & The $N \times M$ matrix with only ones \\
+   $\vect{0}_{M}$ & The $M \times 1$ matrix (i.e., vector) with only zeros \\
+       $\vect{0}_{N \times M}$ & The $N \times M$ matrix with only zeros \\
+\end{longtable}
+
+
+\section*{Abbreviations}
+
+The following acronyms and abbreviations are used in this monograph:
+\newpage
+\enlargethispage{\baselineskip}
+\printnoidxglossaries
+
+
+
+\chapter{Useful Lemmas}\label{appendix1}
+\vspace*{-1.2in}
+
+This appendix contains a few classical results related to matrices, which are utilized to prove the results in other parts of the monograph.
+
+
+\begin{lemma}[Matrix inversion lemma] \label{lemma:matrix-inversion}
+	Consider the matrices $\vect{A} \in \mathbb{C}^{N_1 \times N_1}$, $\vect{B} \in \mathbb{C}^{N_1 \times N_2}$, $\vect{C} \in \mathbb{C}^{N_2 \times N_2}$, and $\vect{D} \in \mathbb{C}^{N_2 \times N_1}$. The following identity holds if all the involved inverses exist:
+	\begin{equation}
+	(\vect{A} + \vect{B} \vect{C} \vect{D} )^{-1} = \vect{A}^{-1} - \vect{A}^{-1} \vect{B} (\vect{D} \vect{A}^{-1}  \vect{B} + \vect{C}^{-1}  )^{-1} \vect{D} \vect{A}^{-1} .
+	\end{equation}
+\end{lemma}
+
+\begin{lemma} \label{lemma-matrix-identities}
+For matrices $\vect{A} \in \mathbb{C}^{N_1 \times N_2}$ and $\vect{B} \in \mathbb{C}^{N_2 \times N_1}$, it holds that
+\begin{align} 
+\left( \vect{I}_{N_1} + \vect{A} \vect{B} \right)^{-1} \vect{A} &= \vect{A} \left( \vect{I}_{N_2} +  \vect{B} \vect{A} \right)^{-1} \label{eq:matrix-identity-commutation-inverse} \\
+\tr \left( \vect{A} \vect{B}  \right) &= \tr \left(\vect{B}  \vect{A}  \right).   \label{eq:matrix-identity-trace-commutation} 
+\end{align}
+\end{lemma}
+
+
+\begin{lemma} \label{lemma-nonorthogonal-positive-semidefinite}
+	For the non-zero positive semi-definite matrix $\vect{A} \in \mathbb{C}^{N \times N}$ and positive definite matrix $\vect{B} \in \mathbb{C}^{N \times N}$, their inner product is strictly positive:
+	\begin{equation}
+	\tr\left(\vect{A}\vect{B}\right)>0.
+	\end{equation}
+\end{lemma}
+\begin{proof}
+	Consider the eigendecomposition of $\vect{A}=\vect{U}\vect{\Lambda}\vect{U}^{\Htran}$ where $\vect{\Lambda}=\diag\left(\lambda_1,\ldots,\lambda_N\right)$ with $\lambda_n\geq0$, for $n=1,\ldots,N$. Let $\vect{u}_n$ denote the $n$th column of the eigenvalue matrix $\vect{U}$. Then, we have
+	\begin{equation}
+	\tr\left(\vect{A}\vect{B}\right)=\sum_{n=1}^N\lambda_n\vect{u}_n^{\Htran}\vect{B}\vect{u}_n
+	\end{equation}
+	that is strictly greater than zero since $\vect{B}$ is a positive definite matrix and at least one eigenvalue of $\vect{A}$ is positive.
+\end{proof}
+
+
+\begin{lemma}\label{lemma:scaling-mse}
+	For the positive semi-definite matrices $\vect{A} \in \mathbb{C}^{N \times N}$, $\vect{C} \in \mathbb{C}^{N \times N}$, and positive definite matrix $\vect{B} \in \mathbb{C}^{N \times N}$, the following inequality holds:
+	\begin{equation} \label{eq:scaling-mse-lemma}
+	\tr\left(\vect{A}\left(\vect{B}+\vect{C}\right)^{-1}\right)\leq \tr\left(\vect{A}\vect{B}^{-1}\right)
+	\end{equation}
+	where the equality holds only when $\vect{C}\vect{B}^{-1}\vect{A}=\vect{0}_{N \times N}$.
+\end{lemma}
+\begin{proof}
+	Consider the eigendecomposition of $\vect{C}=\vect{U}\vect{\Lambda}\vect{U}^{\Htran}=\vect{U}_1\vect{\Lambda}_1\vect{U}_1^{\Htran}$, where $\vect{U}\in \mathbb{C}^{N \times N}$ is the unitary matrix of eigenvectors and $\vect{\Lambda}=\diag\left(\lambda_1,\ldots,\lambda_N\right)$ with the eigenvalues $\lambda_n\geq0$, for $n=1,\ldots,N$. $\vect{U}_1\in \mathbb{C}^{N \times r}$ and $\vect{\Lambda}_1\in \mathbb{C}^{r\times r}$ are the partitions of $\vect{U}$ and $\vect{\Lambda}$, respectively corresponding to the positive eigenvalues. Applying the matrix inversion lemma (Lemma~\ref{lemma:matrix-inversion}) to the inverse of $\vect{B}+\vect{U}_1\vect{\Lambda}_1\vect{U}_1^{\Htran}$, we can express the left side of the inequality in  \eqref{eq:scaling-mse-lemma} as 
+	\begin{align}
+	&\tr\left(\vect{A}\left(\vect{B}+\vect{C}\right)^{-1}\right)\nonumber\\
+	&=\tr\left(\vect{A}\vect{B}^{-1}\right)-\tr\left(\vect{A}\vect{B}^{-1}\vect{U}_1\left(\vect{U}_1^{\Htran}\vect{B}^{-1}\vect{U}_1+\vect{\Lambda}_1^{-1}\right)^{-1}\vect{U}_1^{\Htran}\vect{B}^{-1}\right)
+	\end{align}
+	that is strictly less than $\tr\left(\vect{A}\vect{B}^{-1}\right)$ if $\vect{U}_1^{\Htran}\vect{B}^{-1}\vect{A}\vect{B}^{-1}\vect{U}_1$ is non-zero by Lemma~\ref{lemma-nonorthogonal-positive-semidefinite} noting that the matrix $\left(\vect{U}_1^{\Htran}\vect{B}^{-1}\vect{U}_1+\vect{\Lambda}_1^{-1}\right)^{-1}$ is positive definite. If $\vect{U}_1^{\Htran}\vect{B}^{-1}\vect{A}\vect{B}^{-1}\vect{U}_1=\vect{0}_{r \times r}$ that is equivalent to $\vect{C}\vect{B}^{-1}\vect{A}=\vect{0}_{N \times N}$, then both sides of 	\eqref{eq:scaling-mse-lemma} are equal.
+\end{proof}
+
+
+\begin{lemma} \label{lemma:fourth-order-moment-Gaussian-vector}
+Consider the vector $\vect{a} \sim \CN(\vect{0}_{N}, \vect{A} )$, with covariance matrix $\vect{A} \in \mathbb{C}^{N \times N}$, and any deterministic matrix $\vect{B} \in \mathbb{C}^{N \times N}$. It holds that
+\begin{equation} \label{eq:lemma:fourth-order-moment-Gaussian-vector}
+\mathbb{E}\{ | \vect{a}^{\Htran}  \vect{B} \vect{a} |^2  \} =  |\tr( \vect{B} \vect{A} ) |^2 + \tr( \vect{B} \vect{A} \vect{B}^{\Htran} \vect{A} ) .
+\end{equation}
+\end{lemma}
+\begin{proof}
+Note that $\vect{a} = \vect{A}^{\frac12} \vect{w}$ for $\vect{w} = [w_1 \, \ldots \, w_N]^{\Ttran} \sim \CN(\vect{0}_{N}, \vect{I}_N )$, thus we can write 
+\begin{equation} \label{eq:lemma:fourth-order-moment-Gaussian-vector1}
+\mathbb{E}\{ | \vect{a}^{\Htran}  \vect{B} \vect{a} |^2  \} = \mathbb{E}\{ | \vect{w}^{\Htran} (\vect{A}^{\Htran})^{\frac12}  \vect{B} \vect{A}^{\frac12}  \vect{w} |^2  \} = \mathbb{E}\{ | \vect{w}^{\Htran} \vect{C} \vect{w} |^2  \}
+\end{equation}
+where we defined  $\vect{C} = (\vect{A}^{\Htran})^{\frac12}  \vect{B} \vect{A}^{\frac12}$. Let $c_{n_1,n_2}$ denote the element in $\vect{C}$ on row $n_1$ and column $n_2$.
+Using this notation, we can expand \eqref{eq:lemma:fourth-order-moment-Gaussian-vector1} as
+\begin{align} \
+\notag &\mathbb{E}\{ | \vect{w}^{\Htran} \vect{C} \vect{w} |^2  \} = \sum_{n_1=1}^{N} \sum_{n_2=1}^{N} \sum_{m_1=1}^{N} \sum_{m_2=1}^{N} \mathbb{E}\{
+w_{n_1}^{\star} c_{n_1,n_2} w_{n_2}w_{m_1} c_{m_1,m_2}^{\star} w_{m_2}^{\star} \} 
+\end{align}
+\begin{align}
+&\overset{(a)}{=}  \sum_{n=1}^{N} \mathbb{E}\{
+|w_{n}|^4  \} |c_{n,n}|^2
++
+\sum_{n=1}^{N}
+\condSum{m=1}{m \neq n}{N}
+  \mathbb{E}\{
+|w_{n}|^2 \} \mathbb{E}\{ |w_{m}|^2  \} c_{n,n} c_{m,m}^{\star} 
+\notag \\ &+
+\sum_{n_1=1}^{N}
+\condSum{n_2=1}{n_2 \neq n_1}{N} \mathbb{E}\{
+|w_{n_1}|^2 \} \mathbb{E}\{ |w_{n_2} |^2 \} |c_{n_1,n_2}|^2
+\notag \\ & \overset{(b)}{=}  \sum_{n=1}^{N} 2 |c_{n,n}|^2
++
+\sum_{n=1}^{N}
+\condSum{m=1}{m \neq n}{N}
+ c_{n,n} c_{m,m}^{\star} +
+\sum_{n_1=1}^{N}
+\condSum{n_2=1}{n_2 \neq n_1}{N}  |c_{n_1,n_2}|^2
+\notag \\ & =
+\sum_{n=1}^{N}
+\sum_{m=1}^{N}
+ c_{n,n} c_{m,m}^{\star} +
+\sum_{n_1=1}^{N}
+\sum_{n_2=1}^{N}  |c_{n_1,n_2}|^2
+\notag \\ & \overset{(c)}{=} |\tr(\vect{C})|^2 + \tr(\vect{C} \vect{C}^{\Htran})
+\end{align}
+where $(a)$ utilizes that circular symmetry implies that $\mathbb{E}\{
+w_{n_1}^{\star} w_{n_2}w_{m_1} w_{m_2}^{\star} \}$ is only non-zero when the terms with conjugates have matching indices to the terms without conjugates. The first expression is given by $n_1 = n_2 = m_1 = m_2$, the second term is given by $n_1 = n_2$ and $m_1 = m_2$ with $n_1 \neq m_1$, and the third term is given by $n_1 = m_1$ and $n_2 = m_2$ with $n_1 \neq n_2$.
+In $(b)$, we utilize that $\mathbb{E}\{ |w_{n}|^2  \} = 1$ and $\mathbb{E}\{ |w_{n}|^4  \} = 2$.
+In $(c)$, we write the sums of elements in $\vect{C}$ using the trace. The resulting expression is equivalent to  \eqref{eq:lemma:fourth-order-moment-Gaussian-vector}, which is shown by replacing $\vect{C}$ with $\vect{A}$ and $\vect{B}$ and utilizing the fact that $\tr( \vect{C}_1 \vect{C}_2 ) = \tr(  \vect{C}_2 \vect{C}_1 )$ for any matrices $\vect{C}_1, \vect{C}_2$ such that  $\vect{C}_1$ and  $\vect{C}_2^{\Ttran}$ have the same dimensions.
+\end{proof}
+
+
+
+\chapter{Collection of Proofs}\label{appendix2}
+\vspace*{-1.8in}
+
+
+This appendix contains proofs of lemmas, theorems, and corollaries that were deemed to long to be placed in the main body of the monograph.
+
+\vspace{-3mm}
+
+\section{Proofs from Section~\ref{c-channel-estimation}}
+We report below the proofs from Section~\ref{c-channel-estimation}. 
+\subsection{Proof of Lemma~\ref{lemma:nmse-concave}}\label{proof-of-lemma:nmse-concave}
+To prove this result, it is enough to show that the Hessian matrix $D^2\mathacr{NMSE}\left(\boldsymbol{\lambda}\right)$ is negative definite for $\lambda_n\geq 0$. $D^2\mathacr{NMSE}\left(\boldsymbol{\lambda}\right)$ is given as
+	\begin{align}
+	\!\!\!\!D^2\mathacr{NMSE}\left(\boldsymbol{\lambda}\right)=\frac{1}{N\beta}\diag \left( \frac{-2\eta\tau_p\sigmaUL}{\left(\eta\tau_p\lambda_1+\sigmaUL\right)^3}, \ldots, \frac{-2\eta\tau_p\sigmaUL}{\left(\eta\tau_p\lambda_N+\sigmaUL\right)^3} \right)
+	\end{align}
+	and is negative definite since it is diagonal with strictly negative entries.
+	\vspace{-3mm}
+	
+\subsection{Proof of Lemma~\ref{lemma:nmse-eigenvalue-distribution}}\label{proof-of-lemma:nmse-eigenvalue-distribution}
+Note that all the elements of $\boldsymbol{\lambda}$ and $\boldsymbol{\lambda^\prime}$ are identical except the $(r-1)$th and the $r$th ones. Hence, the difference between $\mathacr{NMSE}\left(\boldsymbol{\lambda}\right)$ and $\mathacr{NMSE}\left(\boldsymbol{\lambda^\prime}\right)$ results from the summation terms in \eqref{eq:nmse-without-pilot-contamination} for $n \in \{ r-1, r\}$. Using this property, $\mathacr{NMSE}\left(\boldsymbol{\lambda}\right)- \mathacr{NMSE}\left(\boldsymbol{\lambda^\prime}\right)$ is
+\begingroup
+\allowdisplaybreaks
+	\begin{align}
+	&\frac{\eta\tau_p}{N\beta}\left( \frac{(\lambda_{r-1}+\lambda_r)^2}{\eta\tau_p(\lambda_{r-1}+\lambda_r)+\sigmaUL}-\frac{\lambda_{r-1}^2}{\eta\tau_p\lambda_{r-1}+\sigmaUL}-\frac{\lambda_r^2}{\eta\tau_p\lambda_r+\sigmaUL}\right) \nonumber\\
+	&\overset{(a)}{=}\frac{1}{N\beta}\left( \frac{(x+y)^2}{x+y+c}-\frac{x^2}{x+c}-\frac{y^2}{y+c}\right) \nonumber \\
+	& = \frac{\left(x+y\right)^2\left(xy+c\left(x+y+c\right)\right)-\left(x^2\left(y+c\right)+y^2\left(x+c\right)\right)\left(x+y+c\right)}{N\beta \left(x+y+c\right)\left(x+c\right)\left(y+c\right)} \nonumber \\
+	&\overset{(b)}{=} \frac{\left(x+y\right)^2xy+2cxy\left(x+y+c\right)-xy\left(x+y\right)\left(x+y+c\right)}{N\beta \left(x+y+c\right)\left(x+c\right)\left(y+c\right)}  \nonumber \\
+	& \overset{(c)}{=} \frac{2cxy\left(x+y+c\right)-cxy\left(x+y\right)}{N\beta \left(x+y+c\right)\left(x+c\right)\left(y+c\right)}  \overset{(d)}{>}0 
+ 	\end{align}
+ 	\endgroup
+	where we have introduced $x=\lambda_{r-1}$, $y=\lambda_r$, and the constant $c=\sigmaUL/(\eta\tau_p)$ in $(a)$ for simplicity. In $(b)$ and $(c)$, we have canceled the common terms $(x^2+y^2)c(x+y+c)$ and $\left(x+y\right)^2xy$, respectively, in the numerator. Finally, the result in $(d)$ is obtained from the fact that $x>0$, $y>0$, and $c>0$.
+	
+	
+	\section{Proofs from Section~\ref{c-uplink}}
+	We report below the proofs from Section~\ref{c-uplink}. 
+\subsection{Proof of Theorem~\ref{proposition:uplink-capacity-general}}\label{proof-of-proposition:uplink-capacity-general}
+	
+	The processed signal in \eqref{eq:uplink-data-estimate2} can be treated as the discrete memoryless interference channel in Lemma~\ref{lemma:capacity-memoryless-random-interference} on p.~\pageref{lemma:capacity-memoryless-random-interference} with a random channel response $h=\vect{v}_k^{\Htran}\vect{D}_k\widehat{\vect{h}}_k $, the input $x=s_k$, the output $y=\vect{v}_k^{\Htran}\vect{D}_k\vect{y}^{\rm{ul}}$, and the realization  $u=\{\vect{D}_k\widehat{\vect{h}}_i:i=1,\ldots,K\}$ that affects the conditional variance of the interference. The effective noise $\vect{v}_k^{\Htran}\vect{D}_k\vect{n}$ may not be Gaussian and all the interference and noise are included in $\upsilon$ with $n=0$ in Lemma~\ref{lemma:capacity-memoryless-random-interference} on p.~\pageref{lemma:capacity-memoryless-random-interference}. The input power is $p=\mathbb{E}\{\left|s_k\right|^2\}=p_k$. The term $\upsilon$ is given by
+	\begin{align}
+		\upsilon=\condSum{i=1}{i \neq k}{K}\vect{v}_k^{\Htran}\vect{D}_k\widehat{\vect{h}}_i s_i+\sum_{i=1}^K\vect{v}_k^{\Htran}\vect{D}_k\widetilde{\vect{h}}_i s_i+\vect{v}_k^{\Htran}\vect{D}_k\vect{n}.
+		\end{align}
+	To prove the theorem, we need to show that the requirements in Lemma~\ref{lemma:capacity-memoryless-random-interference} on p.~\pageref{lemma:capacity-memoryless-random-interference} are satisfied and then compute the conditional variance $p_{\upsilon}(h,u)=\mathbb{E}\{\left|\upsilon\right|^2|h,u\}$. First, we notice that the realizations of $h$ and $u$ are known at the CPU and $\upsilon$ has conditional zero-mean given $(h,u)$, i.e., $\mathbb{E}\{\upsilon|h,u\}=0$ since the  symbols $\{s_i:i=1,\ldots,K\}$ and the noise vector $\vect{n}$ are independent of the channel estimates and zero-mean estimation errors. The conditional variance given $(h,u)$ is
+	\begingroup
+	\allowdisplaybreaks
+	\begin{align}
+	p_{\upsilon}(h,u)&=\mathbb{E}\left\{\left|\upsilon\right|^2|h,u\right\}=\mathbb{E}\left\{\left|\upsilon\right|^2|\left\{\vect{D}_k\widehat{\vect{h}}_i\right\}\right\}\nonumber\\
+	&=\condSum{i=1}{i \neq k}{K}p_i\left|\vect{v}_k^{\Htran}\vect{D}_k\widehat{\vect{h}}_i\right|^2+\sum_{i=1}^Kp_i\vect{v}_k^{\Htran}\vect{D}_k\mathbb{E}\left\{\widetilde{\vect{h}}_i\widetilde{\vect{h}}_i^{\Htran}\right\}\vect{D}_k\vect{v}_k\nonumber\\&\quad+\vect{v}_k^{\Htran}\vect{D}_k\mathbb{E}\{\vect{n}\vect{n}^{\Htran}\}\vect{D}_k\vect{v}_k
+	 \nonumber \\
+	 &=\condSum{i=1}{i \neq k}{K} p_i\left|\vect{v}_k^{\Htran}\vect{D}_k\widehat{\vect{h}}_i\right|^2+\sum_{i=1}^Kp_i\vect{v}_k^{\Htran}\vect{D}_k\vect{C}_i\vect{D}_k\vect{v}_k+\sigmaUL\vect{v}_k^{\Htran}\vect{D}_k\vect{D}_k\vect{v}_k
+		\end{align}
+		\endgroup
+which is equal to  the denominator of \eqref{eq:uplink-instant-SINR-level4}. In the derivation, we have used the fact that the individual terms of $\upsilon$ are mutually uncorrelated and the combining vector $\vect{v}_k$ depends only on the channel estimates, which are independent of the estimation errors. As a final requirement for using Lemma~\ref{lemma:capacity-memoryless-random-interference}, we note that the input signal $x=s_k$ is conditionally uncorrelated with $\upsilon$ given $(h,u)$, i.e., $\mathbb{E}\{s_k^{\star}\upsilon|\{\vect{D}_k\widehat{\vect{h}}_i\}\}=0$ due to the independence of the different symbols and the zero-mean channel estimation errors. 
+
+ As a last step, we note that only the fraction $\tau_u/\tau_c$ of the samples is used for uplink data transmission, which results in the lower bound on the capacity that is stated in the theorem and measured in bit/s/Hz.
+ 
+ \subsection{Proof of Theorem~\ref{proposition:uplink-capacity-general-UatF}}\label{proof-of-proposition:uplink-capacity-general-UatF}
+
+
+By adding and subtracting the term $\mathbb{E} \{ \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k \} s_k$, 
+the received signal in \eqref{eq:uplink-data-estimate2} can alternatively be expressed as
+	\begin{equation}
+	\label{eq:uplink-data-estimate2-UatF}
+\widehat{s}_k = \mathbb{E} \{ \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k \} s_k + \upsilon_k
+\end{equation}
+where
+\begin{align} \nonumber
+\upsilon_k =& \left( \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k - \mathbb{E} \{ \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k \} \right) s_k +\condSum{i=1}{i \neq k}{K}\vect{v}_k^{\Htran}\vect{D}_k\vect{h}_i s_i + \vect{v}_k^{\Htran}\vect{D}_k\vect{n}.
+	\end{align}
+This is a deterministic channel (since $\mathbb{E} \{ \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k \}$ is constant) with the additive interference plus noise term $\upsilon_k$, which has zero mean since $\{s_i:i=1,\ldots,K\}$ and $\vect{n}$ have zero mean. Although $\upsilon_k$ contains the desired signal $s_k$, it is uncorrelated with it since
+\begin{equation}
+\mathbb{E}\left\{ s_k^{\star} \upsilon_k \right\} = \underbrace{\mathbb{E}\left\{\left( \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k - \mathbb{E} \{ \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k \} \right)  \right\} }_{=0}  \mathbb{E}\{ | s_k|^2 \} = 0.
+\end{equation}
+Therefore, we can apply Lemma~\ref{lemma:capacity-memoryless-deterministic-interference} on p.~\pageref{lemma:capacity-memoryless-deterministic-interference} with $h =  \mathbb{E} \{ \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k \}$, $x= s_k$, $p=p_k$, $\upsilon = \upsilon_k$, and $\sigma^2=0$.
+By noting that the signals of different UEs are independent and that the noise contributions at different APs are independent, we have that
+\begin{equation}
+\mathbb{E} \{ |\upsilon_k |^2 \} = \sum\limits_{i=1}^K p_{i}  \mathbb{E} \left\{| \vect{v}_{k}^{\Htran} \vect{D}_{k}{\vect{h}}_{i} |^2\right\}
+		- p_{k} \left |\mathbb{E} \left\{  \vect{v}_{k}^{\Htran} \vect{D}_{k}{\vect{h}}_{k} \right\}\right|^2  + \sigmaUL \mathbb{E} \left\{\| \vect{D}_k \vect{v}_{k} \|^2\right\}.
+\end{equation}
+The SE expression presented in the theorem then follows from Lemma~\ref{lemma:capacity-memoryless-deterministic-interference}.  
+ As a last step, we note that only the fraction $\tau_u/\tau_c$ of the samples is used for uplink data transmission, which results in the lower bound on the capacity that is stated in the theorem and measured in bit/s/Hz.
+
+
+
+\subsection{Proof of Theorem~\ref{theorem:uplink-capacity-level3}}\label{proof-of-proposition:uplink-capacity-level3}
+
+Since the CPU does not have knowledge of the channel estimates, it needs to treat the average channel gain $\vect{a}_{k}^{\Htran}\mathbb{E}\{\vect{g}_{kk}\}$ as the true deterministic channel. Hence, the signal model is
+\begin{equation} \label{eq:CPU-decoding-level3}
+\widehat{s}_k = \vect{a}_{k}^{\Htran}\mathbb{E}\{\vect{g}_{kk}\}  s_k + \upsilon_k
+\end{equation}
+which is a deterministic channel with the additive interference-plus-noise term
+\begin{align}  \upsilon_k 
+=  \big(\vect{a}_{k}^{\Htran}\vect{g}_{kk} -  \vect{a}_{k}^{\Htran} \mathbb{E}\{ \vect{g}_{kk}\}\big) s_k+ 
+\condSum{i=1}{i \neq k}{K} \vect{a}_{k}^{\Htran}  \vect{g}_{ki} s_i +  n^\prime_{k}.
+\end{align}
+The term $\upsilon_k$ has zero mean and is uncorrelated with the signal term in \eqref{eq:CPU-decoding-level3} since
+\begin{align}
+\underbrace{\mathbb{E}\left\{ \vect{a}_{k}^{\Htran}\vect{g}_{kk} -  \vect{a}_{k}^{\Htran} \mathbb{E}\left\{ \vect{g}_{kk}\right\}\right\}}_{=0}\mathbb{E}\left\{\left|s_k\right|^2\right\} = 0.
+\end{align}
+Therefore, we can apply Lemma~\ref{lemma:capacity-memoryless-deterministic-interference} on p.~\pageref{lemma:capacity-memoryless-deterministic-interference} with $h =  \vect{a}_{k}^{\Htran}\mathbb{E}\{\vect{g}_{kk}\}$, $x= s_k$, $p=p_k$, $\upsilon = \upsilon_k$, and $\sigma^2=0$.
+By noting that the signals of different UEs are independent and that the received noise at different APs are independent, we have that
+\begin{equation}
+\mathbb{E} \{ |\upsilon_k |^2 \} = \sum\limits_{i=1}^{K} p_{i} \mathbb{E} \{  |\vect{a}_{k}^{\Htran}\vect{g}_{ki}|^2  \} - p_{k} \left| \vect{a}_{k}^{\Htran} \mathbb{E}\{ \vect{g}_{kk}\} \right|^2 \!+\!  \vect{a}_{k}^{\Htran}\vect{F}_{k}
+		\vect{a}_{k} .
+\end{equation}
+The SE expression presented in the theorem then follows from Lemma~\ref{lemma:capacity-memoryless-deterministic-interference}.  As a last step, we note that only the fraction $\tau_u/\tau_c$ of the samples is used for uplink data transmission, which results in the lower bound on the capacity that is stated in the theorem and measured in bit/s/Hz.
+
+
+
+
+\subsection{Proof of Corollary~\ref{cor:closed-form_ul}}\label{proof-of-cor:closed-form_ul}
+	
+	The proof consists of a direct computation of the three types of expectations that appear in \eqref{eq:uplink-instant-SINR-level3}. We begin with
+	\begin{align} \nonumber
+	\left [ \mathbb{E} \left\{\vect{g}_{ki}\right\} \right ]_l &=	\mathbb{E} \left\{  \vect{v}_{kl}^{\Htran} \vect{D}_{kl} \vect{h}_{il} \right\} = \tr \left( \vect{D}_{kl} \mathbb{E} \left\{    \widehat{\vect{h}}_{il} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right) \\ &= \begin{cases}
+	\sqrt{\eta_k\eta_i}\tau_p  \tr \left(  \vect{D}_{kl}  \vect{R}_{il}\vect{\Psi}_{t_kl}^{-1}\vect{R}_{kl} \right) &   i\in\mathcal{P}_k \\
+	0 & i\notin\mathcal{P}_k
+	\end{cases}
+	\end{align}
+	where the second equality follows from the second identity of Lemma~\ref{lemma-matrix-identities} on p.~\pageref{lemma-matrix-identities} and the fact that $\widetilde{\vect{h}}_{il}$ and $\widehat{\vect{h}}_{kl}$ are independent. The third equality follows from \eqref{eq:cross-correlation-channel-estimates} and gives the expression in \eqref{eq:g_ki-expectation}.
+Similarly, 
+\begin{align}
+\left[ \vect{F}_k \right]_{ll}= \sigmaUL\mathbb{E} \left\{ \left\|  \vect{D}_{kl} \vect{v}_{kl} \right\|^2\right\} = \sigmaUL \tr \left( \vect{D}_{kl} \mathbb{E} \left\{    \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right) =\sigmaUL \left [ \mathbb{E} \left\{\vect{g}_{kk}\right\} \right ]_l
+\end{align}
+	where we used the second identity from Lemma~\ref{lemma-matrix-identities} and then identify the expression of $\left [ \mathbb{E} \left\{\vect{g}_{kk}\right\} \right ]_l$.
+This gives us the expression in \eqref{eq:F_kl}.
+
+It remains to compute the elements of $\mathbb{E}\left\{ \vect{g}_{ki} \vect{g}_{ki}^{\Htran}  \right\}$. We observe that $\mathbb{E}\left\{ \left[ \vect{g}_{ki} \right]_l \left[ \vect{g}_{ki}^{\star} \right]_r  \right\}=\mathbb{E}\left\{ \left[ \vect{g}_{ki} \right]_l\right\}\mathbb{E}\left\{ \left[ \vect{g}_{ki}^{\star} \right]_r\right\}$ for $ r\neq l$ due to the independence of the channels of different APs. Hence, it only remains to compute
+\begin{equation}
+\left[	\mathbb{E} \left\{\vect{g}_{ki} \vect{g}_{ki}^{\Htran}\right\} \right]_{ll}  =
+\mathbb{E} \left\{\widehat{\vect{h}}_{kl}^{\Htran}\vect{D}_{kl} \vect{h}_{il}\vect{h}_{il}^{\Htran} \vect{D}_{kl}  \widehat{\vect{h}}_{kl} \right\} = \tr\left(\vect{D}_{kl}  \mathbb{E} \left\{ \vect{h}_{il}\vect{h}_{il}^{\Htran}  \vect{D}_{kl}\widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right)
+\end{equation}
+where we utilized the second identity from Lemma~\ref{lemma-matrix-identities}.
+
+If $i \not \in \mathcal{P}_k$, we can utilize the independence of $\widehat{\vect{h}}_{kl}$ and $ \vect{h}_{il}$ to
+obtain
+\begin{align} \nonumber
+ \tr\left(\vect{D}_{kl}  \mathbb{E} \left\{ \vect{h}_{il}\vect{h}_{il}^{\Htran} \vect{D}_{kl} \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right) &= \tr\left(\vect{D}_{kl}  \mathbb{E} \left\{  \vect{h}_{il}\vect{h}_{il}^{\Htran} \right\}\vect{D}_{kl}\mathbb{E} \left\{  \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right)  \\ 
+ &= \eta_k \tau_p \tr \left( \vect{D}_{kl} \vect{R}_{il}   \vect{R}_{kl} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl} \right)
+\end{align}
+where we (for brevity) omitted one $\vect{D}_{kl}$ term that does not affect the result.
+
+If $i \in \mathcal{P}_k$, we notice that
+	\begingroup
+\allowdisplaybreaks
+\begin{align} \nonumber
+& \tr\left(\vect{D}_{kl}  \mathbb{E} \left\{ \vect{h}_{il}\vect{h}_{il}^{\Htran} \vect{D}_{kl} \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right) \\ 
+ &=  \tr\left(\vect{D}_{kl}  \mathbb{E} \left\{ \widehat{\vect{h}}_{il} \widehat{\vect{h}}_{il}^{\Htran} \vect{D}_{kl} \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right) 
+ + \tr\left(\vect{D}_{kl}  \mathbb{E} \left\{ \widetilde{\vect{h}}_{il} \widetilde{\vect{h}}_{il}^{\Htran} \vect{D}_{kl} \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right)
+\end{align}
+ \endgroup
+where the equality follows from separating $\vect{h}_{il}$ into its estimate and estimation error. The second term becomes $ \eta_k \tau_p  \tr ( \vect{D}_{kl} \vect{C}_{il} \vect{R}_{kl} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl} )$ by utilizing the independence of estimates and estimation error and omitting one $\vect{D}_{kl}$ term. The first term is computed by utilizing the result from \eqref{eq:relation-i-k-estimates} to rewrite the estimate as  $\widehat{\vect{h}}_{il}   =\sqrt{ \frac{\eta_i}{\eta_k} }  \vect{R}_{il}\vect{R}_{kl}^{-1}   \widehat{\vect{h}}_{kl}$: 
+\begin{align} \nonumber
+&\tr\left(\vect{D}_{kl}  \mathbb{E} \left\{ \widehat{\vect{h}}_{il} \widehat{\vect{h}}_{il}^{\Htran} \vect{D}_{kl} \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right)   \\ \nonumber
+&= \frac{\eta_i}{\eta_k} \tr\left(\vect{D}_{kl}  \mathbb{E} \left\{ \vect{R}_{il}(\vect{R}_{kl})^{-1} \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} (\vect{R}_{kl})^{-1} \vect{R}_{il} \vect{D}_{kl} \widehat{\vect{h}}_{kl} \widehat{\vect{h}}_{kl}^{\Htran} \right\} \right) \\ \nonumber
+&= \frac{\eta_i}{\eta_k}  \mathbb{E} \{ |\widehat{\vect{h}}_{kl}^{\Htran} \vect{D}_{kl}   \vect{R}_{il}(\vect{R}_{kl})^{-1} \widehat{\vect{h}}_{kl}|^2 \} \\
+&= \eta_k\eta_i\tau_p^{2}  \left|\tr \left(  \vect{D}_{kl} \vect{R}_{il} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl}  \right)\right|^2 + \eta_k \tau_p  \tr \left( \vect{D}_{kl} (\vect{R}_{il} - \vect{C}_{il})\vect{R}_{kl} \vect{\Psi}_{t_k l}^{-1} \vect{R}_{kl}\right)
+\end{align}
+where the last step follows from Lemma~\ref{lemma:fourth-order-moment-Gaussian-vector} on p.~\pageref{lemma:fourth-order-moment-Gaussian-vector} and some algebra. By adding these two terms together, we finally obtain \eqref{eq:gki-second-moment}.
+Note that the proof holds even if $\vect{R}_{kl}$ is non-invertible because $\vect{R}_{kl}^{-1}  \widehat{\vect{h}}_{kl} = \sqrt{\eta_k \tau_p} \vect{R}_{kl}^{-1} \vect{R}_{kl} \vect{\Psi}_{t_kl}^{-1} \vect{y}_{t_kl}^{{\rm pilot}} = \sqrt{\eta_k \tau_p} \vect{\Psi}_{t_kl}^{-1} \vect{y}_{t_kl}^{{\rm pilot}}$, where there is no inversion. We are only using the inversion to shorten the notation.
+
+	
+	\section{Proofs from Section~\ref{c-downlink}}
+	We report below the proofs from Section~\ref{c-downlink}.
+\subsection{Proof of Theorem~\ref{theorem:downlink-capacity-level4}}\label{proof-of-theorem:downlink-capacity-level4}
+
+Since the UE $k$ only has knowledge of the average of the effective channel, $\mathbb{E}\left\{\vect{h}_{k}^{\Htran}\vect{D}_{k}\vect{w}_k\right\}$, the received signal in \eqref{eq:DCC-downlink-three-parts} at UE $k$ can be expressed as
+	\begin{align} \label{eq:UE-decoding-level4}
+	y_k^{\rm{dl}} &= \mathbb{E}\left\{\vect{h}_{k}^{\Htran}\vect{D}_{k}\vect{w}_k\right\} \varsigma_k + \upsilon_k +  n_k 
+	\end{align}
+	which is a deterministic channel with the additive noise $n_k$ and the additive interference term
+	\begin{align}  \upsilon_k 
+	= & \left(\vect{h}_{k}^{\Htran}\vect{D}_{k}\vect{w}_k-\mathbb{E}\left\{\vect{h}_{k}^{\Htran}\vect{D}_{k}\vect{w}_k\right\} \right) \varsigma_k + 
+	\condSum{i=1}{i \neq k}{K} \vect{h}_{k}^{\Htran}\vect{D}_{i}\vect{w}_i \varsigma_i.
+	\end{align}
+	The $\upsilon_k$ term has zero mean (since $\varsigma_i$ has zero mean) and although it contains the desired signal $\varsigma_k$, it is uncorrelated with it since
+\begin{equation}
+\mathbb{E}\left\{ \varsigma_k^{\star} \upsilon_k \right\} = 
+\underbrace{\mathbb{E} \left\{ \left(\vect{h}_{k}^{\Htran}\vect{D}_{k}\vect{w}_k-\mathbb{E}\left\{\vect{h}_{k}^{\Htran}\vect{D}_{k}\vect{w}_k\right\} \right)  \right\}}_{=0} \mathbb{E}\{ | \varsigma_k|^2\} = 0.
+\end{equation}
+Therefore, we can apply Lemma~\ref{lemma:capacity-memoryless-deterministic-interference} on p.~\pageref{lemma:capacity-memoryless-deterministic-interference} with $h =\mathbb{E}\left\{\vect{h}_{k}^{\Htran}\vect{D}_{k}\vect{w}_k\right\} $, $x= \varsigma_k$, $p=1$, $\upsilon = \upsilon_k$, and $\sigma^2=\sigmaDL$.
+By noting that the signals of different UEs are independent, we have that
+\begin{equation}
+\mathbb{E} \{ |\upsilon_k |^2 \} = \sum\limits_{i=1}^{K} \mathbb{E} \left\{ \left|  \vect{h}_{k}^{\Htran} \vect{D}_{i} \vect{w}_{i} \right|^2 \right\} -  \left| \mathbb{E} \left\{  \vect{h}_{k}^{\Htran} \vect{D}_{k} \vect{w}_{k} \right\} \right|^2.
+\end{equation}
+The SE expression presented in the theorem then follows from Lemma~\ref{lemma:capacity-memoryless-deterministic-interference} on p.~\pageref{lemma:capacity-memoryless-deterministic-interference}.  
+ As a last step, we note that only the fraction $\tau_d/\tau_c$ of the samples is used for downlink data transmission, which results in the lower bound on the capacity that is stated in the theorem and measured in bit/s/Hz.
+
+
+\subsection{Proof of Theorem~\ref{prop:duality}}\label{proof-of-prop:duality}
+
+
+	
+	Let $\gamma_{k} = \mathacr{SINR}_{k}^{({\rm ul},\centuatf)}$ denote the value of the effective SINR in \eqref{eq:uplink-instant-SINR-level4-UatF} for the uplink powers $\{p_i: i=1,\ldots,K\}$ and combining vectors $\{ \vect{D}_i {\bf v}_{i}: i=1,\ldots,K\}$. We want to show that $\gamma_{k} = \mathacr{SINR}_{k}^{({\rm dl,\cent})}$ is achievable in the downlink when \eqref{eq:precoding-vectors-duality-proposition} is satisfied for all $i$. Plugging \eqref{eq:precoding-vectors-duality-proposition} into \eqref{eq:downlink-instant-SINR-level4} yields the following SINR constraints:
+	\begin{align} 
+	\gamma_k  =\frac{{\rho_{k}}\bigg|    \mathbb{E} \left\{ \vect{h}_{k}^{\Htran}  \frac{\vect{D}_{k}{\bf v}_{k}}{\sqrt{\mathbb{E} \{ \| \vect{D}_k{\vect{v}}_{k} \|^2 \}}}  \right\} \bigg|^2 }{ \sum\limits_{i=1}^{K} {\rho_{i}}\mathbb{E} \left\{ \left|  \vect{h}_{k}^{\Htran}  \frac{ \vect{D}_{i} {\bf v}_{i}}{\sqrt{\mathbb{E} \left\{ \left\| \vect{D}_i{\vect{v}}_{i} \right\|^2 \right\}}}   \right|^2 \right\} - {\rho_{k}} \left|   \mathbb{E} \left\{ \vect{h}_{k}^{\Htran}  \frac{ \vect{D}_{k} {\bf v}_{k}}{\sqrt{\mathbb{E} \left\{ \left\| \vect{D}_k{\vect{v}}_{k} \right\|^2\right\}}}  \right\} \right|^2 + \sigma_{\rm dl}^2 }\label{eq:downlink-SINR-level4-proof}
+	\end{align}
+	for $k=1,\ldots,K$. We define the diagonal matrix $\vect{\Gamma} \in \mathbb{R}^{K \times K}$ with the $k$th diagonal element being
+	\begin{align}
+	[\vect{\Gamma}]_{kk} =\frac{1}{\gamma_k}\left|    \mathbb{E} \left\{ \vect{h}_{k}^{\Htran}  \frac{\vect{D}_{k} {\bf v}_{k}}{\sqrt{\mathbb{E} \{ {\vect{v}}_{k}^{\Htran}\vect{D}_{k} {\vect{v}}_{k} \}}}  \right\} \right|^2
+	\end{align}
+	and let $\vect{\Sigma} \in \mathbb{R}^{K \times K}$ be the matrix whose $(k,i)$th element is
+	\begin{align}
+	[\vect{\Sigma}]_{ki} = \mathbb{E} \left\{ \left|  \vect{h}_{k}^{\Htran}  \frac{\vect{D}_{i}{\bf v}_{i}}{\sqrt{\mathbb{E} \{ {\vect{v}}_{i}^{\Htran}\vect{D}_{i} {\vect{v}}_{i} \}}}   \right|^2 \right\} - \begin{cases}
+	0 & i \ne k \\
+	\gamma_k[\vect{\Gamma}]_{kk}& i=k.
+	\end{cases}
+	\end{align}
+	Using these matrices, the SINR constraint in \eqref{eq:downlink-SINR-level4-proof} can be expressed as
+	\begin{align}
+[\vect{\Gamma}]_{kk} = \frac{ \sum\limits_{i=1}^{K}\rho_i [\vect{\Sigma}]_{ki} + \sigma_{\rm dl}^2 }{\rho_k}.
+	\end{align}
+	By rearranging this equation, we obtain
+$\sigma_{\rm dl}^2 = \rho_k [\boldsymbol{\Gamma}]_{kk} - \sum\nolimits_{i=1}^{K}\rho_i [\boldsymbol{\Sigma}]_{ki}$.
+	The $K$ constraints can be written in matrix form as $
+	{\bf 1}_K\sigma_{\rm dl}^2 = \left(\boldsymbol{\Gamma} - \boldsymbol{\Sigma}\right)\boldsymbol{\rho}$ 
+	with $\boldsymbol{\rho} =[\rho_1 \, \ldots \, \rho_K]^{\Ttran}$ being the downlink transmit power vector. The SINR constraints in \eqref{eq:downlink-SINR-level4-proof} are thus satisfied if 
+	\begin{align}\label{eq:optimal-power-proof}
+	\boldsymbol{\rho} = \left(\boldsymbol{\Gamma} - \boldsymbol{\Sigma}\right)^{-1}{\bf 1}_K\sigma_{\rm dl}^2.
+	\end{align}
+	This is a feasible power if $\boldsymbol{\Gamma} - \boldsymbol{\Sigma}$ is invertible, which always holds when ${\bf p}=[p_1 \, \ldots \, p_K]^{\Ttran}$ is feasible. To show this, we notice that the $K$ uplink SINR conditions can be expressed in a similar form where $\boldsymbol{\Sigma}$ is replaced by $\boldsymbol{\Sigma}^{\Ttran}$
+	such that ${\bf p} = \left(\boldsymbol{\Gamma} - \boldsymbol{\Sigma}^{\Ttran}\right)^{-1}{\bf 1}_K\sigma_{\rm ul}^2$.
+	Since the eigenvalues of $\boldsymbol{\Gamma} - \boldsymbol{\Sigma}$ and $\boldsymbol{\Gamma} - \boldsymbol{\Sigma}^{\Ttran}$ are the same and the uplink SINR conditions are satisfied by assumption, we can always select the downlink powers according to \eqref{eq:optimal-power-proof}. Substituting ${\bf 1}_K = \frac{1}{\sigma_{\rm ul}^2}\left(\vect{\Gamma} - \vect{\Sigma}^{\Ttran}\right){\bf p}$ into \eqref{eq:optimal-power-proof} yields 
+	\begin{align}
+	\boldsymbol{\rho} = \frac{\sigma_{\rm dl}^2}{\sigma_{\rm ul}^2}\left(\boldsymbol{\Gamma} - \boldsymbol{\Sigma}\right)^{-1}\left(\boldsymbol{\Gamma} - \boldsymbol{\Sigma}^{\Ttran}\right){\bf p}. \label{eq:downlink-duality-power}
+	\end{align}
+	The total transmit power condition now follows from direct computation by noting that ${\bf 1}_K^{\Ttran}\left(\vect{\Gamma} - \vect{\Sigma}\right)^{-1}{\bf 1}_K={\bf 1}_K^{\Ttran}\left(\vect{\Gamma} - \vect{\Sigma}^{\Ttran}\right)^{-1}{\bf 1}_K$.
+	
+To complete the proof, we need to show the power allocation coefficients obtained by \eqref{eq:downlink-duality-power} are positive. Please see \cite[Proof of Theorem~4.8]{massivemimobook} for the final technical details.
+	
+	
+	
+
+\backmatter  
+
+\printbibliography
+
+\end{document}

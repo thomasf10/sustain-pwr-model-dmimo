@@ -58,16 +58,42 @@ def draw_positions(cfg: DMIMOConfig, rng: np.random.Generator):
     return ap_pos, ue_pos
 
 
-def large_scale_fading(cfg: DMIMOConfig, ap_pos, ue_pos) -> np.ndarray:
+def large_scale_fading(cfg: DMIMOConfig, ap_pos, ue_pos,
+                       rng: np.random.Generator) -> np.ndarray:
     """Large-scale fading (average channel gain) beta[l, k] between AP l and UE k.
 
-    Typically ``beta = 10 ** (-(path_loss_dB - shadowing_dB) / 10)`` using
-    :meth:`DMIMOConfig.path_loss_dB` plus an ``N(0, shadow_std_dB^2)`` term.
+    Implements the 3GPP Urban Microcell model of the cell-free monograph
+    (Bjornson & Sanguinetti, Sec. 2.5.2): the channel gain in dB is
+    ``beta_kl [dB] = -PL(d_kl) + F_kl``, with ``PL`` the log-distance path loss
+    of :meth:`DMIMOConfig.path_loss_dB`, ``d_kl`` the 3-D AP-UE distance (the
+    horizontal separation combined with the ``ap_height - ue_height`` vertical
+    offset), and ``F_kl ~ N(0, shadow_std_dB^2)`` the log-normal shadowing. The
+    returned coefficients are ``beta = 10 ** (beta_dB / 10)`` in linear scale.
+
+    The shadowing terms are drawn independently across ``(l, k)``. The book also
+    specifies inter-UE shadow correlation for a common AP (eq. for
+    ``E{F_kl F_ij}``); that spatial correlation is not modeled here.
+    [MODEL: correlated shadowing omitted]
+
+    Args:
+        cfg: System configuration.
+        ap_pos: AP coordinates ``(L, 2)`` [m] from :func:`draw_positions`.
+        ue_pos: UE coordinates ``(K, 2)`` [m] from :func:`draw_positions`.
+        rng: Random generator (used for the shadowing realizations).
 
     Returns:
         Array ``(L, K)`` of linear large-scale fading coefficients.
     """
-    raise NotImplementedError("channel model: large-scale fading beta[l, k]")
+    ap = np.asarray(ap_pos, dtype=float)   # (L, 2)
+    ue = np.asarray(ue_pos, dtype=float)   # (K, 2)
+    horizontal = np.linalg.norm(ap[:, None, :] - ue[None, :, :], axis=2)  # (L, K)
+    height_diff = cfg.ap_height - cfg.ue_height
+    dist_3d = np.sqrt(horizontal ** 2 + height_diff ** 2)                 # (L, K)
+
+    path_loss_dB = cfg.path_loss_dB(dist_3d)                              # (L, K)
+    shadowing_dB = rng.normal(0.0, cfg.shadow_std_dB, size=path_loss_dB.shape)
+    beta_dB = -path_loss_dB + shadowing_dB
+    return 10.0 ** (beta_dB / 10.0)
 
 
 def spatial_correlation(cfg: DMIMOConfig, ap_pos, ue_pos, beta: np.ndarray) -> np.ndarray:

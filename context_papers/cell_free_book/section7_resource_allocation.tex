@@ -1,0 +1,808 @@
+%!TEX root = cell-free-book.tex
+
+\chapter{Spatial Resource Allocation}
+\label{c-resource-allocation} 
+\vspace{-1cm}
+This section describes some important considerations for the optimization, operation, and implementation of User-centric Cell-free Massive MIMO in practical networks. While previous sections have presented the foundations, this section is more related to the latest trends and developments. New algorithms and insights are likely to arise in the future, beyond what is presented here.
+The general theme is spatial resource allocation, which refers to the allocation of transmit powers and pilot signals to the UEs, the design of cooperation clusters, and the provisioning of fronthaul resources among the spatially distributed UEs and APs. Section~\ref{sec:optimized-power-allocation} describes power optimization algorithms for maximizing the sum SE and max-min fairness utility functions in both uplink and downlink. Since these algorithms solve network-wide optimization problems, they are not scalable but serve as theoretical benchmarks.
+ Next, Section~\ref{sec:scalable-power-allocation} presents heuristic power allocation alternatives, which are designed to be scalable and efficient. The optimized and scalable power allocation methods are compared in Section~\ref{sec:comparison-power-optimzation}.
+  In Section~\ref{sec:pilot-assignment-advanced} and Section~\ref{sec:selecting-DCC-advanced}, we provide brief overviews of algorithms for pilot assignment and DCC selection, respectively. Section~\ref{sec:implementation-constraints} discusses important implementation constraints that appear in practical deployments, including having limited fronthaul capacity. Finally, a summary of the key points is provided in Section~\ref{c-resource-allocation-summary}.
+
+
+\section{Transmit Power Optimization}
+\label{sec:optimized-power-allocation}
+
+The transmit power coefficients have so far been treated as heuristically selected constants, but these can be optimized to maximize a network-wide utility function. Section~\ref{sec:optimization-algorithms} on p.~\pageref{sec:optimization-algorithms} provided the theoretical foundations for maximizing the max-min fairness and sum SE utilities. 
+These represent two structured ways of selecting an operating point at the outer boundary of the SE region, as was illustrated in Figure~\ref{figure:basic_rate_region} on p.~\pageref{figure:basic_rate_region}.
+In this section, we will consider these utilities in the cell-free context and maximize them with respect to the uplink and downlink power coefficients under their respective power constraints. We will mainly use fixed-point and weighted MMSE-based algorithms that take the channel statistics and choice of combining/precoding scheme as inputs. These algorithms can be implemented at the CPU and the same solution can be applied as long as the channel statistics remain the same. Hence, there is no need to adapt the transmit power on a  coherence block basis.
+We will consider the uplink and downlink separately.
+
+\subsection{Uplink Power Optimization}
+\label{sec:optimized-power-allocation-uplink}
+
+We begin by considering the uplink power optimization.
+UE $k$ transmits its uplink data with a power $p_k$, which can be selected as any number between $0$ and the maximum  power $\pmax$. The procedure of selecting an appropriate uplink power is often called \emph{power control} since it can be viewed as controlling how much different UEs cut down on their powers, compared to $\pmax$, to maximize a particular utility function.
+
+\enlargethispage{0.75\baselineskip} 
+
+Several different SE expressions for the centralized and distributed operation were derived in Section~\ref{c-uplink} on p.~\pageref{c-uplink}. In this section, we consider the SE for the centralized case in Theorem~\ref{proposition:uplink-capacity-general-UatF} on p.~\pageref{proposition:uplink-capacity-general-UatF} and the SE for the distributed case in Theorem~\ref{theorem:uplink-capacity-level3} on p.~\pageref{theorem:uplink-capacity-level3}. Both results were derived using the \gls{UatF} bounding technique~\cite[Theorem~4.4]{massivemimobook} and, therefore, share a common structure that enables us to optimize the transmit powers using the same algorithms.\footnote{We have previously used the SE expression in Theorem~\ref{proposition:uplink-capacity-general} on p.~\pageref{proposition:uplink-capacity-general} for analyzing the uplink performance in the centralized operation. This expression  gives slightly larger SE values that better represent the practically achievable communication performance, but since the transmit powers only appear inside of expectations, the expression is not amendable for power optimization. The power allocation algorithms that we develop in this section are optimally designed for the more conservative capacity bounds in Theorem~\ref{proposition:uplink-capacity-general-UatF} on p.~\pageref{proposition:uplink-capacity-general-UatF} and in Theorem~\ref{theorem:uplink-capacity-level3} on p.~\pageref{theorem:uplink-capacity-level3}, but can also be used along with the bound in Theorem~\ref{proposition:uplink-capacity-general}.} 
+
+
+
+We can gather all the uplink powers in a vector $\vect{p}=[p_1 \, \ldots \, p_K]^{\Ttran}$ and notice that they affect all the UEs. The uplink SE of UE $k$ depends on $\vect{p}$ via its effective SINR. The numerator of the SINR depends on the power $p_k$ of its desired signal and the interference term in the denominator depends on all the power coefficients in $\vect{p}$. The effective SINR for UE $k$ in the centralized and distributed uplink operation can be jointly expressed in the generic form
+\enlargethispage{\baselineskip} 
+\begin{align}\label{eq:SINR-uplink}
+\mathrm{SINR}_k\left(\vect{p}\right)=\frac{b_kp_k}{\vect{c}_k^{\Ttran}\vect{p}+\sigma_k^2}
+\end{align}
+as a function of the vector $\vect{p}$ with all transmit power coefficients.
+The difference between the two types of operation lies in the values of the parameters $b_k \geq 0$, $\vect{c}_k=[c_{k1} \, \ldots \, c_{kK}]^{\Ttran}\in \mathbb{R}_{\geq 0}^K$, and $\sigma_k^2 \geq 0$. They represent the average channel gain of the desired signal, the vector with the average channel gains for the respective interfering signals, and the effective noise variance, which are given as
+\begin{align}
+&b_k=\begin{cases} \left| \mathbb{E} \left\{ \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k\right\}\right|^2 & \text{ for centralized operation} \\
+\left| \vect{a}_k^{\Htran}\mathbb{E} \left\{ \vect{g}_{kk}\right\}\right|^2 & \text{ for distributed operation}, \end{cases} \quad \forall k \\
+&c_{kk}=\begin{cases} \mathbb{E} \left\{\left|  \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_k\right|^2\right\}-b_k & \text{ for centralized operation} \\
+\mathbb{E} \left\{ \left| \vect{a}_k^{\Htran}\vect{g}_{kk}\right|^2\right\}-b_k & \text{ for distributed operation}, \end{cases} \quad \forall k\\
+&c_{ki}=\begin{cases} \mathbb{E} \left\{\left|  \vect{v}_k^{\Htran}\vect{D}_k\vect{h}_i\right|^2\right\} & \text{ for centralized operation} \\
+\mathbb{E} \left\{ \left| \vect{a}_k^{\Htran}\vect{g}_{ki}\right|^2 \right\} & \text{ for distributed operation}, \end{cases} \quad \forall k, \forall i\neq k \\
+&\sigma_k^2=\begin{cases} \sigmaUL\mathbb{E} \left\{ \left\Vert \vect{D}_k\vect{v}_k\right\Vert^2\right\} & \text{ for centralized operation} \\
+ \vect{a}_k^{\Htran}\vect{F}_k\vect{a}_{k} & \text{ for distributed operation}, \end{cases} \quad \forall k.
+\end{align}
+The generic SINR expression in \eqref{eq:SINR-uplink} has a structure that we recognize from Lemma~\ref{lemma:generic-SINR-expression} on p.~\pageref{lemma:generic-SINR-expression} with $\left|\mathrm{DS}_k(\vect{p})\right|^2 = b_kp_k$ being the signal term in the numerator, $\sum_{i=1}^K\mathbb{E}\left\{\left|\mathrm{I}_{ki}\left(\vect{p}\right)\right|\right\}^2 = \vect{c}_k^{\Ttran}\vect{p}$ being the total interference power, and $\sigma_k^2$ is the noise power. 
+Hence, we can use the optimization algorithms presented in Section~\ref{sec:optimization-algorithms} on p.~\pageref{sec:optimization-algorithms}, which apply for arbitrary instances of the SINR expression from Lemma~\ref{lemma:generic-SINR-expression}, 
+to solve two power optimization problems: max-min SE fairness and sum SE maximization. We stress that the algorithms presented below are applying to centralized operation with arbitrary receive combining and distributed operation with arbitrary local receive combining and LSFD weights. This does not mean that the same transmit powers are optimal in all situations. Since different network operations lead to different values of $b_k$, $\vect{c}_k$, and $\sigma_k^2$, the optimal transmit powers will naturally be different even if they are obtained using the same algorithms.
+
+
+\subsubsection{Uplink Max-Min SE Fairness}
+
+We first consider the max-min SE fairness problem, which was formulated for the general case in \eqref{eq:maxmin-fairness-problem}. In the considered uplink scenario, there are $K$ individual transmit power constraints and the max-min fairness optimization problem can be particularized as
+\begin{align} \label{eq:maxmin-fairness-problem-uplink}
+&\underset{\vect{p} \geq \vect{0}_K}{\textrm{maximize}} \quad \min\limits_{k\in \{1,\ldots,K\}} \quad \frac{b_kp_k}{\vect{c}_k^{\Ttran}\vect{p}+\sigma_k^2} \\
+&\textrm{subject to} \quad p_k\leq \pmax, \quad k=1,\ldots,K.  \nonumber
+\end{align}
+This problem has the same structure as the generic problem in \eqref{eq:maxmin-fairness-problem} with $R=K$ and $\vect{a}_r$ 
+having a one in the $r$th entry and zeros elsewhere for $r=1,\ldots,K$. Under the following conditions, the solution to \eqref{eq:maxmin-fairness-problem-uplink} can be computed by using the fixed-point algorithm in Algorithm~\ref{alg:fixed-point} on p.~\pageref{alg:fixed-point}.
+
+\begin{lemma}
+The three conditions in Lemma~\ref{lemma:fixed-point} on p.~\pageref{lemma:fixed-point} are satisfied for $\mathrm{SINR}_k(\vect{p})$ in \eqref{eq:SINR-uplink} if the coefficients $b_k$, $c_{ki}$ for all $i \neq k$, and $\sigma_k^2$ are strictly positive. Hence, we can use Algorithm~\ref{alg:fixed-point} to solve \eqref{eq:maxmin-fairness-problem-uplink}.
+\end{lemma}
+
+The requirements stated in the lemma are mild and basically say that the processed signal for every UE includes a non-zero fraction of the transmitted power from all other UEs and that the noise power is non-zero.
+By particularizing Algorithm~\ref{alg:fixed-point}  for the problem at hand, we obtain Algorithm~\ref{alg:fixed-point-uplink}, which converges to the optimal solution of the max-min fairness problem in \eqref{eq:maxmin-fairness-problem-uplink}. 
+All UEs will have equal SE at the optimum and at least one UE will use the maximum power $\pmax$.
+Algorithm~\ref{alg:fixed-point-uplink} converges quickly and has relatively low computational complexity since it only involves iterative closed-form updates of the variables. However, its complexity grows with $K$, thus it is not scalable.
+
+\begin{algorithm}
+	\caption{Fixed-point algorithm for solving the uplink max-min fairness problem in \eqref{eq:maxmin-fairness-problem-uplink}.} \label{alg:fixed-point-uplink}
+	\begin{algorithmic}[1]
+		\State {\bf Initialization:} Set arbitrary initial power $\vect{p}>\vect{0}_K$ and the solution accuracy $\epsilon>0$
+		\While{$\underset{k\in\{1,\ldots,K\}}{\max} \textrm{SINR}_k\left(\vect{p}\right)-\underset{k\in\{1,\ldots,K\}}{\min} \textrm{SINR}_k\left(\vect{p}\right) > \epsilon$} 
+		\State $p_k \gets \frac{p_k}{\textrm{SINR}_k\left(\vect{p}\right)}$, $k=1,\ldots,K$
+		\State $\vect{p} \gets \frac{p_{\rm max}}{\underset{k\in\{1,\ldots,K\}}{\max}p_k}\vect{p}$
+		\EndWhile
+		\State {\bf Output:} Optimal transmit powers $\vect{p}$
+		\State Max-min SE $\underset{k\in\{1,\ldots,K\}}{\min} \frac{\tau_u}{\tau_c}\log_2\left(1+ \textrm{SINR}_k\left(\vect{p}\right)\right)$
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+\subsubsection{Uplink Sum SE Maximization}
+
+We will now consider the sum SE maximization problem, which is formulated in the uplink as
+\begin{align} \label{eq:sum-SE-maximization-uplink}
+&\underset{\vect{p} \geq \vect{0}_K}{\textrm{maximize}} \quad \sum\limits_{k=1}^K  \log_2\left(1+\frac{b_kp_k}{\vect{c}_k^{\Ttran}\vect{p}+\sigma_k^2}\right) \\
+&\textrm{subject to} \quad p_k\leq \pmax, \quad k=1,\ldots,K . \nonumber
+\end{align}
+This problem has the same structure as the generic one in \eqref{eq:sum-SE-maximization}. Hence, we can conclude that \eqref{eq:sum-SE-maximization-uplink} is not convex, however, a local optimum can be attained by the block coordinate descent algorithm given in Algorithm~\ref{alg:sum-SE} on p.~\pageref{alg:sum-SE}.
+That algorithm was developed based on a weighted MMSE reformulation of the sum SE maximization problem, where the MSE in the data detection was stated in \eqref{eq:ek-MSE}. For the particular SINR expression considered in this section, the corresponding MSE can be particularized as
+\begin{align} 
+e_k\left(\vect{p}, u_k\right)=u_{k}^2\left(b_kp_k+\vect{c}_k^{\Ttran}\vect{p}+\sigma_k^2\right) -2u_{k}\sqrt{b_kp_k}+1  \label{eq:ek-MSE-uplink}
+\end{align}
+where we have used the fact that $b_k$ is real-valued and positive and $u_k$ is also real-valued since all the coefficients in the SINR expression are real-valued.
+The solution to the optimization problem in Step 6 of Algorithm \ref{alg:sum-SE} on p.~\pageref{alg:sum-SE} can be obtained in closed-form as
+\begin{align} \label{eq:pk-update-uplink}
+p_k=\min\left(\pmax, \frac{b_kd_k^2u_k^2}{\left(d_ku_k^2b_k+\sum\limits_{i=1}^Kd_iu_i^2c_{ik}\right)^2}  \right)
+\end{align}
+by treating $\sqrt{p_1},\ldots,\sqrt{p_K}$ as the optimization variables and decomposing the problem into $K$ independent subproblems each of which is a quadratic minimization under a bound constraint. The steps of the block coordinate descent algorithm for the uplink sum SE maximization can then be simplified to Algorithm~\ref{alg:sum-SE-uplink}, which is an iterative algorithm where all the updates are based on closed-form expressions. 
+The algorithm converges quickly and has relatively low computational complexity, but the complexity grows with $K$ so the algorithm is not scalable. Note that Algorithm~\ref{alg:sum-SE-uplink} only guarantees to find a local optimum to \eqref{eq:sum-SE-maximization-uplink}, thus different initializations may lead to different solutions.
+
+A typical property of sum SE maximization problems is that the optimal solution might assign zero power to some UEs, which naturally leads to zero SE. This can occur for UEs that have weak channels to all APs, however, we will show in Section~\ref{sec:comparison-power-optimzation}  that this is not an issue that appears when applying the algorithm to the running example. We can be sure that at least one UE will use the maximum power $\pmax$ at the optimum solution.
+
+
+\begin{algorithm}
+	\caption{Block coordinate descent algorithm for solving the sum SE maximization problem in \eqref{eq:sum-SE-maximization-uplink}.} \label{alg:sum-SE-uplink}
+	\begin{algorithmic}[1]
+		\State {\bf Initialization:} Set the solution accuracy $\epsilon>0$
+		\State Set an arbitrary feasible power vector $\vect{p}$
+		\While{  $\sum_{k=1}^K\Big(d_{k}e_{k}\left(\vect{p},u_k\right)-\ln\left( d_{k}\right)\Big)$  is either improved more than $\epsilon$ or not improved at all}
+		\State $u_{k} \gets \frac{\sqrt{b_kp_k}}{b_kp_k+\vect{c}_k^{\Ttran}\vect{p}+\sigma_k^2}, \quad k=1,\ldots,K$
+		\State $d_k \gets \frac{1}{u_{k}^2\left(b_kp_k+\vect{c}_k^{\Ttran}\vect{p}+\sigma_k^2\right) -2u_{k}\sqrt{b_kp_k}+1}, \quad k=1,\ldots,K$
+		\State $p_k \gets \min\left(\pmax, \frac{b_kd_k^2u_k^2}{\left(d_ku_k^2b_k+\sum\limits_{i=1}^Kd_iu_i^2c_{ik}\right)^2}  \right), \quad k=1,\ldots,K$
+		\EndWhile
+		\State {\bf Output:} Optimal transmit powers $\vect{p}$
+		\State Sum SE $\frac{\tau_u}{\tau_c}\sum_{k=1}^K\log_2\left(d_k\right)$
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{remark}[Pilot power optimization]
+The optimization problems in \eqref{eq:maxmin-fairness-problem-uplink} and \eqref{eq:sum-SE-maximization-uplink} optimize the transmit powers $p_1,\ldots,p_K$ that are used for uplink data transmission. The uplink transmission also involves the pilot powers $\eta_1,\ldots,\eta_K$, which were implicitly assumed to be constant (they appear at the inside of $b_k$, $\vect{c}_k$, and $\sigma_k^2$). If the pilot assignment is carried out properly, then pilot transmission with maximum power $\eta_1=\ldots=\eta_K= \pmax$ is expected to be a nearly optimal solution. There are a few papers that also consider pilot power optimization. For example, \cite{Mai2018} optimizes the pilot powers by minimizing the maximum NMSE in the channel estimation, but without considering the performance in the data transmission phase. 
+The joint pilot and data power optimization is considered in \cite{Masoumi2018} for single-antenna APs, but only an approximation of the max-min fairness problem is solved. Further research on the joint pilot and data power optimization problem is required.
+\end{remark}
+
+
+
+\subsection{Downlink Power Optimization}
+\label{sec:optimized-power-allocation-downlink}
+
+We will now consider the downlink power optimization. AP $l$ transmits the signal $\vect{x}_l =  \sum_{i=1}^{K} \vect{D}_{il}  \vect{w}_{il} \varsigma_i $ defined in \eqref{eq:DCC-transmit-downlink2} and is assumed to have a maximum transmit power of $\rhomax$. This power can be arbitrarily divided between the UEs and this procedure is often called \emph{power allocation}. An AP can decide to not use all of its power to not cause unnecessary interference, similar to the situation in the uplink. 
+The centralized and distributed operation will be handled differently in this section, even if the power constraints are the same in both cases. The reason is that the precoding vectors are coupled between the APs in the centralized case, while they are not in the distributed case.
+
+In the centralized operation, the centralized precoding vectors
+\begin{equation}
+\vect{w}_k = \sqrt{\rho_k} \frac{\bar{\vect{w}}_k}{\sqrt{\mathbb{E} \left\{ \left\| \bar{\vect{w}}_k \right\|^2 \right\} }}
+\end{equation}
+from \eqref{eq:precoding-centralized-expression} are used for $k=1,\ldots,K$. There are $K$ power allocation coefficients $\{\rho_k:k=1,\ldots,K\}$ to optimize, where $\rho_k \geq 0$ represents the total downlink power allocated to UE $k$ from all the serving APs.
+
+In the distributed operation, the local precoding vectors for UE $k$ are defined in \eqref{eq:precoding-distributed-expression}  as
+\begin{equation}
+{\vect{w}}_{kl}= \sqrt{\rho_{kl}}\frac{\bar{\vect{w}}_{kl}}{\sqrt{\mathbb{E}\left\{\left\| \bar{\vect{w}}_{kl}\right\|^2\right\}}}
+\end{equation}
+for $l \in \mathcal{M}_k$. There are $\sum_{k=1}^K |\mathcal{M}_k|$ power allocation coefficients $\{\rho_{kl} : l\in \mathcal{M}_k, k=1,\ldots,K\}$ to optimize, where $\rho_{kl} \geq 0$ denotes the downlink  power that AP $l$ is assigning to UE $k$. 
+Since there are more coefficients~in the distributed case, we can expect the optimization to be more complex.
+
+\enlargethispage{\baselineskip}
+
+\subsubsection{Optimized Centralized Downlink Power Allocation}
+\label{sec:optimized-power-allocation-downlink-scheme1}
+
+We begin with the centralized operation for which the downlink SE is given by Theorem~\ref{theorem:downlink-capacity-level4} on p.~\pageref{theorem:downlink-capacity-level4}. We notice that the effective SINR, $\mathacr{SINR}_{k}^{({\rm dl},\cent)}$, achieved by UE $k$ can be expressed as a function of the downlink power coefficients $\boldsymbol{\rho}=[\rho_1 \, \ldots \, \rho_K]^{\Ttran}$ as
+\begin{align}\label{eq:SINR-downlink}
+\mathacr{SINR}_{k}^{({\rm dl},\cent)}\left(\boldsymbol{\rho}\right)=\frac{\tilde{b}_k\rho_k}{\tilde{\vect{c}}_k^{\Ttran}\boldsymbol{\rho}+\sigmaDL}
+\end{align}
+where $\tilde{b}_k$ is the average channel gain of the desired signal and $\tilde{\vect{c}}_k=[\tilde{c}_{k1} \, \ldots \, \tilde{c}_{kK}]^{\Ttran}\in \mathbb{R}_{\geq 0}^K$ is a vector containing the average channel gains for the respective interfering signals.
+The specific values of these parameters in the centralized downlink operation are
+\begin{align}
+&\tilde{b}_k=  \frac{\left| \mathbb{E} \left\{ \vect{h}_{k}^{\Htran}\vect{D}_{k}\bar{\vect{w}}_{k}\right\} \right|^2 }{ \mathbb{E} \left\{ \| \bar{\vect{w}}_k \|^2 \right\}}, \quad \forall k \\
+&\tilde{c}_{kk}= \frac{ \mathbb{E} \left\{\left|  \vect{h}_{k}^{\Htran}\vect{D}_{k}\bar{\vect{w}}_{k}\right|^2\right\} }{ \mathbb{E} \left\{ \| \bar{\vect{w}}_k \|^2 \right\}} -\tilde{b}_k, \quad \forall k\\
+&\tilde{c}_{ki}= \frac{ \mathbb{E} \left\{\left|  \vect{h}_{k}^{\Htran}\vect{D}_{i}\bar{\vect{w}}_{i}\right|^2\right\} }{ \mathbb{E} \left\{ \| \bar{\vect{w}}_i \|^2 \right\} },  \quad \forall k, \forall i\neq k .
+\end{align}
+Recall that $\{\bar{\vect{w}}_{k}: k=1,\ldots,K\}$ are vectors that point out the directions of the centralized precoding vectors. MMSE, P-MMSE, and P-RZF precoding were considered in Section~\ref{subsec:centralized-precoding} on p.~\pageref{subsec:centralized-precoding} and represent different ways of selecting $\bar{\vect{w}}_{k}$. The choice of precoding scheme will affect the values of $\tilde{b}_k$ and $\tilde{\vect{c}}_k$, but the same optimization algorithms can be utilized for any precoding since the SINRs are always given by \eqref{eq:SINR-downlink}.
+
+We note that the effective downlink SINR in \eqref{eq:SINR-downlink} has the same structure as the effective uplink SINR in \eqref{eq:SINR-uplink}, except that the $K$ transmit power coefficients are now contained in a vector that we denote $\boldsymbol{\rho}$. Hence, we can apply almost the same optimization algorithms to solve the max-min fairness and sum SE maximization problems, with the only structural difference that we have one power constraint per AP. 
+Let $\bar{\vect{w}}_{kl}^{\prime} \in \mathbb{C}^N$ denote the portion of the normalized centralized precoding vector $\bar{\vect{w}}_k /\sqrt{\mathbb{E} \{ \left\| \bar{\vect{w}}_k \right\|^2 \} }$ corresponding to AP $l$, so we have
+\begin{align} \label{eq:normalized_centralized_precoding}
+& \frac{\bar{\vect{w}}_k}{\sqrt{\mathbb{E} \left\{ \left\| \bar{\vect{w}}_k \right\|^2 \right\} }} = \begin{bmatrix} \bar{\vect{w}}_{k1}^{\prime} \\ \vdots \\  \bar{\vect{w}}_{kL}^{\prime} \end{bmatrix}.
+\end{align}
+Note that $\sum_{l=1}^{L} \mathbb{E} \{ \| \bar{\vect{w}}_{kl}^{\prime} \|^2 \} = 1$ by construction, while the individual vectors $\{\bar{\vect{w}}_{kl}^{\prime}: l\in \mathcal{M}_k\}$ can have arbitrary average squared norms between 0 and 1. The value $\mathbb{E} \{ \| \bar{\vect{w}}_{kl}^{\prime} \|^2 \} \in [0,1]$ represents the fraction of the total transmit power assigned to UE $k$ that will be sent from AP $l$. Hence, the power constraint for AP $l$ can be formulated as
+\begin{equation} \label{eq:power-constraint-centralized}
+\sum_{k\in \mathcal{D}_l}\rho_k\mathbb{E} \left\{ \left\| \bar{\vect{w}}_{kl}^{\prime} \right\|^2 \right\} \leq \rhomax.
+\end{equation}
+
+We first consider the max-min SE fairness problem that is formulated for the general case in \eqref{eq:maxmin-fairness-problem}. In the special case at hand, there are $L$ per-AP transmit power constraints of the kind in \eqref{eq:power-constraint-centralized}. 
+The max-min fairness optimization problem can then be particularized as
+\begin{align} \label{eq:maxmin-fairness-problem-downlink}
+&\underset{\boldsymbol{\rho} \geq \vect{0}_K}{\textrm{maximize}} \quad \min\limits_{k\in \{1,\ldots,K\}} \quad \frac{\tilde{b}_k\rho_k}{\tilde{\vect{c}}_k^{\Ttran}\boldsymbol{\rho}+\sigmaDL} \\
+&\textrm{subject to} \quad \sum_{k\in \mathcal{D}_l}\rho_k \mathbb{E} \left\{ \left\| \bar{\vect{w}}_{kl}^{\prime} \right\|^2\right\}\leq \rhomax, \quad l=1,\ldots,L.  \nonumber
+\end{align}
+The above problem has the same structure as the generic problem in \eqref{eq:maxmin-fairness-problem} with $R=L$ and $\vect{a}_r$ is the vector whose elements are
+ $\mathbb{E} \{ \| \bar{\vect{w}}_{kr}^{\prime} \|^2\}$ for UEs that are served by AP $r$ and zero elsewhere. Note that the three conditions in Lemma~\ref{lemma:fixed-point} on p.~\pageref{lemma:fixed-point} are satisfied, just as in uplink, and we can thus design a similar fixed-point algorithm that converges to the optimal solution of \eqref{eq:maxmin-fairness-problem-downlink}. The specific steps are provided in Algorithm~\ref{alg:fixed-point-downlink}. This algorithm will converge quickly but the complexity grows with $K$. This means that it is not scalable to optimize the powers in this way in a large cell-free network.
+As usual for max-min fairness problems, all UEs will obtain the same SE at the optimum. 
+
+\begin{algorithm}
+	\caption{Fixed-point algorithm for solving the centralized downlink max-min fairness problem in \eqref{eq:maxmin-fairness-problem-downlink}.} \label{alg:fixed-point-downlink}
+	\begin{algorithmic}[1]
+		\State {\bf Initialization:} Set arbitrary initial power $\boldsymbol{\rho}>\vect{0}_K$ and the solution accuracy $\epsilon>0$
+		\While{$\underset{k\in\{1,\ldots,K\}}{\max} \textrm{SINR}_k\left(\boldsymbol{\rho}\right)-\underset{k\in\{1,\ldots,K\}}{\min} \textrm{SINR}_k\left(\boldsymbol{\rho}\right) > \epsilon$} 
+		\State $\rho_k \gets \frac{\rho_k}{\textrm{SINR}_k\left(\boldsymbol{\rho}\right)}$, $k=1,\ldots,K$
+		\State $\boldsymbol{\rho} \gets \frac{\rho_{\rm max}}{\underset{l\in\{1,\ldots,L\}}{\max}\sum\limits_{k\in \mathcal{D}_l}\rho_k \mathbb{E} \{ \| \bar{\vect{w}}_{kl}^{\prime} \|^2\}}\boldsymbol{\rho}$
+		\EndWhile
+		\State {\bf Output:} Optimal transmit powers $\boldsymbol{\rho}$
+			\State Max-min SE $\underset{k\in\{1,\ldots,K\}}{\min} \frac{\tau_d}{\tau_c}\log_2\left(1+ \textrm{SINR}_k\left(\boldsymbol{\rho}\right)\right)$
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+
+
+We now consider the downlink sum SE maximization problem in the centralized operation, which  is formulated as
+\begin{align}  \label{eq:sum-SE-maximization-downlink}
+&\underset{\boldsymbol{\rho} \geq \vect{0}_K}{\textrm{maximize}} \quad \sum\limits_{k=1}^K  \log_2\left(1+\frac{\tilde{b}_k\rho_k}{\tilde{\vect{c}}_k^{\Ttran}\boldsymbol{\rho}+\sigmaDL}\right) \\
+&\textrm{subject to} \quad \sum_{k\in \mathcal{D}_l}\rho_k \mathbb{E} \left\{ \left\| \bar{\vect{w}}_{kl}^{\prime} \right\|^2\right\}\leq \rhomax, \quad l=1,\ldots,L. \nonumber
+\end{align}
+This problem also resembles the uplink counterpart with the main structural difference being the power constraints that are coupled between the optimization variables. We notice that \eqref{eq:sum-SE-maximization-downlink} is a problem of the kind in \eqref{eq:sum-SE-maximization} with  $R=L$ and $\vect{a}_r$ defined in the same way as for the max-min fairness problem above.
+This implies that the sum SE maximization problem is not convex but a local optimal solution can be obtained by particularizing the block coordinate descent algorithm in Algorithm~\ref{alg:sum-SE} on p.~\pageref{alg:sum-SE} for the problem at hand. This algorithm utilizes a weighted MMSE reformulation of the sum SE maximization problem and the corresponding MSE in \eqref{eq:ek-MSE} becomes
+\begin{align} 
+&e_k\left(\boldsymbol{\rho}, u_k\right)=u_{k}^2\left(\tilde{b}_k\rho_k+\tilde{\vect{c}}_k^{\Ttran}\boldsymbol{\rho}+\sigmaDL\right) -2u_{k}\sqrt{\tilde{b}_k\rho_k}+1  \label{eq:ek-MSE-downlink}
+\end{align}
+in the considered downlink problem. Algorithm~\ref{alg:sum-SE-downlink} provides the resulting algorithm and \eqref{eq:sum-SE-maximization-weighted-MMSE-subproblem-DL} in Step 6 contains a subproblem that needs to be solved in every iteration.
+If we treat $\{\sqrt{\rho_k}:k=1,\ldots,K\}$  as the optimization variables, \eqref{eq:sum-SE-maximization-weighted-MMSE-subproblem-DL} becomes a convex quadratically-constrained quadratic programming problem. Although a closed-form solution does not exist in general due to the multiple power constraints involving the same variables, any convex solver can be utilized to solve this subproblem \cite{Boyd2004a}.
+
+\begin{remark}[General-purpose convex solvers] \label{remark:convex-solvers}
+A convex optimization problem that lacks a closed-form solution can be solved either by a dedicated solver, which is developed to exploit the special structure of the problem at hand, or by a general-purpose solver that has been optimized for a wide class of problems. The former approach is preferred from a runtime efficiency perspective, while the latter approach is preferred for faster code development since the finer implementation details are abstracted away.
+We took the second approach when comparing power allocation schemes in Section~\ref{sec:comparison-power-optimzation}.
+More precisely, we made use of the solver SDPT3 \cite{SDPT3} and wrote the code using CVX \cite{cvx2014}, an interface for  specifying convex problems and connect them to a solver. 
+An example of the first approach is \cite{Chakraborty2020a}.
+\end{remark}
+
+
+\begin{algorithm}
+	\caption{Block coordinate descent algorithm for solving the sum SE maximization problem in \eqref{eq:sum-SE-maximization-downlink}.} \label{alg:sum-SE-downlink}
+	\begin{algorithmic}[1]
+		\State {\bf Initialization:} Set the solution accuracy $\epsilon>0$
+		\State Set an arbitrary feasible initial power vector $\boldsymbol{\rho}$
+		\While{  $\sum_{k=1}^K\Big(d_{k}e_{k}\left(\boldsymbol{\rho},u_k\right)-\ln\left( d_{k}\right)\Big)$  is either improved more than $\epsilon$ or not improved at all}
+		\State $u_{k} \gets \frac{\sqrt{\tilde{b}_k\rho_k}}{\tilde{b}_k\rho_k+\tilde{\vect{c}}_k^{\Ttran}\boldsymbol{\rho}+\sigmaDL}, \quad k=1,\ldots,K$
+		\State $d_k \gets 1\Big/ \!\left(u_{k}^2\left(\tilde{b}_k\rho_k+\tilde{\vect{c}}_k^{\Ttran}\boldsymbol{\rho}+\sigmaDL\right) -2u_{k}\sqrt{\tilde{b}_k\rho_k}+1\right), \quad k=1,\ldots,K$
+			\State Solve the following convex problem for the current values of  $u_k$ and $d_k$:
+		\begin{align}
+		&\underset{\boldsymbol{\rho} \geq \vect{0}_K}{\textrm{minimize}} \quad \sum_{k=1}^Kd_{k}e_{k}\left(\boldsymbol{\rho},u_k\right) \label{eq:sum-SE-maximization-weighted-MMSE-subproblem-DL} \\
+		&\hspace{0cm}\textrm{subject to} \quad \sum_{k\in \mathcal{D}_l}\rho_k\mathbb{E} \left\{ \left\| \bar{\vect{w}}_{kl}^{\prime} \right\|^2\right\}\leq \rhomax, \quad l=1,\ldots,L  \nonumber
+		\end{align}
+		\State Update $\boldsymbol{\rho}$ by the obtained solution to \eqref{eq:sum-SE-maximization-weighted-MMSE-subproblem-DL}.
+		\EndWhile
+		\State {\bf Output:} Optimal transmit powers $\boldsymbol{\rho}$
+			\State Sum SE $\frac{\tau_d}{\tau_c}\sum_{k=1}^K\log_2\left(d_k\right)$
+	\end{algorithmic}
+\end{algorithm}
+
+
+\enlargethispage{\baselineskip}
+
+\subsubsection{Optimized Distributed Downlink Power Allocation}
+\label{sec:optimized-power-allocation-downlink-scheme2}
+
+In the distributed downlink operation, there are $\sum_{k=1}^K |\mathcal{M}_k|$ power allocation coefficients to optimize: $\{\rho_{kl} :  l\in \mathcal{M}_k, k=1,\ldots,K\}$. 
+This number is larger than $K$ (as in the centralized operation), except in the extreme case when each UE is only served by one AP. For example, if each AP serves $\tau_p$ UEs (one per pilot), then there will be $L \tau_p$ power coefficients to optimize in the distributed operation.
+
+The same SE expression is used as in the centralized operation, but the effective SINRs have a different dependence on the optimization variables than in the centralized case.
+To obtain tractable formulations, we first introduce a new set of optimization variables:
+\begin{equation} \label{eq:square-roots-powers}
+\tilde{\rho}_{kl}=\sqrt{\rho_{kl}}\geq0
+\end{equation}
+for $k\in \mathcal{D}_l$ and $l=1,\ldots,L$.
+These are the square roots of the transmit power coefficients. There is a one-to-one correspondence in \eqref{eq:square-roots-powers} between the power variables, thus optimization with respect to the new variables $\{\tilde{\rho}_{kl} :  l\in \mathcal{M}_k, k=1,\ldots,K\}$ is equivalent to the optimization with respect to the original ones. The benefit of the new variables is that 
+the effective downlink SINR for UE $k$ in \eqref{eq:downlink-instant-SINR-level2} can be expressed as
+\begin{align}\label{eq:SINR-downlink-2}
+\mathacr{SINR}_{k}^{({\rm dl},\dist)}\left(\left\{\tilde{\boldsymbol{\rho}}_i\right\}\right)=\frac{\left|\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k\right|^2}{\sum\limits_{i=1}^K\tilde{\boldsymbol{\rho}}_i^{\Ttran}\tilde{\vect{C}}_{ki}\tilde{\boldsymbol{\rho}}_i-\left|\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k\right|^2+\sigmaDL}
+\end{align}
+where
+\begin{align}
+ &\tilde{\boldsymbol{\rho}}_k=\left [ \tilde{\rho}_{k1} \, \ldots \, \tilde{\rho}_{kL} \right ]^{\Ttran} \in \mathbb{R}_{\geq 0}^L, \quad \forall k \\
+  &\tilde{\vect{b}}_k \in \mathbb{R}_{\geq 0}^L, \nonumber \\
+   & \left[ \tilde{\vect{b}}_{k} \right]_{l}=\begin{cases}  \frac{\mathbb{E} \left\{ \vect{h}_{kl}^{\Htran}\bar{\vect{w}}_{kl}\right\}}{\sqrt{\mathbb{E}\left\{\left\| \bar{\vect{w}}_{kl}\right\|^2\right\}}} &  l\in \mathcal{M}_k \\
+  0 & l \notin \mathcal{M}_k, \end{cases} \quad \forall k \\
+  & \tilde{\vect{C}}_{ki}\in \mathbb{C}^{L \times L}, \nonumber \\
+  &\left[ \tilde{\vect{C}}_{ki} \right]_{lr}=\begin{cases}\frac{\mathbb{E} \left\{ \vect{h}_{kl}^{\Htran}\bar{\vect{w}}_{il}\bar{\vect{w}}_{ir}^{\Htran}\vect{h}_{kr}\right\}}{\sqrt{\mathbb{E}\left\{\left\| \bar{\vect{w}}_{il}\right\|^2\right\}}\sqrt{\mathbb{E}\left\{\left\| \bar{\vect{w}}_{ir}\right\|^2\right\}}} &  l\in \mathcal{M}_i, r\in \mathcal{M}_i \\ 0 & l\notin \mathcal{M}_i \textrm{ or } r\notin \mathcal{M}_i, \end{cases} \quad \forall k,i .
+\end{align}
+The elements of $\tilde{\vect{b}}_k$ are assumed to be real and non-negative, which is satisfied when using L-MMSE, LP-MMSE, and MR precoding. This condition can also be satisfied without loss of generality for any other type of precoding by rotating the phase of the precoding vectors \cite{Bengtsson2001a}. 
+
+\pagebreak
+The max-min fairness problem can now be formulated for the distributed downlink operation as
+\begin{align} \label{eq:maxmin-fairness-problem-downlink-t}
+&\underset{\tilde{\boldsymbol{\rho}}_k\geq \vect{0}_L, \forall k, t \geq 0}{\textrm{maximize}} \quad t \\
+&\textrm{subject to} \quad  \frac{\left|\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k\right|^2}{\sum\limits_{i=1}^K\tilde{\boldsymbol{\rho}}_i^{\Ttran}\tilde{\vect{C}}_{ki}\tilde{\boldsymbol{\rho}}_i-\left|\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k\right|^2+\sigmaDL}\geq t, \quad k=1,\ldots,K \nonumber \\
+&\hspace{21mm} \sum_{k\in \mathcal{D}_l}\tilde{\rho}_{kl}^2\leq \rhomax, \quad l=1,\ldots,L\nonumber
+\end{align}
+by utilizing the auxiliary variable $t$ that represents the minimum SINR among all UEs. Note that the power constraint 
+$\sum_{k\in \mathcal{D}_l}\tilde{\rho}_{kl}^2\leq \rhomax$ of AP $l$ sums up all the squared coefficients related to this AP.
+We notice that \eqref{eq:maxmin-fairness-problem-downlink-t} is an instance of the generic problem formulation in \eqref{eq:maxmin-fairness-problem-t}, thus an optimal solution to \eqref{eq:maxmin-fairness-problem-downlink-t} can be obtained using Algorithm~\ref{alg:bisection} on p.~\pageref{alg:bisection}. 
+This algorithm contains a bisection search over $t$ where a solution to \eqref{eq:maxmin-fairness-feasibility2} is computed for each candidate value. By including a minimization of the total transmit power in the objective as in \eqref{eq:maxmin-fairness-feasibility2} to improve convergence rate, the subproblem for the problem at hand can be expressed in the second-order cone programming form:
+\begin{align} \label{eq:maxmin-fairness-feasibility-downlink}
+&\underset{\tilde{\boldsymbol{\rho}}_k\geq \vect{0}_L, \forall k}{\textrm{minimize}} \quad \sum_{k=1}^{K} \| \tilde{\boldsymbol{\rho}}_k\|^2  \\
+&\textrm{subject to} \quad   \left \Vert \begin{bmatrix}   \tilde{\vect{C}}_{k1}^{\frac12}\tilde{\boldsymbol{\rho}}_1 \\ \vdots \\ \tilde{\vect{C}}_{kK}^{\frac12}\tilde{\boldsymbol{\rho}}_K \\ \sqrt{\sigmaDL} \end{bmatrix} \right \Vert \leq \sqrt{\frac{1+ t^{\rm candidate}}{ t^{\rm candidate}}}\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k, \quad k=1,\ldots,K \nonumber \\
+&\hspace{21mm} \left\| \begin{bmatrix}  \tilde{\rho}_{1l} & \ldots &  \tilde{\rho}_{Kl} \end{bmatrix}  \right\| \leq \sqrt{\rhomax}, \quad l=1,\ldots,L \nonumber \\
+&\hspace{21mm} \tilde{\boldsymbol{\rho}}_k \geq \vect{0}_L, \quad k=1,\ldots,K \nonumber
+\end{align}
+where we implicitly set $\tilde{\rho}_{kl}$ to zero for $k\notin\mathcal{D}_l$ in the second constraint.
+
+\pagebreak 
+This reformulation is achieved by noticing that the SINR constraint $\mathacr{SINR}_{k}^{({\rm dl},\dist)}\left(\left\{\tilde{\boldsymbol{\rho}}_i\right\}\right) \geq t^{\rm candidate}$ can be equivalently expressed as
+\begin{equation}
+\frac{ ( \tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k )^2 }{
+\left \Vert \begin{bmatrix}   \tilde{\vect{C}}_{k1}^{\frac12}\tilde{\boldsymbol{\rho}}_1 & \ldots & \tilde{\vect{C}}_{kK}^{\frac12}\tilde{\boldsymbol{\rho}}_K & \sqrt{\sigmaDL} \end{bmatrix} \right \Vert^2 - 
+(\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k)^2} \geq t^{\rm candidate}
+\end{equation}
+and then rearranged as in the first constraint of \eqref{eq:maxmin-fairness-feasibility-downlink}. This is a trick that first appeared in \cite{Bengtsson2001a} and then was used for Cell-free Massive MIMO in \cite{Ngo2017b}. By utilizing the subproblem in \eqref{eq:maxmin-fairness-feasibility-downlink}, we obtain Algorithm~\ref{alg:bisection-downlink-case}. 
+
+
+\begin{algorithm}
+	\caption{Bisection search algorithm for solving the max-min fairness problem in \eqref{eq:maxmin-fairness-problem-downlink-t}.} \label{alg:bisection-downlink-case}
+	\begin{algorithmic}[1]
+		\State {\bf Initialization:} Set the solution accuracy $\epsilon>0$
+		\State Set the initial lower and upper bounds for the max-min SINR:
+		\State $t^{\rm lower}\gets0$
+		\State $t^{\rm upper}\gets \underset{k\in \{1,\ldots,K\}}{\min}\quad |\mathcal{M}_k|\rhomax\frac{\tilde{\vect{b}}_k^{\Ttran}\tilde{\vect{b}}_k}{\sigmaDL}$
+		\State Initialize solution variables: $\tilde{\boldsymbol{\rho}}_k^{\rm opt}=\vect{0}_L$ for $k=1,\ldots,K$, $t^{\rm opt}=0$
+		\While{$t^{\rm upper}-t^{\rm lower}>\epsilon$}
+		\State $t^{\rm candidate}\gets \frac{t^{\rm lower}+t^{\rm upper}}{2}$
+		\State Solve the following convex problem:
+\begin{align} \label{eq:maxmin-fairness-feasibility-downlink2}
+&\underset{\tilde{\boldsymbol{\rho}}_k\geq \vect{0}_L, \forall k}{\textrm{minimize}} \quad \sum_{k=1}^{K} \| \tilde{\boldsymbol{\rho}}_k\|^2  \\
+&\textrm{subject to} \quad   \left \Vert \begin{bmatrix}   \tilde{\vect{C}}_{k1}^{\frac12}\tilde{\boldsymbol{\rho}}_1 \\ \vdots \\ \tilde{\vect{C}}_{kK}^{\frac12}\tilde{\boldsymbol{\rho}}_K \\ \sqrt{\sigmaDL} \end{bmatrix} \right \Vert \leq \sqrt{\frac{1+ t^{\rm candidate}}{ t^{\rm candidate}}}\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k, \quad k=1,\ldots,K \nonumber \\
+&\hspace{21mm} \left\| \begin{bmatrix}  \tilde{\rho}_{1l} & \ldots &  \tilde{\rho}_{Kl} \end{bmatrix}  \right\| \leq \sqrt{\rhomax}, \quad l=1,\ldots,L \nonumber \\
+&\hspace{21mm} \tilde{\boldsymbol{\rho}}_k \geq \vect{0}_L, \quad k=1,\ldots,K \nonumber
+\end{align}
+		\If{\eqref{eq:maxmin-fairness-feasibility-downlink2} is feasible}
+		\State $t^{\rm lower}\gets t^{\rm candidate}$
+		\State $\tilde{\boldsymbol{\rho}}_k^{\rm opt} \gets \tilde{\boldsymbol{\rho}}_k$, which is the solution to \eqref{eq:maxmin-fairness-feasibility-downlink2} for $k=1,\ldots,K$
+		\Else
+		\State  $t^{\rm upper}\gets t^{\rm candidate}$
+		\EndIf
+		\EndWhile
+		\State {\bf Output:} Optimal square-roots of the transmit powers $\tilde{\boldsymbol{\rho}}_1^{\rm opt},\ldots,\tilde{\boldsymbol{\rho}}_K^{\rm opt}$, $t^{\rm opt}=\underset{k\in \{1,\ldots,K\}}{\min} \mathacr{SINR}_{k}\left(\left\{\tilde{\boldsymbol{\rho}}_i^{\rm opt}\right\}\right)$
+		\State Max-min SE $\frac{\tau_d}{\tau_c}\log_2\left(1+ t^{\rm opt}\right)$
+	\end{algorithmic}
+\end{algorithm}
+
+
+It remains to solve the downlink sum SE maximization problem for the distributed operation, which  can be formulated as
+\begin{align}\label{eq:sum-SE-maximization-downlink-2}
+&\underset{\tilde{\boldsymbol{\rho}}_k \geq \vect{0}_L,\forall k}{\textrm{maximize}} \quad \sum\limits_{k=1}^K  \log_2\left(1+\frac{\left|\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k\right|^2}{\sum\limits_{i=1}^K\tilde{\boldsymbol{\rho}}_i^{\Ttran}\tilde{\vect{C}}_{ki}\tilde{\boldsymbol{\rho}}_i-\left|\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k\right|^2+\sigmaDL}\right) \\
+&\textrm{subject to} \quad \sum_{k\in \mathcal{D}_l}\tilde{\rho}_{kl}^2\leq \rhomax, \quad l=1,\ldots,L.   \nonumber
+\end{align}
+We recognize \eqref{eq:sum-SE-maximization-downlink-2} as an instance of the generic sum SE maximization problem in \eqref{eq:sum-SE-maximization}. Due to Lemma~\ref{theorem:weighted-MMSE-convergence} on p.~\pageref{theorem:weighted-MMSE-convergence}, a local optimal solution to \eqref{eq:sum-SE-maximization-downlink-2} can be obtained by the block coordinate descent algorithm given in Algorithm~\ref{alg:sum-SE-downlink-2}. This algorithm is designed based on a weighted MMSE reformulation of the sum SE maximization problem, where the MSE in \eqref{eq:ek-MSE} becomes
+\begin{align} 
+&e_k\left(\{\tilde{\boldsymbol{\rho}}_i\}, u_k\right)=u_{k}^2\left(\sum\limits_{i=1}^K\tilde{\boldsymbol{\rho}}_i^{\Ttran}\tilde{\vect{C}}_{ki}\tilde{\boldsymbol{\rho}}_i+\sigmaDL\right) -2u_{k}\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k+1  \label{eq:ek-MSE-downlink-2}
+\end{align}
+for the considered downlink problem. Step 6 in Algorithm~\ref{alg:sum-SE-downlink-2} contains a subproblem that needs to be solved at each iteration. It is a convex quadratically-constrained quadratic programming problem, which can be solved using any numerical solver for convex problems. See Remark~\ref{remark:convex-solvers} for some suggested tools.
+
+\begin{algorithm}
+	\caption{Block coordinate descent algorithm for solving the sum SE maximization problem in \eqref{eq:sum-SE-maximization-downlink-2}.} \label{alg:sum-SE-downlink-2}
+	\begin{algorithmic}[1]
+		\State {\bf Initialization:} Set the solution accuracy $\epsilon>0$
+		\State Set arbitrary feasible initial powers $\{\tilde{\boldsymbol{\rho}}_k\}$
+		\While{  $\sum_{k=1}^K\Big(d_{k}e_{k}\left(\{\tilde{\boldsymbol{\rho}}_i\},u_k\right)-\ln\left( d_{k}\right)\Big)$  is either improved more than $\epsilon$ or not improved at all}
+		\State $u_{k} \gets \frac{\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k}{\sum\limits_{i=1}^K\tilde{\boldsymbol{\rho}}_i^{\Ttran}\tilde{\vect{C}}_{ki}\tilde{\boldsymbol{\rho}}_i+\sigmaDL}, \quad k=1,\ldots,K$
+		\State $d_k \gets \frac{1}{u_{k}^2\left(\sum\limits_{i=1}^K\tilde{\boldsymbol{\rho}}_i^{\Ttran}\tilde{\vect{C}}_{ki}\tilde{\boldsymbol{\rho}}_i+\sigmaDL\right) -2u_{k}\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k+1}, \quad k=1,\ldots,K$
+		\State Solve the following problem for the current values of  $u_k$ and $d_k$:
+		\begin{align}
+		&\underset{\tilde{\boldsymbol{\rho}}_k \geq \vect{0}_L, \forall k}{\textrm{minimize}} \quad \sum_{k=1}^Kd_{k}\left(u_{k}^2\left(\sum\limits_{i=1}^K\tilde{\boldsymbol{\rho}}_i^{\Ttran}\tilde{\vect{C}}_{ki}\tilde{\boldsymbol{\rho}}_i+\sigmaDL\right) -2u_{k}\tilde{\vect{b}}_k^{\Ttran}\tilde{\boldsymbol{\rho}}_k\right) \label{eq:sum-SE-maximization-weighted-MMSE-subproblem-DL-2} \\
+		&\hspace{0cm}\textrm{subject to} \quad \sum_{k\in \mathcal{D}_l}\tilde{\rho}_{kl}^2\leq \rhomax, \quad l=1,\ldots,L    \nonumber
+		\end{align}
+		\State Update $\{\tilde{\boldsymbol{\rho}}_k\}$ by the obtained solution to \eqref{eq:sum-SE-maximization-weighted-MMSE-subproblem-DL-2}.
+		\EndWhile
+		\State {\bf Output:} Optimal square-roots of the transmit powers $\tilde{\boldsymbol{\rho}}_1,\ldots,\tilde{\boldsymbol{\rho}}_K$
+		\State Sum SE $\frac{\tau_d}{\tau_c}\sum_{k=1}^K\log_2\left(d_k\right)$
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+\begin{remark}[Other utility functions and scheduling]
+There are other utility functions than max-min fairness and sum SE that can be maximized. For example, one can introduce user-specific weights in the utility functions to get the weighted max-min fairness and weighted sum SE utilities. The algorithms presented in this monograph can be extended to handle these cases as well.
+Moreover, there are utility functions that have a totally different structure, such as the geometric mean of the SEs (also known as proportional fairness) and the harmonic mean of the SEs \cite{Bjornson2013d}, \cite{Farooq2020a}, \cite{Luo2008a}.
+However, apart from limiting the length of this monograph, there are two strong reasons for why we only covered the max-min fairness and sum SE utilities.
+The first reason is that the early works  \cite{Nayebi2017a}, \cite{Ngo2017b} on Cell-free Massive MIMO emphasized the importance of the max-min fairness utility, and the resulting ability of cell-free networks to deliver uniformly good service over large coverage areas. This is why we considered that metric.
+The second reason is that the weighted sum SE maximization problem is of main importance in practical networks, where the UEs have data queues of limited lengths and packets are arriving at random to these queues.
+One can then formulate dynamic resource allocation problems that take the queue dynamics into account \cite{Georgiadis2006a}, \cite{Shirani2010a} and irrespective of what the long-term utility function is, the problems that need to be solved regularly are weighted sum SE maximization problem where the weights are computed based on the lengths of the data queues and the long-term utility. The first step into dynamic resource allocation for cell-free networks was taken in \cite{Chen2020b}, which only considers the uplink. There appear to be many open research questions related to the interplay between scheduling and power allocation in Cell-free Massive MIMO.
+\end{remark}
+
+
+
+
+
+
+\section{Scalable Distributed Power Optimization}
+\label{sec:scalable-power-allocation}
+
+The algorithms presented in Section~\ref{sec:optimized-power-allocation} jointly optimize the transmit powers for all UEs to maximize a network-wide utility function.
+Since there are $K$ SINRs to optimize and at least $K$ optimization variables, it is unavoidable that the computational complexity becomes unscalable as $K \to \infty$.
+In fact, the complexity of any network-wide power allocation optimization grows unboundedly with $K$, which makes them unscalable according to Definition~\ref{def:scalable} on p.~\pageref{def:scalable}. Hence, to obtain a scalable power allocation scheme that is practically implementable in large cell-free networks, we need to devise distributed and heuristic schemes, where each AP or UE makes a local decision with limited involvement of the other APs/UEs. For example, a device can make decisions based on the CSI that it can acquire locally.
+ 
+It is easy to design a scalable scheme; for example, we can let every UE transmit with full power in the uplink and let every AP allocate its power equally among the UEs it serves in the downlink.
+The challenge is to identify heuristic schemes that also provide reasonably good SEs, according to network-wide utility functions. This basically boils down to numerically evaluating different heuristic schemes against the optimized baselines of the kind presented in Section~\ref{sec:optimized-power-allocation}. In this section, we will present some selected recent approaches to distributed power allocation. We refer to \cite{Bjornson2011a}, \cite{Bjornson2010c}, \cite{Interdonato2019a}, \cite{Nayebi2017a}, \cite[Sec.~3.4.4]{Bjornson2013d}, for further examples and stress that further research is needed in this direction.
+
+\enlargethispage{\baselineskip} 
+
+\vspace{-2mm}
+\subsection{Scalable Uplink Power Control}
+
+Fractional power control is a classical heuristic in the uplink of multi-user systems, particularly in cellular networks \cite{Simonsson2008a}, \cite{Whitehead1993a}. It builds on the principle of using power control to compensate for a fraction of the pathloss differences within each cell. Power control is a balancing act between utilizing the pathloss differences to provide the cell-center UEs with high SEs (at the expense of causing interference to other UEs and cells) and compensating for the pathloss differences to improve the SE for cell-edge UEs (at the expense of forcing cell-center UEs to reduce their power and thereby their SE).
+The characteristic feature of fractional power control is that each UE computes its transmit power as a function of only its channel gain to the serving AP, but since the same function is utilized by all UEs, the interference statistics can also be implicitly tuned by an appropriate function selection \cite{Whitehead1993a}.
+
+The power control situation is different in cell-free networks compared to cellular networks since each UE has multiple serving APs. A UE can have a strong channel to one serving AP but a weak channel to another serving AP, while another UE experiences the opposite situation. \linebreak \emph{Should any of the UEs reduce its power in this situation to limit~the~mutual interference and, if yes, how much?} There are no simple~answers~but there are algorithms that work fairly well and these are essentially adding up the channel gains from the serving APs as if there was only one AP.
+
+A fractional power control algorithm for cell-free networks was proposed and motivated in \cite{Nikbakht2019a}, \cite{Nikbakht2020a} for a setup where all APs serve all UEs using MR combining, but it can be easily adapted to the case when each AP serves a subset of the UEs using an arbitrary combining scheme \cite{Chen2020a}. UE $k$ selects its uplink transmit power as
+\enlargethispage{\baselineskip} 
+\begin{align}\label{eq:fractional_power_UL}
+p_k= \pmax\frac{\left(\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}\right)^{\upsilon}}{\underset{i\in\{1,\ldots,K\}}{\max}\left(\sum\limits_{l\in\mathcal{M}_i}\beta_{il}\right)^{\upsilon}}
+\end{align}
+where the exponent $\upsilon$ dictates the power control behavior. The denominator in \eqref{eq:fractional_power_UL} makes sure that $p_k \in [0,\pmax]$.
+Note that $\sum_{l\in\mathcal{M}_i}\beta_{il}$ is the total channel gain from UE $i$ to the APs that serve it.
+If $\upsilon=0$, all UEs transmit with maximum power as assumed in the simulations~in Section~\ref{sec:uplink-performance-comparison} on p.~\pageref{sec:uplink-performance-comparison}. If $\upsilon=-1$, each UE is fully~compensating~for~the variations in the total channel gain among the UEs so that $p_i\sum_{l\in\mathcal{M}_i}\beta_{il}$ becomes the same for  $i=1,\ldots,K$. This can be viewed as an approximation of max-min fairness power control. Fractional power control traditionally consists of finding a tradeoff between these extremes by selecting $\upsilon \in [-1,0]$ so this is the range considered in \cite{Nikbakht2019a}, \cite{Nikbakht2020a}.~To~identify~an approximation of sum SE maximization, we also need to consider $\upsilon > 0$ so more power is used by the UEs with good channel conditions. Another possible generalization is to replace $\beta_{kl}$ with $\beta_{kl}-\tr(\vect{C}_{kl})/N$ to take the performance loss due to channel estimation errors into account.
+
+\enlargethispage{\baselineskip}
+
+One problem with the fractional power control scheme described above is that it is not scalable since we need to compute the maximum of $K$ terms in the denominator of \eqref{eq:fractional_power_UL}. 
+However, we can easily modify \eqref{eq:fractional_power_UL} such that the number of the terms in the denominator does not grow with $K$ and thereby achieve scalability.
+In cellular networks, this is normally done by replacing the denominator with a constant representing the worst-case cell-edge conditions (e.g., what is the lowest channel gain that a connected UE can have). This makes good sense in symmetric cellular deployments, where this value is roughly the same in every cell, while it can be an overly pessimistic approximation in asymmetric cell-free networks.
+ Inspired by the scalable combining schemes from Section~\ref{subsec:scalable-combining} on p.~\pageref{subsec:scalable-combining}, one option is to only compute the maximum with respect to the indices of the UEs that are partially served by the same APs. This makes intuitive sense in large networks where each UE is mostly affected by the closest UEs.
+Using the set $\mathcal{S}_k$ defined in \eqref{eq:S_k}, for which $|\mathcal{S}_k|$ does not grow unboundedly when $K$ goes to infinity, a scalable version of the fractional power control in \eqref{eq:fractional_power_UL} is obtained by selecting the transmit power of UE $k$ as
+\begin{align}\label{eq:fractional_power_UL-scalable}
+p_k= \pmax\frac{\left(\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}\right)^{\upsilon}}{\underset{i\in\mathcal{S}_k}{\max}\left(\sum\limits_{l\in\mathcal{M}_i}\beta_{il}\right)^{\upsilon}}.
+\end{align}
+Depending on the value of $\upsilon$, we can heuristically aim at optimizing different utility functions. To find the desired value, the network designer can simulate the CDF of the per-UE SE for different values of $\upsilon$ and then determine which value gives the most desirable tradeoff between high fairness and high sum SE.
+
+\begin{remark}[Minimizing the signal-to-interference ratio]
+Fractional power control is a heuristic scheme in the sense that it is not directly connected to maximizing a utility function of the individual SEs. However, under certain conditions, such power control can be shown to minimize the variations in the \gls{SIR} experienced by UEs at random locations. For example, \cite{Whitehead1993a} proved that if the channel gains are Gaussian distributed in the decibel scale and have equal variance, then fractional power control with $\upsilon=-1/2$  minimizes the variance of the SIR in a two-UE setup. A generalization of this result to cell-free networks is provided in \cite{Nikbakht2020a} and serves as a motivation for why fractional power control makes practical sense to shape the CDF curve of the SIR experienced at random locations, even if the connections to the CDF of the per-UE SE or to utility functions such as the sum SE and max-min fairness are heuristic.
+\end{remark}
+
+
+\subsection{Scalable Centralized Downlink Power Allocation}
+
+In the centralized downlink operation, the transmit powers that different APs are transmitting with to a given UE are coupled through the centralized precoding vectors
+\begin{equation} \label{eq:normalized-precoding-vector}
+\frac{\bar{\vect{w}}_k}{\sqrt{\mathbb{E} \left\{ \left\| \bar{\vect{w}}_k \right\|^2 \right\} }} = \begin{bmatrix} \bar{\vect{w}}_{k1}^{\prime} \\ \vdots \\  \bar{\vect{w}}_{kL}^{\prime} \end{bmatrix}, 
+\quad k=1,\ldots,K.
+\end{equation}
+If one AP increases its power to UE $k$, then all the other APs that serve this UE must do the same to keep the same direction of the precoding vector. Otherwise, the ability for the APs to cancel each others' interference (as illustrated in Figure~\ref{figure:distributed-beamforming} on p.~\pageref{figure:distributed-beamforming}) is lost. This ability is one of the key benefits of the centralization operation and should not be lost if the performance gain over the distributed operation should be retained.
+Recall from \eqref{eq:power-constraint-centralized} that the power constraint at AP $l$ is
+\begin{equation} \label{eq:power-constraint-centralized2}
+\sum_{k\in \mathcal{D}_l}\rho_k\mathbb{E} \left\{ \left\| \bar{\vect{w}}_{kl}^{\prime} \right\|^2 \right\} \leq \rhomax.
+\end{equation}
+Since $\sum_{l\in \mathcal{M}_k} \mathbb{E} \{ \| \bar{\vect{w}}_{kl}^{\prime} \|^2 \} = 1$, the fraction $\mathbb{E} \{ \| \bar{\vect{w}}_{kl}^{\prime} \|^2 \}  \in [0,1]$ that an arbitrary AP $l \in \mathcal{M}_k$ allocates to UE $k$ is generally much smaller than $\rho_k$. 
+This must be accounted for so that all the serving APs can select a common power value that satisfies all of their power constraints.
+A simple heuristic solution is to assign the same power
+\begin{equation}\label{eq:equal_power_allocation_DL}
+\rho_k = \frac{\rhomax}{\tau_p}
+\end{equation}
+to all UEs, as proposed in \cite{Bjornson2020a}.
+ In this case, the normalized precoding vector in \eqref{eq:normalized-precoding-vector}
+ determines how this power is distributed between the APs, and all APs are guaranteed to satisfy their power constraints since they serve at most $\tau_p$ UEs and will at most allocate $\rhomax/\tau_p$ to each of them. Since the computation of \eqref{eq:equal_power_allocation_DL} is independent of $K$, this network-wide equal power allocation scheme is scalable.
+
+A more general heuristic can be obtained by taking inspiration from the fractional uplink power control in  \eqref{eq:fractional_power_UL-scalable} by selecting the downlink power allocation coefficients proportionally to the total channel gain from the serving APs: 
+\begin{align}\label{eq:fractional_power_centralized_DL-scalable}
+\rho_k\propto \left(\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}\right)^{\upsilon}.
+\end{align}
+The exponent $\upsilon \in [-1,1]$ in \eqref{eq:fractional_power_centralized_DL-scalable} determines the power allocation behavior. The proportionality constant must be selected so that all the power constraints are satisfied, which can be done as follows:
+\begin{align}\label{eq:fractional_power_centralized_DL-scalable1b}
+\rho_k=\rhomax \frac{\left(\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}\right)^{\upsilon}}{\underset{\ell\in \mathcal{M}_k}{\max} \  \sum\limits_{i\in \mathcal{D}_{\ell}}   \left(\sum\limits_{l\in\mathcal{M}_i}\beta_{il}\right)^{\upsilon}}.
+\end{align}
+If $\upsilon=0$ and $|\mathcal{D}_{\ell}| = \tau_p$, then \eqref{eq:fractional_power_centralized_DL-scalable1b} turns into the network-wide equal power allocation scheme in \eqref{eq:equal_power_allocation_DL}.
+ More power is allocated to the UEs with higher total channel gains if $\upsilon>0$, while it is the other way around if $\upsilon<0$. 
+ The former is resembling the main characteristics of power allocation for maximum sum SE, while the latter is resembling max-min fairness.
+ 
+The denominator in \eqref{eq:fractional_power_centralized_DL-scalable1b} makes sure that all the power constraints are satisfied since
+$\sum_{i \in \mathcal{D}_l} \rho_i \leq \rhomax$ for $l=1,\ldots,L$.
+However, this is a conservative design for the worst-case situation that each UE is only served by only one AP, which is generally not the case in cell-free networks. The consequence is that all APs will operate far below their maximum power.
+Suppose we know the largest fraction of $\rho_k$ that any of the serving APs can be assigned to transmit:
+\begin{align}
+\omega_k = \underset{\ell\in\mathcal{M}_k}{\max} \ \mathbb{E} \left\{ \left\| \bar{\vect{w}}_{k\ell}^{\prime} \right\|^2 \right\}.
+\end{align} 
+We can then use it as an additional tuning parameter and change \eqref{eq:fractional_power_centralized_DL-scalable} into
+\begin{align}\label{eq:fractional_power_centralized_DL-scalable2}
+\rho_k\propto \frac{\left(\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}\right)^{\upsilon}}{\omega_k^{\kappa}}
+\end{align}
+where the exponent $0\leq\kappa\leq1$ is a parameter that reshapes the ratio of power allocation between different UEs. The motivation for such a scaling factor is as follows. When the power allocation in \eqref{eq:fractional_power_centralized_DL-scalable1b} is used and $\omega_k \approx 1/| \mathcal{M}_k |$ (i.e., the smallest value it can take), then all the serving APs will approximately transmit with power $\rho_k /| \mathcal{M}_k |$ to UE $k$ but manage their power constraints as if they transmitted with power $\rho_k$.
+To prevent this situation to some extent, we can scale the original power coefficient of each UE inversely proportional to $\omega_k^{\kappa}$ as in \eqref{eq:fractional_power_centralized_DL-scalable2}. The intuition is that each AP should instead 
+manage its power constraint as if it transmits with power $\rho_k \omega_k^\kappa$ (note that $\rho_k \omega_k^\kappa \geq \rho_k \omega_k$).
+To satisfy the power constraint at each AP, we select the proportionality constant in \eqref{eq:fractional_power_centralized_DL-scalable2} to obtain
+\begin{align}\label{eq:fractional_power_centralized_DL-scalable3}
+\rho_k=\rhomax \frac{\left(\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}\right)^{\upsilon}\omega_k^{-\kappa}}{\underset{\ell\in \mathcal{M}_k}{\max} \  \sum\limits_{i\in \mathcal{D}_{\ell}}   \left(\sum\limits_{l\in\mathcal{M}_i}\beta_{il}\right)^{\upsilon}\omega_i^{1-\kappa}}.
+\end{align}
+The following chain of inequalities demonstrates that the power constraint is satisfied at each AP $l^{\prime}$:
+\begin{align}\label{eq:fractional_power_centralized_DL-scalable3_power}
+\sum_{k\in\mathcal{D}_{l^{\prime}}}\rho_k\mathbb{E} \left\{ \left\| \bar{\vect{w}}_{kl^{\prime}}^{\prime} \right\|^2 \right\}&\leq \sum_{k\in\mathcal{D}_{l^{\prime}}}\rho_k\omega_k =\sum\limits_{k\in\mathcal{D}_{l^{\prime}}} \frac{\rhomax\left(\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}\right)^{\upsilon}\omega_k^{1-\kappa}}{\underset{\ell\in \mathcal{M}_k}{\max} \  \sum\limits_{i\in \mathcal{D}_{\ell}}   \left(\sum\limits_{l\in\mathcal{M}_i}\beta_{il}\right)^{\upsilon}\omega_i^{1-\kappa}} \nonumber\\
+& \leq  \rhomax\frac{\sum\limits_{k\in\mathcal{D}_{l^{\prime}}}\left(\sum\limits_{l\in\mathcal{M}_k}\beta_{kl}\right)^{\upsilon}\omega_k^{1-\kappa}}{\underset{\ell\in \bigcap\limits_{k\in \mathcal{D}_{l^{\prime}}}\!\!\!\mathcal{M}_k}{\max} \  \sum\limits_{i\in \mathcal{D}_{\ell}}   \left(\sum\limits_{l\in\mathcal{M}_i}\beta_{il}\right)^{\upsilon}\omega_i^{1-\kappa}} \nonumber\\
+&\leq  \rhomax
+\end{align}
+where the last inequality follows from the fact the set $\bigcap_{k\in \mathcal{D}_{l^{\prime}}}\!\!\mathcal{M}_k$ includes $l^{\prime}$, thus the numerator is smaller or equal to the denominator.
+
+We stress that \eqref{eq:fractional_power_centralized_DL-scalable3} is a scalable power allocation scheme since the computational complexities associated with the terms in the numerator and denominator do not grow with $K$. When evaluating the downlink performance in the running example in Section~\ref{sec:downlink-performance-comparison} on p.~\pageref{sec:downlink-performance-comparison}, we used \eqref{eq:fractional_power_centralized_DL-scalable3} with $\upsilon = -0.5$ and $\kappa=0.5$. In Section~\ref{sec:comparison-power-optimzation}, we will investigate numerically how to select the parameters $\upsilon \in [-1,1]$ and $\kappa \in [0,1]$.
+
+\subsection{Scalable Distributed Downlink Power Allocation}
+
+In the distributed downlink operation, the power allocation contains multiple power coefficients per UE. On the one hand, this increases the complexity compared to uplink power control, but on the other hand, it becomes easier to find suitable tradeoffs. If a UE is served by one AP with a strong channel and by one AP with a weak channel, then it can be assigned widely different powers from these APs in the downlink, while it is less obvious if it should transmit with high or low power in the uplink.
+From a UE's perspective, it is preferable to be allocated more downlink power from APs with strong channels than APs with weak channels, since this leads to a higher SNR than the opposite allocation.
+From an AP's perspective, it is natural to prioritize transmitting to UEs that it has good channels to, compared to UEs with weak channels, because the opposite strategy would cause large interference to the UEs with good channels. 
+These basic principles can be utilized to determine a distributed heuristic power allocation scheme where each AP determines its own transmit power allocation independently of the other APs.
+Since the number of UEs that are served by a particular AP does not grow with $K$ for a scalable cell-free network (e.g., it serves at most $\tau_p$ UEs when we use Algorithm~\ref{alg:basic-pilot-assignment} on p.~\pageref{alg:basic-pilot-assignment}), this kind of distributed power allocation is scalable. 
+
+A distributed power allocation scheme was proposed in  \cite{Interdonato2019a} for a system with $N=1$. We will present a generalization for arbitrary $N$ using the notation of this monograph. With this power allocation policy, AP $l$ selects its downlink powers $\rho_{1l}, \ldots, \rho_{Kl}$ as
+\begin{equation} \label{eq:fractional_power_DL}
+\rho_{kl} = \begin{cases} \rhomax \frac{f\left(\mathcal{G}_{kl}\right)}{\sum_{i \in \mathcal{D}_l} f\left(\mathcal{G}_{il}\right)} &  k \in \mathcal{D}_l\\
+0 &  k \notin \mathcal{D}_l
+\end{cases}
+\end{equation}
+where $f(\cdot)$ is a pre-determined function and the input is given by the channel statistics which, for the channel between UE $i$ and AP $l$, is
+\begin{equation}
+\mathcal{G}_{il} = \{ \vect{R}_{il}, \vect{C}_{il} \}.
+\end{equation}
+The intuition is that $f\left(\mathcal{G}_{il}\right)$ should somehow determine the relative importance of transmitting to UE $i$, while the term in the denominator of \eqref{eq:fractional_power_DL} normalizes the transmit powers so that the AP is always using its maximum power: $\sum_{k \in \mathcal{D}_l} \rho_{kl} = \rhomax$. 
+
+
+\enlargethispage{-\baselineskip}
+
+Many different power allocation policies can be formulated according to \eqref{eq:fractional_power_DL}. If we select $f\left(\mathcal{G}_{il}\right)=1$, every UE is equally important and we obtain per-AP equal power allocation with $\rho_{kl}=\frac{\rhomax}{|\mathcal{D}_l|}$.
+Another option is $f\left(\mathcal{G}_{il}\right) = (\beta_{il})^{\upsilon}$ \cite{Interdonato2019a}, which turns \eqref{eq:fractional_power_DL} into
+\begin{equation} \label{eq:fractional_power_DL-2}
+\rho_{kl} = \begin{cases} \rhomax \frac{ (\beta_{kl})^{\upsilon}}{\sum_{i \in \mathcal{D}_l} (\beta_{il})^{\upsilon}} &  k \in \mathcal{D}_l\\
+0 &  k \notin \mathcal{D}_l
+\end{cases}
+\end{equation}
+where the exponent $\upsilon$ dictates the power allocation behavior. If $\upsilon=0$, we obtain the per-AP equal power allocation. If $\upsilon=1$, we give~higher emphasis to the UEs according to their respective channel gains. This leads to allocating more power to the UEs with better channel qualities. If $\upsilon=-1$, the power allocation is inversely proportional~to~the~channel gain, so that each of the served UEs will obtain the same received~power.
+This might seem like a good feature from a fairness perspective, but~it is generally not since the UEs with good channel conditions will then~be subject to high interference.
+A more opportunistic power allocation~with $\upsilon \in [0,1]$ seems to be preferred to make efficient use of the fact that~each UE typically has a good channel from some APs and a worse channel from other APs \cite{Interdonato2019a}. 
+Hence, even if  \eqref{eq:fractional_power_DL-2} has an expression that~resembles the uplink fractional power control expression in \eqref{eq:fractional_power_UL}, the~intended operation is very different: we want to emphasize SNR differences instead of mitigating them.
+When evaluating the downlink performance~in~the running example in Section~\ref{sec:downlink-performance-comparison} on p.~\pageref{sec:downlink-performance-comparison}, we used \eqref{eq:fractional_power_DL-2} with $\upsilon = 0.5$.
+
+Power allocation policies of the kind in \eqref{eq:fractional_power_DL} are scalable by design since only the UEs in $\mathcal{D}_l$ are considered. Another good feature is that every UE will be allocated a non-zero power from all its serving APs, leading to a non-zero SE. Estimation errors can be taken into account by selecting $f\left(\mathcal{G}_{il}\right) = (\beta_{il}-\tr(\vect{C}_{il})/N)^{\upsilon}$ instead of  $f\left(\mathcal{G}_{il}\right) = (\beta_{il})^{\upsilon}$, with the consequence of moving power from UEs with lower channel quality to UEs with better channel quality.
+For any choice of the function $f(\cdot)$, we can identify the desired value of $\upsilon$ in a given network by simulating CDF curves of the per-UE SE for UEs at different locations. By plotting different curves for different values of $\upsilon$, we can determine which value gives the most desirable tradeoff between high fairness and high~sum SE.
+
+
+\section{Comparison of Power Optimization Schemes}
+\label{sec:comparison-power-optimzation}
+
+We will now compare the scalable power control/allocation schemes from Section~\ref{sec:scalable-power-allocation} with the optimized benchmarks from Section~\ref{sec:optimized-power-allocation}.
+To this end, we continue the running example that was defined in Section~\ref{sec:running-example} on p.~\pageref{sec:running-example}. The specific system parameters are: $L=100$ APs, $N=4$ antennas per AP, and $K=40$ UEs. We consider the user-centric implementation based on the DCC formation algorithm presented in Section~\ref{sec:pilot-assignment} on p.~\pageref{sec:pilot-assignment} with different scalable processing schemes. The channels follow spatially correlated Rayleigh fading with ASDs $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$.
+
+When we compare the performance of different schemes, we will show CDF curves of the SEs that the UEs achieve at different random locations. When we did the same thing in previous chapters, the curves achieved by the different schemes that we compared were often non-intersecting so that we could easily conclude that the rightmost curve was the preferable one. 
+To achieve an efficient scalable implementation, we would pick the rightmost scheme among the scalable alternatives. The situation will be different when we compare different power optimization schemes in this section because we will get curves that intersect, which demonstrates that different schemes are preferable for different types of UEs. Note that the lower tail of a CDF curve represents the performance achieved by the UEs with the worst channel conditions, while the upper tail represents the performance achieved by the UEs with the best channel conditions. One way to measure fairness is by looking at the steepness of the CDF curve; if the curve is steep, then the SE difference between UEs with the worst and best channel conditions is small. However, one should also bear in mind that a network that gives zero SE to everyone features great fairness (everyone gets the same performance) but it is not practically desirable. Hence, the network designer will eventually have to select a scheme that provides the right tradeoff between fairness and sum SE.
+
+
+\subsection{Comparison of Uplink Power Control Schemes}
+
+We first consider the uplink and compare both optimized and scalable schemes.
+As optimized power control schemes, we consider the max-min fairness and sum SE maximization algorithms from Section~\ref{sec:optimized-power-allocation-uplink}, namely Algorithm~\ref{alg:fixed-point-uplink} and Algorithm~\ref{alg:sum-SE-uplink}, respectively. The corresponding results are respectively denoted by ``\gls{MMF}'' (max-min fairness) and ``SumSE''. In addition, we consider three heuristic but scalable schemes. The first one is that all UEs transmit with full power, which is denoted by ``Full''. Moreover, we consider the fractional power control scheme in \eqref{eq:fractional_power_UL-scalable} with exponents $\upsilon=0.5$ or $\upsilon=-0.5$ and denote it  by ``\gls{FPC}''. Note that the case with $\upsilon=0.5$ allows UEs with better channel conditions to transmit with higher power whereas the case with $\upsilon=-0.5$ does the opposite.
+
+\label{sec:performance-comparison-power-allocation}
+\begin{figure}[p!]
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section7/section7_figure1a}
+		\end{overpic} \label{figureSec7_1a}
+		\caption{Centralized uplink operation with P-MMSE combining.} 
+		\vspace{4mm}
+	\end{subfigure} 
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section7/section7_figure1b}
+		\end{overpic} \label{figureSec7_1b}
+		\caption{Distributed uplink operation with n-opt LSFD and LP-MMSE combining.} 
+	\end{subfigure} 
+	\caption{CDF of the uplink SE per UE in the centralized and distributed operation with different optimized and heuristic power control methods. We consider $L=100$, $N=4$, $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$.}\label{figureSec7_1}
+\end{figure}
+
+
+Figure~\ref{figureSec7_1} compares the uplink SE of the power control methods described above. We consider a scalable centralized operation with P-MMSE combining in Figure~\ref{figureSec7_1}(a) and a scalable distributed operation with n-opt LSFD and LP-MMSE combining in Figure~\ref{figureSec7_1}(b). In both cases, the sum SE maximizing power control provides the same performance as with full-power transmission. In fact, when the initial point to Algorithm~\ref{alg:sum-SE-uplink} is that everyone transmits with maximum power, then the objective function is not improved in the next iteration. Although Algorithm~\ref{alg:sum-SE-uplink} attains only a local optimum, we tried several different random initializations and observed that the algorithm always converged to the solution where everyone transmits with full power. 
+This does not mean that the full-power transmission will maximize the sum SE in any Cell-free Massive MIMO system, but it demonstrates that the considered network setup is very capable of suppressing interference so that everyone can transmit at maximum power. If we, hypothetically speaking, would add a UE with extremely bad channel conditions to the network, then the sum SE maximization might allocate zero power to it since this utility function does not provide any performance guarantees.
+
+When it comes to max-min fairness power control, we notice~that~the lower tail of the corresponding CDF curve begins at the highest number among all the studied schemes. This is expected since the performance of the most unfortunate UE in the entire network is maximized. However, by zooming in at the lower tail of the CDF curves, we can see that~max-min fairness only results in a marginal improvement compared to the sum SE curve, and the price to pay is substantially smaller~SEs~for~the vast majority of UEs.
+In fact, the fractional power control~method~with $\upsilon=-0.5$ achieves nearly the same SE for the most unfortunate UEs, while not sacrificing the SE for the other UEs to the same extent.~When we switch to fractional power control with $\upsilon=0.5$, we notice that~its~behavior is similar to sum SE maximization for the UEs with good channel conditions, but not as good for the UEs with weaker channel conditions.
+
+In summary, maximizing the sum SE will result in a CDF curve that is almost entirely to the right of the competing schemes. Hence, it is generally the preferred choice and this power optimization can be implemented in a scalable manner by letting all UEs transmit with full power. This is why we utilized this scheme for performance comparisons in Section~\ref{sec:uplink-performance-comparison} on p.~\pageref{sec:uplink-performance-comparison}.
+If we want a higher level of fairness, in terms of increasing the SE for the most unfortunate UEs, then a fractional power control method with $\upsilon=-0.5$ is a good scalable option. It must be thus clear that the max-min fairness problem focuses on an extreme type of fairness that only helps one UE in the network, at the expense of everyone else. This effect is particularly evident in a large cell-free network where most UEs are barely affecting the most unfortunate UE but anyway are forced to cut down on their transmit powers.
+
+
+\subsection{Comparison of Downlink Power Allocation Schemes}
+
+We continue with the comparison of optimized and scalable power allocation schemes by considering the downlink. We begin by studying the centralized operation where we use Algorithm~\ref{alg:fixed-point-downlink} for max-min fairness power allocation and Algorithm~\ref{alg:sum-SE-downlink} for sum SE maximization. We also consider the network-wide equal power allocation scheme in \eqref{eq:equal_power_allocation_DL} and the fractional power allocation method in \eqref{eq:fractional_power_centralized_DL-scalable3} as scalable benchmarks. Recall that the latter method was considered in the simulations in Section~\ref{sec:downlink-performance-comparison} on p.~\pageref{sec:downlink-performance-comparison}. These methods are denoted by ``MMF'', ``SumSE'', ``Equal'', and ``\gls{FPA}'' respectively. 
+
+
+Figure~\ref{figureSec7_2} shows the CDFs of the SE per UE for the P-MMSE~precoding scheme, which is scalable. In Figure~\ref{figureSec7_2}(a), we consider the effect of tuning parameters in the FPA scheme, i.e., the exponents $\upsilon$ and $\kappa$ in \eqref{eq:fractional_power_centralized_DL-scalable3}. When $\upsilon$ is positive, more emphasis is put on the UEs with higher total channel gains whereas it is the other way around for a negative $\upsilon$. Hence, $\upsilon<0$ mimics the max-min fairness optimization. There is an additional tuning parameter $\kappa$ that reshapes the power allocation to account for the unequal contributions that the serving APs provide to the centralized precoding vector. From the figure, we notice that the effect of $\upsilon$ on the SE spread is more substantial compared to $\kappa$. When $\upsilon=0.5$, the more fortunate UEs attain higher SE compared to the case of $\upsilon=-0.5$. On the other hand, $\upsilon=-0.5$ is more preferable to provide more uniform service quality. Another observation is that the selection of $\kappa$ affects the SE differently for the different values of $\upsilon$. When $\upsilon=0.5$, it is better to use a higher $\kappa$ while the reverse is true when $\upsilon=-0.5$. 
+
+
+\begin{figure}[p!]
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section7/section7_figure2a}
+		\end{overpic} \label{figureSec7_2a}
+		\caption{Fractional power allocation with different parameter values.} 
+		\vspace{4mm}
+	\end{subfigure} 
+	\begin{subfigure}[b]{\columnwidth} \centering 
+		\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section7/section7_figure2b}
+			\put(24,15.7){90\% likely}
+			\put(13,13.7){$- - - - - - - - - - - - $}
+		\end{overpic} \label{figureSec7_2b}
+		\caption{Centralized downlink operation with several power allocation schemes.} 
+	\end{subfigure} 
+	\caption{CDF of the downlink SE per UE in the centralized operation with different optimized and heuristic power allocation methods. We consider P-MMSE precoding, $L=100$, $N=4$, $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$. }\label{figureSec7_2}
+\end{figure}
+
+\enlargethispage{\baselineskip} 
+ 
+In Figure~\ref{figureSec7_2}(b), we compare the CDFs of the SE per UE for the optimized and scalable power allocation methods described above. We use the fractional power allocation from Figure~\ref{figureSec7_2}(a) with $\upsilon=-0.5$ and $\kappa=0.5$, as we did in the results of Section~\ref{sec:downlink-performance-comparison} on p.~\pageref{sec:downlink-performance-comparison}. This is an option that gives the best performance in the lower tail.
+We notice that the max-min fairness-based power allocation begins at the largest value and has the smallest difference between its lower and upper tails, which are two properties that are expected from this type of power allocation. 
+However, as in the uplink case studied in Figure~\ref{figureSec7_1}, this type of fairness results in a significant performance drop for all UEs except the most unfortunate ones.
+In fact, with sum SE maximization or fractional power allocation, it is possible to serve nearly all of the UEs with higher SE and only a few with reduced SE in comparison with the max-min fairness solution. Hence, we conclude that the sum SE metric is preferable over the max-min fairness metric both when it comes to average performance and fairness. Fractional power allocation provides a good heuristic tradeoff.
+A key observation is that most of the UEs attain higher SE with the scalable fractional power allocation than with sum SE maximization and the 90\% likely SE (where the CDF curve is 0.1) is better than with max-min fairness. Hence, this scheme strikes a good tradeoff between fairness and sum SE.
+
+\enlargethispage{\baselineskip}
+
+Different from the uplink case, sum SE maximization generally performs better than the network-wide equal power allocation. The CDF for the network-wide equal power allocation is the rightmost one in the upper tails, but there is a substantial gap to the other curves for all other UEs. For example, the 90\% likely SE is around 1.5\,bit/s/Hz higher when considering fractional power allocation. 
+
+
+
+In Figure~\ref{figureSec7_3}, we consider the distributed operation with the scalable LP-MMSE precoding. When it comes to the optimized power allocation schemes, we consider the max-min fairness and sum SE maximization algorithms in Algorithm~\ref{alg:bisection-downlink-case} and Algorithm~\ref{alg:sum-SE-downlink-2}, respectively. As scalable alternatives, we consider per-AP equal power allocation with $\rho_{kl}=\frac{\rhomax}{|\mathcal{D}_l|}$ and the heuristic scheme in \eqref{eq:fractional_power_DL-2}. We denote the latter one by ``FPA'' in analogy with the conceptually similar fractional uplink power control approach in \eqref{eq:fractional_power_UL-scalable} and we consider two different exponents: $\upsilon=0.5$ and $\upsilon=-0.5$. Note the case with $\upsilon=0.5$ leads to that each AP allocates more power to the UEs with better channel conditions whereas $\upsilon=-0.5$ leads to the opposite effect.
+
+
+\begin{figure}[t!]\centering
+	\begin{overpic}[width=0.88\columnwidth,tics=10]{images/section7/section7_figure3}
+			\put(40,17.7){85\% likely}
+		\put(13,15.8){$- - - - - - - - - - - - $}
+	\end{overpic} 
+	\caption{CDF of the downlink SE per UE in the distributed operation with different optimized and heuristic power allocation methods. Scalable LP-MMSE precoding is used. We consider $L=100$, $N=4$, $K=40$, $\tau_p=10$, and spatially correlated Rayleigh  fading with ASD $\sigma_{\varphi}=\sigma_{\theta}=15^{\circ}$.  }   
+	\label{figureSec7_3} 
+\end{figure}
+
+
+Most of the UEs benefits from sum SE maximization in Figure~\ref{figureSec7_3}, however, max-min fairness can significantly improve the SE achieved by the most unfortunate UEs in the network. The UEs with the 15\% worst channel conditions (below 85\% likely SE) achieve higher SE with max-min fairness than with sum SE maximization, which is a much higher percentage than we have observed for uplink power control and centralized downlink power allocation.
+We further notice that using the exponent $\upsilon=-0.5$ in the heuristic scheme in \eqref{eq:fractional_power_DL-2} is not an efficient approach, since the CDF curve is to the left of all the other curves. On the other hand, the case with $\upsilon=0.5$, which we utilized for performance comparison in Section~\ref{sec:downlink-performance-comparison} on p.~\pageref{sec:downlink-performance-comparison}, is much better than the per-AP equal power allocation. The reason is that less interference is created when each UE obtains most of its power from the AP that it has the best channel to, compared to when all the serving APs are transmitting with equal power. The gap between the case of $\upsilon=0.5$ and the sum SE maximization scheme is relatively small. 
+
+We conclude that we can choose between sum SE maximization and max-min fairness in the distributed downlink operation depending on the tradeoff between average SE and fairness that we want to obtain. The  heuristic scheme in \eqref{eq:fractional_power_DL-2} is a reasonable approximation of the sum SE maximization case but further research on scalable power allocation schemes is needed.
+
+
+
+\begin{remark}[Machine learning for efficient power optimization]
+Most of the signal processing problems that have been considered in previous sections of this monograph have known optimal solutions, as well as computationally scalable approximations that seem to perform very well. The presented algorithms for channel estimation, precoding, and combining in centralized and distributed operations are examples of successful man-made algorithms.
+In contrast, the downlink power allocation and uplink power control problems are still not solved from a practical perspective. 
+The optimization algorithms presented earlier in this section have computational complexities that grow polynomially with the number of UEs, which is an algorithmic deficiency \cite{Bjornson2020b}. The man-made heuristic schemes presented earlier are not bad but there is a substantial gap to the optimal benchmark algorithms, partially because the heuristic schemes have access to less information and partially because it is inherently hard to design heuristic schemes that work well everywhere in the network.
+Machine learning might be the tool that is needed to overcome these deficiencies and some first steps are taken in \cite{Bashar2020c}, \cite{Chakraborty2019a}, \cite{Nikbakht2020b}, \cite{Yan2020a}, \cite{Zhao2020a}. A deep learning approach can potentially find shortcuts in existing centralized optimization algorithms, thereby lowering the computational complexity while only suffering from small performance penalties. Other utility functions than those considered in this monograph can also be considered.
+When it comes to distributed power allocation schemes (or other schemes that have access to less information than the benchmark algorithms), there is no need to have the same policy at every AP but the specific characteristics of the local propagation environment around each AP can be learned to enhance the performance. The benefit from this can hopefully outweigh the drawback of only having access to local information at the AP.
+This research direction is only in its infancy.
+\end{remark}
+
+
+\enlargethispage{\baselineskip}
+
+\vspace{-2mm}
+\section{Pilot Assignment}
+\label{sec:pilot-assignment-advanced}
+
+
+When multiple UEs are simultaneously using the same pilot signal, there will be pilot contamination that reduces the estimation quality of the pilot-sharing UEs' channels and increases the mutual interference in the data transmission phase. This issue is not unique to cell-free networks but appears also in cellular networks. Pilot contamination has received particular attention in the literature of Cellular Massive MIMO \cite{Adhikary2017a}, \cite{ashikhmin2012pilot}, \cite{BjornsonHS17}, \cite{Jose2011b}, \cite{Marzetta2010a}, \cite{Mueller2014b}, \cite{Rusek2013a}, \cite{Sanguinetti2019a}, \cite{Yin2016a}, mainly because the resulting additional interference grows with the number of AP antennas. 
+The easiest approach to limit the pilot contamination issue is by selecting the pilot-sharing UEs in a judicious manner. To this end, the standard approach in cellular networks is  to associate each cell with a predetermined subset of the pilots. This subset can, for instance, be selected so that neighboring cells are using different subsets. 
+Each AP can then assign the pilots arbitrarily to the UEs that reside in its cell. Hence, the cellular structure is exploited to make the pilot assignment relatively straightforward to implement in a distributed fashion. Such methods cannot be used in a cell-free network and, therefore, there is a need for developing new algorithms for pilot assignment.
+
+The general behaviors of pilot contamination in cell-free networks were exemplified in Section~\ref{sec:impact-on-estimation-accuracy} on p.~\pageref{sec:impact-on-estimation-accuracy}. A key insight was that we want to avoid that two UEs that are close to the same set of APs are assigned to the same pilot. A naive approach to pilot assignment is random allocation \cite{Interdonato2018}, where we generate a random integer from 1 to $\taupu$ for every UE and assign this UE to the pilot with the matching index. A benefit of this approach is that it requires no coordination between different UEs or APs, while the main drawback is that the probability that a UE will use the same pilot as its geographically closest neighbor is $1/\taupu$. This is the worst-case situation that should be avoided by using a more structured pilot assignment algorithm.
+
+
+
+
+
+\subsection{Utility-Based Pilot Assignment}
+
+The key to structured pilot assignment is to define a utility function $f(t_1,\ldots,t_K)$ that represents the goal of the pilot assignment and takes the indices $t_1,\ldots,t_K \in \{ 1,\ldots,\tau_p\}$ of the pilots assigned to the different UEs as input.
+The utility can, for example, be defined so that it is maximized when the extra interference caused by pilot contamination is minimized \cite{Ngo2017b} or when the sum SE is maximized \cite{Liu2020a}. In any case, we have the following general problem formulation:
+\begin{align} \label{eq:pilot-assignment-problem}
+\underset{t_1,\ldots,t_K}{\textrm{maximize}} & \quad f(t_1,\ldots,t_K) \\
+\textrm{subject to} &\quad t_k \in \{ 1, \ldots, \tau_p \}, \quad k=1,\ldots,K. \nonumber
+\end{align}
+This is a combinatorial problem and we can, thus, find the optimal pilot assignment for a given utility function by an exhaustive search over all $\taupu^K$ possible pilot assignment.\footnote{This number can be slightly reduced by exploiting that it only matters which UEs use the same pilot and not what the index of their pilot is.}
+The complexity grows exponentially with $K$, which makes it challenging to implement an exhaustive search in a practical network with many UEs, even if it would only be used for offline benchmarking. We need to be able to solve the pilot assignment problem regularly since the utility will depend on which UEs are currently active in the network.
+
+Instead of finding the global optimum to \eqref{eq:pilot-assignment-problem}, we can design an algorithm that finds a decent suboptimal solution. One approach is to design a greedy algorithm that optimizes the utility with respect to one UE at a time. The algorithm can either consider each UE once or iterate until convergence. In small networks where most UEs can be assigned to unique pilots, the algorithm in \cite{Sabbagh2018a} can be used to find suitable UE pairs that can reuse pilots.
+The greedy algorithm in \cite{Ngo2017b} is first assigning pilots randomly to the UEs, followed by an iterative procedure where each UE determines if the extra interference caused by pilot contamination can be reduced by switching to another pilot. 
+A variation of that greedy algorithm is proposed in \cite{Zhang2018b} by also making use of the geographical locations of the UEs.
+A UE clustering algorithm is proposed in \cite{Attarifar2018a} to dynamically divide the network into geographical clusters in which each pilot is only used once. This principle resembles the cellular approach to the pilot assignment problem but makes use of the actual UE locations.
+A refined clustering algorithm that utilizes the physical distances between APs and UEs is proposed in \cite{Chen2020a}.
+Yet another clustering algorithm is proposed in \cite{Femenias2019a} but it is using the inner products between the vectors $[\beta_{k1} \, \ldots \, \beta_{kL}]^{\Ttran}$ of different UEs as a similarity metric instead of location-based parameters.
+
+Several of the aforementioned algorithms make direct use of the observation that two closely located UEs should not be assigned to the same pilot. However, it is important to bear in mind that it is the channel gains that matter when determining the pilot contamination and even if these are strongly correlated with the UE locations, there can be large variations, which are modeled by shadow fading. 
+
+The mathematical literature contains many combinatorial algorithms that can potentially be applied to pilot assignment. Tabu-search is an algorithm that was used in \cite{Liu2020a} for SE-maximizing pilot assignment. The main principle is to iteratively explore small variations on the current assignment and select a preferable one. A list of previously selected solutions is kept to avoid going back to them. The Hungarian algorithm was utilized in \cite{Buzzi2020a} and tuned to optimize different utilities.
+
+\enlargethispage{1.2\baselineskip}
+
+It is generally hard to make a fair comparison of pilot assignment algorithms because they might  optimize different utilities, they might get stuck in different local optima in different setups, and their computational complexity can be widely different. However, one can conclude that network-wide algorithms are preferably implemented at the CPU and the complexity will grow at least linearly with $K$, which makes their implementation unsuitable for large networks. Our experimental experience is that the most important aspect of a pilot assignment in cell-free networks is to avoid the worst assignments where closely located UEs use the same pilot. This is fairly easy to achieve in a network with $L \gg K$ since each pilot will be reused quite sparsely in the network, as seen from the APs' perspective. The coherent interference that made pilot contamination a major concern in the Cellular Massive MIMO literature is likely not a major issue in cell-free networks, where there also are many antennas but each UE is only served by a small subset.
+
+\enlargethispage{\baselineskip}
+
+
+
+\subsubsection{Scalable Pilot Assignment}
+
+
+
+If a pilot assignment algorithm should be scalable, it probably must be implemented by a local interaction between a UE and its neighboring APs. Any algorithm that attempts to maximize a network-wide utility and exploits network-wide information will require an immense complexity to evaluate the utility. The pilot assignment algorithm presented in Algorithm~\ref{alg:basic-pilot-assignment} on p.~\pageref{alg:basic-pilot-assignment} is an attempt to design such a scalable algorithm. It originates from \cite{Bjornson2020a} where the main idea was to connect the pilot assignment for a given UE to how it accesses the network (as it is usually done in cellular networks). When the UE is becoming active, it selects a neighboring AP and this AP locally determines which pilot is the most appropriate for the UE to use. More precisely, it computes/measures the amount of pilot interference at each of the pilots and assigns the UE to the pilot with the least interference. This likely corresponds to the pilot where the pilot-sharing UEs are furthest away from the AP, which makes intuitive sense: we want each pilot to be reused as sparsely as possible in space. The algorithm is by no means optimal but has been used throughout this monograph and has provided  good results.
+
+Further research on scalable pilot assignment is certainly needed and since it is a type of clustering problem, machine learning might be a suitable tool for developing efficient algorithms.
+
+
+
+\section{Selection of Dynamic Cooperation Clusters}
+\label{sec:selecting-DCC-advanced}
+
+
+The DCC framework is restricting which APs are allowed to serve a given UE in the uplink and downlink. It is unavoidable that this leads to lower SE than in a network where any AP can serve any UE, since we have fewer degrees-of-freedom when optimizing the system. However, there are  strong reasons for introducing these restrictions. As stressed earlier in this monograph, scalability in terms of computational complexity and fronthaul signaling is one reason.
+Another reason is to reduce the energy consumption \cite{Ngo2018a} or to limit the delay spread of the downlink signals, which increases with the distance between the UE and the serving AP that is furthest away \cite{Bjornson2013d}, \cite{Zhang2008a}. Intuitively, the SE loss can be kept small if each UE is served by all the APs within its area of influence, but the question is what this means in practice.
+
+Some general guidelines for DCC selection  were provided in \cite[Sec.~4.7]{Bjornson2013d}. Firstly, each UE should have a ``master AP'' that it is anchored to. This AP is required to serve the UE, to guarantee a non-zero SE, while service from other APs is provisioned based on availability (e.g., if these APs are not overloaded with serving other UEs). Secondly, the UEs should be selected from a user-centric perspective, as emphasized throughout this monograph.
+Thirdly, different UEs can be assigned to different numbers of APs depending on the local propagation conditions. For example, a UE that has a very good channel to one AP might only need to be served by that AP, or a few more, while a UE that is in between many APs or is subject to much interference will require multiple APs to boost the SNR and/or suppress interference.
+Finally, \cite{Bjornson2013d} suggests that one should use the channel quality rather than the geographical locations when measuring proximity to different APs and determining which APs should serve the UE.
+
+There are many possible user-centric clustering algorithms. While it is possible to design network-wide algorithms where all UEs are jointly considered, this will be an unscalable solution where the complexity grows with $K$. Hence, we will concentrate on approaches that consider one UE at a time.
+
+Recall that $\mathcal{M}_k \subset \{ 1, \ldots, L \}$ is the subset of APs that serves UE $k$. 
+One approach for selecting the subset is
+\begin{equation} \label{eq:threshold-DCC}
+\mathcal{M}_k = \{ l = 1,\ldots,L : \beta_{kl} \geq \Delta \}
+\end{equation}
+where $\Delta>0$ is a constant parameter \cite{Bjornson2011a}. This means that the UE is served by all APs that have a large-scale fading coefficient $\beta_{kl} $ that is above a threshold specified by $\Delta$.
+A variation of this approach is to predetermine that each UE $k$ should be served by a certain number of APs. These APs are then selected as the ones with the largest values on $\beta_{kl}$ \cite{Buzzi2017a}. This corresponds to tuning the threshold $\Delta$ in \eqref{eq:threshold-DCC} for each UE to get the predetermined number of serving APs.
+Alternatively, the number of serving APs can be selected on a per-UE basis to make sure that
+\begin{equation}
+\frac{\sum_{l \in \mathcal{M}_k } \beta_{kl}}{\sum_{l=1 }^{L} \beta_{kl}} \geq \delta
+\end{equation}
+where $\delta>0$ is a threshold representing the fraction of the total received power that  UE $k$ would receive in the downlink \cite{Ngo2018a}. For example, if $\delta= 0.95$, then the UE will be served by the subset of APs that has the strongest channels and which contributes to more than 95\% of the total received power at the UE.
+
+The aforementioned approaches are user-centric and make intuitive sense, but are not taking into account how many UEs a given AP can practically serve. There are two important types of limitations. The first limitation is scalability. Each AP has a limited processing power so it can only manage a limited number of UEs in a distributed operation and only transmit and receive data related to a limited number of UEs over its fronthaul link. The second limitation is pilot contamination. It is only reasonable for an AP to serve one UE per pilot \cite{Bjornson2020a}, \cite{Sabbagh2018a}, because otherwise the weaker of the pilot-sharing UEs will be subject to strong interference. An exception to this rule is if the pilot-sharing UEs have very different spatial correlation matrices so that the AP can separate their channels in the estimation phase based on that information.
+
+
+If we need to select the clusters $\mathcal{M}_1,\ldots,\mathcal{M}_K$ to comply with the per-AP constraint of the type $|\mathcal{D}_l| \leq \tau_p$ (where $\mathcal{D}_l$ is the set of UEs served by AP $l$), we cannot apply any of the approaches mentioned above. More precisely, we cannot make our selection from a purely user-centric perspective but must take the limitations caused by the network architecture into account.
+One scalable solution is to let the pilot assignment algorithm determine the clusters \cite{Bjornson2020a}. For example, each AP can serve (up to) one UE per pilot, namely the UE that has the largest large-scale fading coefficient $\beta_{kl}$ among those that use the pilot. This approach is scalable but the performance will rely on the fact that the pilot assignment problem has been solved appropriately. This was the approach taken in Algorithm~\ref{alg:basic-pilot-assignment} on p.~\pageref{alg:basic-pilot-assignment} and followed throughout this monograph.
+We observed that the SE loss compared to serving all UEs by all APs is small, at least in the running example with $L \gg K$. 
+However, further research on scalable cooperation cluster formation is needed, particularly for challenging cases with many UEs in certain areas of the network.
+
+
+
+\section{Implementation Constraints}
+\label{sec:implementation-constraints}
+
+Scalability has been the main focus when we developed the foundations of User-centric Cell-free Massive MIMO in this monograph. The basic definition of scalability, according to Definition~\ref{def:scalable} on p.~\pageref{def:scalable}, is that the signal processing complexity and fronthaul signaling per AP and UE remain finite as $K \to \infty$. This implies that once we have deployed an AP and connected it to its CPU, we will not have to update the local processors and fronthaul infrastructure as we are deploying additional APs, increase the coverage area, or serve a larger number of UEs. However, there are further implementation constraints to consider when building practical networks. We will briefly mention a few of these constraints in this section to stress that further research is needed in these directions.
+
+\subsection{Low-Cost Components}
+To enable a ubiquitous deployment of APs, it is important to use compact low-cost components, which might be based on UE-grade chipsets rather than conventional hardware for cellular infrastructure. Practical transceiver components are subject to hardware impairments of different kinds \cite{Schenk2008a}, including non-linearities in power amplifiers, mismatches in mixers, finite-resolution analog-to-digital and digital-to-analog conversion, and phase noise in local oscillators. These effects lead to signal distortion which in some cases can be modeled as a signal power loss plus an uncorrelated additive distortion term, using the Bussgang decomposition \cite{Bussgang1952a}, \cite{Demir2020a}.
+The impact of such distortion on cell-free networks has been analyzed in \cite{Masoumi2020a}, \cite{Zhang2018a}, \cite{Zheng2020a} for general hardware impairments, while the special case of quantization distortion in each \gls{ADC} was considered in \cite{Hu2019a}. The obtained SE expressions can be utilized to get a better sense of the practically achievable SE and to optimize the transmit power based on these expressions.
+The analysis in the aforementioned papers follows the methodology that was developed in the Cellular Massive MIMO literature
+\cite{massivemimobook} or approximations thereof. These models are relatively simple and future research should consider more detailed models.
+
+
+\subsection{Quantization of Fronthaul Signaling}
+We have focused on limiting the number of scalar numbers that need to be transmitted over the fronthaul links per coherence block. However, in practice, these signals must also be quantized before being transmitted over the fronthaul. While the quantization distortion caused by hardware impairments (such as finite-resolution ADCs) is applied on a sample-by-sample basis and largely uncontrollable, the fronthaul compression can be optimized using appropriately designed compression formats that are applied to a block of signal samples. The signal distortion can potentially be limited by making use of rate-distortion theory. Some papers in this direction are \cite{Bashar2020c}, \cite{Bashar2019b}, \cite{Boroujerdi2019a}, \cite{Femenias2019a}, \cite{Maryopi2019a}, \cite{Masoumi2020a}, \cite{Parida2018a}. An interesting consideration that appears when having fronthaul compression is that it matters where certain computations are carried out. If a processing task, such as channel estimation or signal detection, is carried out locally at the AP, the result will be more accurate than if the received signals are first compressed and sent to the CPU and then processed in the same way. 
+For example, in a centralized operation, we can choose between estimate-and-quantify and quantify-and-estimate protocols \cite{Bashar2019b}, \cite{Maryopi2019a}. Similar to the case of hardware impairments, SE expressions that are developed by taking the fronthaul compression into account can be used for optimizing the transmit power or other resource allocation tasks.
+
+
+\enlargethispage{\baselineskip} 
+
+\subsection{Radio Stripes \& Other Constrained Fronthaul Architectures}
+
+The structure of the fronthaul might also be constrained in the sense that each AP might not have a dedicated fronthaul link but a shared connection with a subset of other APs. For example, in the radio stripes architecture \cite{Interdonato2018}, the APs are integrated into fronthaul cables that are connected to a CPU at one end, which also provides a power supply. A fronthaul signal from the outmost AP needs to travel via all the other APs before reaching the CPU. The benefit of this architecture is that amount of cabling can be greatly reduced. In a deployment with a particular fronthaul architecture, the structure can be utilized to optimize the fronthaul signaling and signal processing. For example, the APs can send signals to their neighboring APs which enables a co-processing and interference mitigation \cite{Shaik2020a}. MMSE combining can be implemented in a sequential fashion \cite{Shaik2021a}.
+
+\subsection{Synchronization of APs}
+
+Proper synchronization of the distributed APs is necessary for coherent uplink and downlink transmission. The APs must not be phase-synchronized since this is momentarily achieved in every coherence block through the channel estimation, which estimates the combined effect of the propagation channels and the phase-shifts induced by the hardware. However, the cooperating APs must be  synchronized in time and frequency; see \cite{Jeong2020a} for a recent review of how to achieve that in Cellular Massive MIMO systems and \cite{Etzlinger2018a} for a more general review. Perfect synchronization has been assumed in this monograph, but the actual implementation can be challenging since the APs are distributed. Some initial algorithms for cell-free networks are described in \cite{Cheng2013a}, \cite{Interdonato2018}, but further work is needed on this topic. The user-centric cooperation clusters might relax the synchronization requirements since only the geographically closest APs must be well synchronized, while more distant APs that are serving non-overlapping sets of UEs do not require the same level of synchronization.
+
+
+\newpage
+\enlargethispage{\baselineskip} 
+\section{Summary of the Key Points in Section~\ref{c-resource-allocation}}
+\label{c-resource-allocation-summary}
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+\item UEs in cell-free networks have conflicting performance goals due to the interference and shared power budgets. Power allocation can be used to find a tradeoff between them. 
+
+\item Any algorithm that jointly optimizes the transmit powers in uplink or downlink to maximize a network-wide utility function becomes unscalable as $K\to \infty$ since there are $K$ SINRs to optimize and at least $K$ optimization variables. 
+
+\item To obtain a practically implementable power allocation that is scalable, some kind of distributed heuristic scheme is needed, where each AP or UE makes a local decision based on the channel knowledge that it can acquire locally. Fractional power control is a classical heuristic that can be also used in cell-free networks.
+
+\item Sum SE maximization is often the preferable optimization criterion since it attains high SEs for the UEs with good channel conditions and satisfactorily SEs for UEs with bad channel conditions. An alternative metric is the max-min fairness, which provides (slightly) higher SE for the UE with the worst conditions but a substantial SE loss for most other UEs.
+
+\item In the uplink, the sum SE  is maximized when all UEs transmit with full power. Hence, there is no need to run a network-wide optimization problem in the centralized and distributed uplink operation. To emphasize fairness, fractional power control can be utilized with a negative exponent.
+
+\item In the centralized downlink operation, fractional power allocation with a negative exponent provides higher SE to the most of the UEs than the sum SE maximization and it also achieves a good balance between fairness and sum SE. 
+
+\end{itemize}
+
+\end{mdframed}
+
+
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+
+\item In the distributed downlink simulations, the fractional power allocation with a positive exponent performs much better than per-AP equal power allocation. There is a gap to the sum SE maximization-based scheme but it is relatively small.
+
+\item The pilot contamination effect can be reduced by assigning pilots to UEs to limit the interference. The optimal pilot assignment is a combinatorial problem whose complexity grows exponentially with $K$. However, greedy algorithms that operate at one UE at a time can be developed. They are scalable and guarantee reasonably good performance.
+
+\item An unscalable network where all APs serve all UEs provides the highest SEs, but the dynamic cooperation clusters can be selected to achieve a scalable operation with a small performance loss. Any user-centric clustering algorithm where all UEs are jointly considered is unscalable as $K\to \infty$. If properly designed, approaches that consider one UE at a time can provide good performance while being scalable.
+
+\item Scalability is not the only requirement for building practical networks. The need for enabling a ubiquitous deployment of APs makes it preferable to use compact low-cost components, whose hardware imperfections must be taken into account in the analysis and design. The fronthaul signal compression is another limiting factor. The structure of the fronthaul might also impose limitations since some APs might share a connection with a subset of other APs. Finally, proper synchronization of the distributed APs is necessary for coherent uplink and downlink transmission. These are topics (among many others) that require further investigation.
+
+
+\end{itemize}
+
+\end{mdframed}
+
+

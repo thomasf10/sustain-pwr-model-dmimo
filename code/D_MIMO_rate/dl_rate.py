@@ -65,7 +65,7 @@ def simulate_downlink(cfg: DMIMOConfig,
     for _ in range(cfg.n_realizations):
         # --- Channel model (mimo_helpers) --------------------------------
         ap_pos, ue_pos = mh.draw_positions(cfg, rng)
-        beta = mh.large_scale_fading(cfg, ap_pos, ue_pos)
+        beta = mh.large_scale_fading(cfg, ap_pos, ue_pos, rng)
         R = mh.spatial_correlation(cfg, ap_pos, ue_pos, beta)
         H = mh.generate_channels(cfg, rng, R)
         H_hat = mh.estimate_channels(cfg, rng, H, R)

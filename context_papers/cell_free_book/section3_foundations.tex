@@ -1,0 +1,537 @@
+%!TEX root = cell-free-book.tex
+
+\chapter{Theoretical Foundations}
+\label{c-theoretical-foundations} 
+
+\vspace{-5mm}
+
+This section describes some basic results from estimation, information, and optimization theory which will be utilized later in this monograph. Section~\ref{sec:estimation-theory} describes the foundations of estimating Gaussian distributed random variables, which might be the channels in a cell-free network. Section~\ref{sec:capacity-bounds} defines the channel capacity and describes standard methods for computing achievable lower bounds, which are also known as achievable spectral efficiencies (SEs). 
+In Section~\ref{sec:Rayleigh-quotient}, we consider the maximization of a ratio known as a generalized Rayleigh quotient.
+In Section~\ref{sec:optimization-algorithms}, two different utility maximization algorithms are provided, which are of particular interest for the optimization of UE performance in a cell-free network. The key points are summarized in Section~\ref{c-theoretical-foundations-summary}.
+
+
+%%%%%%%%%%%%%%%%%%%
+
+\enlargethispage{\baselineskip} 
+
+\section{Estimation Theory for Gaussian Variables}
+\label{sec:estimation-theory}
+
+The estimation of channel coefficients is an important aspect of any coherent communication system. In this section, we provide the theoretical foundation for estimating the realization of a Gaussian random variable from an observation that is corrupted by independent additive Gaussian noise. We only present the main concepts and results that will be used in later chapters and refer to textbooks such as \cite{massivemimobook}, \cite{Kay1993a} for further details and explanations.
+
+\begin{definition}[Minimum mean-squared error estimator] 
+Consider a\linebreak random variable $\vect{x} \in \mathbb{C}^N$ with support in $\mathcal{X}$ and let $\hat{\vect{x}}(\vect{y})$ denote an arbitrary estimator of $\vect{x}$ based on the observation $\vect{y} \in \mathbb{C}^{M}$. The particular choice of  $\hat{\vect{x}}(\vect{y}) : \mathbb{C}^{M} \to \mathbb{C}^{N}$  that minimizes the \gls{MSE}
+\begin{equation}
+\mathbb{E} \left\{ \| \vect{x} - \hat{\vect{x}}(\vect{y}) \|^2 \right\}
+\end{equation}
+is called the \gls{MMSE} estimator of $\vect{x}$.
+It can be computed as
+\begin{equation}
+\hat{\vect{x}}_{\mathrm{MMSE}}(\vect{y}) = \mathbb{E} \{ \vect{x} | \vect{y} \} = \int_{\mathcal{X}}  \vect{x} f(\vect{x} | \vect{y} ) d \vect{x}
+\end{equation}
+where $f(\vect{x} | \vect{y} ) $ is the conditional \gls{PDF} of $\vect{x}$ given the observation $\vect{y}$.
+\end{definition}
+
+The \gls{MMSE} estimator of a complex Gaussian random variable from an observation that is corrupted by independent additive complex Gaussian noise (and interference) can be computed in closed form.
+
+\begin{lemma} \label{lemma:MMSE-estimator}
+Consider estimation of the $N$-dimensional vector $\vect{x} \sim \CN(\vect{0}_N,\vect{R})$, with a positive semi-definite correlation matrix $\vect{R}$, from the observation $\vect{y} = \vect{x} q + \vect{n} \in \mathbb{C}^{N}$.
+The pilot signal $q \in \mathbb{C}$ is known and $\vect{n} \sim \CN(\vect{0}_N,\vect{S})$ is an independent noise/interference vector with a positive definite correlation matrix. 
+
+The \gls{MMSE} estimator of $\vect{x}$ is
+\begin{equation} \label{eq_MMSE_channel_matrix-rankdef}
+\begin{split}
+\hat{\vect{x}}_{\mathrm{MMSE}}(\vect{y}) = q^\star  \vect{R}
+\left( |q|^2 \vect{R} + \vect{S} \right)^{-1} \vect{y}.
+\end{split}
+\end{equation}
+The estimation error correlation matrix is
+\begin{equation} \label{eq_error_covariance_channel_matrix-rankdef}
+ \vect{C}_{\mathrm{MMSE}} 
+= \vect{R} -  |q|^2 \vect{R} 
+ \left(  |q|^2 \vect{R} + \vect{S} \right)^{-1} \vect{R}
+\end{equation}
+and the \gls{MSE} is
+\begin{equation} \label{eq_MSE_channel_matrix-rankdef}
+\mathacr{MSE} = \tr \left( \vect{R} -  |q|^2 \vect{R} 
+ \left(  |q|^2 \vect{R} + \vect{S} \right)^{-1} \vect{R} \right).
+\end{equation}
+\end{lemma}
+\begin{proof}
+The detailed proof can be found in \cite[App.~B.4]{massivemimobook}.
+\end{proof}
+
+For brevity, we will denote the MMSE estimate as $\hat{\vect{x}}_{\mathrm{MMSE}}$, without explicitly specifying what observation it was based on.
+A consequence of Lemma~\ref{lemma:MMSE-estimator} is that the MMSE estimate is distributed as
+\begin{equation}
+\hat{\vect{x}}_{\mathrm{MMSE}} \sim \CN ( \vect{0}_N , \vect{R} - \vect{C}_{\mathrm{MMSE}}).
+\end{equation}
+Moreover, the estimation error $\tilde{\vect{x}} = \vect{x} - \hat{\vect{x}}$ is distributed as 
+\begin{equation}
+\tilde{\vect{x}}_{\mathrm{MMSE}} \sim \CN ( \vect{0}_N ,  \vect{C}_{\mathrm{MMSE}}).
+\end{equation}
+These random variables are independent, which is a useful property that will be utilized in the analysis in future sections.
+
+
+%%%%%%%%%%%%%%%%%%%
+
+\section{Capacity Bounds and Spectral Efficiency}
+\label{sec:capacity-bounds}
+
+The SE is the performance metric that will be used throughout this monograph.
+This is a measure of the average amount of information that can be correctly transferred per complex-valued sample, when a very large block of data is transmitted. This is the natural metric in broadband applications, where the demand for data is large.
+
+\begin{definition}[Spectral efficiency]\label{definition_spectral_efficiency} 
+The achievable SE of an encoding/decoding scheme is the average number of bits of information, per complex-valued sample, that it can transmit reliably over the channel under consideration.
+\end{definition}
+
+When communicating over a bandwidth of $B$\,Hz, the Nyquist-Shannon sampling theorem specifies that the communication signal is fully determined by $B$ complex-valued samples per second \cite{Shannon1949b} (or $2B$ real-valued samples per second). These are the samples that the data is encoded into in communications and the SE describes the amount of data that can be transferred per such complex sample. Since there are $B$ samples per second, the unit of the SE is either bit per complex sample or bit per second per Hertz, which is abbreviated as bit/s/Hz.
+We will use the latter unit in the remainder of this monograph.
+A related metric is the \emph{information rate} [bit/s], which is defined as the product of the SE and the bandwidth $B$.
+
+The channel between a given transmitter and receiver supports many different SEs (depending on the chosen encoding/decoding scheme), but the largest achievable SE is of key importance when designing communication systems. The maximum SE is determined by the so-called \emph{channel capacity}.
+We refer to the original paper \cite{Shannon1948a} by Shannon and textbooks on information theory, such as \cite{Cover1991a}, for the general and formal definition. 
+In wireless communications, we are particularly interested in channels where the received signal is a superposition of a scaled version of the desired signal and additive Gaussian noise. These channels are commonly referred to as discrete memoryless \gls{AWGN} channels, since each discrete input signal leads to a discrete output signal that is independent of previous and future inputs. We will provide exact capacity expressions and capacity lower bounds for two distinctly different cases: deterministic and random channels. Although the channels are modeled as random in this monograph, both cases will be utilized.
+
+\subsection{Capacity Bounds for Deterministic Channels}
+
+We begin with the canonical case when the channel is deterministic and the communication is only disturbed by Gaussian distributed noise. A block diagram of this setup is provided in Figure~\ref{figure:AWGN-channel}.
+
+\begin{figure}[t!]
+	\begin{center}
+		\includegraphics{images/section3/basic_channel_example}
+	\end{center} \vskip-5mm
+	\caption{A discrete memoryless channel with input $x$ and output $y = hx + n$, where $h$ is the channel response and $n$ is independent Gaussian noise.} \label{figure:AWGN-channel} 
+\end{figure}
+
+\begin{lemma} \label{lemma:capacity-memoryless-deterministic} 
+Consider a discrete memoryless \gls{AWGN} channel with input $x \in \mathbb{C}$ and output $y \in \mathbb{C}$ given by
+\begin{equation}
+y = h x + n
+\end{equation}
+where $n \sim \CN(0,\sigma^2)$ is independent noise. The input distribution is power-limited as $\mathbb{E}\{ |x|^2 \} \leq p$ and the channel response $h \in \mathbb{C}$ is deterministic and known at the output.
+
+In this case, any SE smaller or equal to the channel capacity
+\begin{equation} \label{eq:capacity-fixed-channel}
+C = \log_2 \left(1+\frac{p |h|^2}{\sigma^2} \right)
+\end{equation}
+is achievable. The capacity is achieved by selecting $x \sim \CN(0,p)$.
+\end{lemma}
+\begin{proof}
+The detailed proof can be found in \cite{Shannon1949b}.
+\end{proof}
+
+The practical meaning of the channel capacity is that for any SE smaller or equal to the capacity, there exists an encoding/decoding scheme such that an arbitrarily low error probability can be achieved. More precisely, if we consider an information sequence with $N$ scalar inputs to the \gls{AWGN} channel, then the probability of error goes to zero as $N\to \infty$. This means that an infinite decoding delay is required to achieve the capacity. However, in practice, one can operate very close to the capacity whenever blocks of thousands of bits are transmitted \cite{Bjornson2016b}, which is typically the case in broadband applications.
+
+The channel considered in Lemma~\ref{lemma:capacity-memoryless-deterministic} is called a \gls{SISO} channel because one input signal is sent and results in one output signal. However, we will demonstrate in later sections how the same result can be utilized in situations with multiple antennas. 
+The capacity expression in \eqref{eq:capacity-fixed-channel} has a form that is typical for communications: the base-two logarithm of one plus the  \gls{SNR} defined as 
+\begin{equation}
+\mathacr{SNR} =  \frac{\overbrace{p |h|^2  }^{\textrm{Received signal power}} }{\underbrace{  \vphantom{p |h|^2} \sigma^2}_{\textrm{Noise power}}}.
+\end{equation}
+
+In the setups considered in this monograph, the communication is also disturbed by interference from other concurrent transmissions. In this case, the exact capacity is generally unknown, but convenient lower bounds can be obtained \cite{Biglieri1998a}. The following lemma provides a lower bound on the capacity that will be used repeatedly in this monograph.
+
+\begin{lemma} \label{lemma:capacity-memoryless-deterministic-interference} 
+Consider a discrete memoryless interference channel  with input $x \in \mathbb{C}$ and output $y \in \mathbb{C}$ given by
+\begin{equation} 
+y = h x + \upsilon + n
+\end{equation}
+where $n \sim \CN(0,\sigma^2)$ is independent noise and $\upsilon\in \mathbb{C}$ is random interference with an arbitrary distribution that has zero mean, variance $p_{\upsilon}$, and is uncorrelated with the input (i.e., $\mathbb{E}\{ x^{\star} \upsilon \} = 0$).
+
+The input distribution is power-limited as $\mathbb{E}\{ |x|^2 \} \leq p$ and the channel response $h \in \mathbb{C}$ is deterministic and known at the output.
+The channel capacity $C$ is then lower bounded as
+\begin{equation} \label{eq:capacity-fixed-channel-interference}
+C \geq \log_2 \left(1+\frac{p |h|^2}{p_{\upsilon} + \sigma^2} \right)
+\end{equation}
+where the bound is achieved using the input distribution $x \sim \CN(0,p)$.
+\end{lemma}
+\begin{proof}
+The detailed proof can be found in \cite[App.~C.1.2]{massivemimobook}.
+\end{proof}
+
+The lower bound on the capacity in \eqref{eq:capacity-fixed-channel-interference} is achieved by encoding/decoding the signal as if the interference $\upsilon$ is independent Gaussian noise, because this is the worst case from a communication perspective \cite{Hassibi2003a}. There are no approximations involved but the achievable SE is generally smaller than the capacity, particularly when there are very strong interfering signals. However, treating non-Gaussian interference as independent Gaussian noise in the encoding/decoding is practically convenient and provably optimal in the low-interference regime \cite{Annapureddy2009a}, \cite{Annapureddy2011a}, \cite{Motahari2009a},  \cite{Shang2011b}, \cite{Shang2009b}. When we use the SE expression from Lemma~\ref{lemma:capacity-memoryless-deterministic-interference} in later sections, the random interference term $\upsilon$ will not only include interference from other concurrent transmissions but also unknown random variations in the desired channel.
+
+The SE expression in \eqref{eq:capacity-fixed-channel-interference} has a similar form as the capacity expression in Lemma~\ref{lemma:capacity-memoryless-deterministic}. It is the base-two logarithm of one plus the expression  
+\begin{equation} \label{eq:effective-SINR}
+\mathacr{SINR} = \frac{\overbrace{p |h|^2  }^{\textrm{Received signal power}}}{\underbrace{  \vphantom{p |h|^2} p_{\upsilon}}_{\textrm{Interference power}} + \underbrace{ \vphantom{p |h|^2} \sigma^2}_{\textrm{Noise power}}}
+\end{equation}
+which is an \gls{SINR}. We will refer to it as an \emph{effective \gls{SINR}}, which means that the lower bound in \eqref{eq:capacity-fixed-channel-interference} is effectively the same as the capacity of an \gls{AWGN} channel with an \gls{SNR} equal to $\mathacr{SINR}$ in \eqref{eq:effective-SINR}. This implies that the SE in \eqref{eq:capacity-fixed-channel-interference} can be practically achieved using channel codes designed for \gls{AWGN} channels.
+
+\subsection{Capacity Bounds for Random Channels}
+
+We consider randomly fading channels in this monograph.
+If the channel is a random variable that takes a new independent realization after a finite block of complex samples (e.g., a coherence block), then another capacity concept can be defined: the \emph{ergodic capacity}. The transmission then spans asymptotically many realizations of the random variable that describes the channel and the word ``ergodic'' identifies that all the statistical properties of the channel are deducible from a single sequence of channel realizations. We begin with the canonical case when the communication is only disturbed by Gaussian distributed noise. 
+
+\begin{lemma} \label{lemma:capacity-memoryless-random} 
+Consider a discrete memoryless channel with input $x \in \mathbb{C}$ and output $y \in \mathbb{C}$ given by
+\begin{equation}
+y = h x + n
+\end{equation}
+where $n \sim \CN(0,\sigma^2)$ is independent noise and the input distribution is power-limited as $\mathbb{E}\{ |x|^2 \} \leq p$.
+The channel $h$ is a realization of a random variable $\mathbb{H}$ that is independent of the signal and noise, and the realization $\mathbb{H}=h$ is known at the receiver.
+
+The ergodic channel capacity is
+\begin{equation} \label{eq:capacity-fading-channel}
+C = \mathbb{E} \left\{ \log_2 \left(1+\frac{p |h|^2}{\sigma^2} \right) \right\}
+\end{equation}
+where the expectation is with respect to $h$. The capacity is  achieved by selecting the input distribution $x \sim \CN(0,p)$.
+\end{lemma}
+\begin{proof}
+The detailed proof can be found in \cite[App.~C.1.1]{massivemimobook}.
+\end{proof}
+
+The ergodic capacity of the block-fading channel is similar to the capacity in \eqref{eq:capacity-fixed-channel}, but the key difference is that there is an expectation in front of the logarithm in \eqref{eq:capacity-fading-channel}. In this case, $\mathacr{SNR} = \frac{p |h|^2}{\sigma^2}$ is called the \emph{instantaneous \gls{SNR}}.
+We can also define the average \gls{SNR} as
+\begin{equation} \label{eq:average-SNR-basic-def}
+ \mathacr{SNR} = \frac{p \mathbb{E} \{ |h|^2 \}  }{ \sigma^2}
+\end{equation}
+where the expectation is computed with respect to the channel realizations. 
+
+As mentioned above, the communication will be disturbed by interference from other concurrent transmissions in this monograph.
+ In this case, the exact ergodic capacity is generally unknown, but a convenient lower bound can be obtained by once again treating the interference as noise \cite{Biglieri1998a}, \cite{Medard2000a}. The following lemma provides a lower bound on the ergodic capacity that will be used repeatedly in this monograph.
+
+\begin{lemma} \label{lemma:capacity-memoryless-random-interference} 
+Consider a discrete memoryless interference channel  with input $x \in \mathbb{C}$ and output $y \in \mathbb{C}$ given by
+\begin{equation} \label{eq:interference-capacity}
+y = h x + \upsilon + n
+\end{equation}
+where $n \sim \CN(0,\sigma^2)$ is independent noise, the channel response $h\in \mathbb{C}$ is known at the output, and $\upsilon\in \mathbb{C}$ is random interference with an arbitrary distribution satisfying the properties listed below. The input is power-limited as $\mathbb{E}\{ |x|^2 \} \leq p$.
+
+Suppose $h\in \mathbb{C}$ is a realization of the random variable $\mathbb{H}$ and that $\mathbb{U}$ is a random variable with realization $u$ that affects the interference variance. The realizations of these random variables are known at the output. 
+ If the noise $n$ is conditionally independent of $\upsilon$ given $h$ and $u$, the interference $\upsilon$ has conditional zero mean (i.e., $\mathbb{E}\{ \upsilon | h, u \}  = 0 $) and conditional variance denoted by $p_{\upsilon}(h,u) = \mathbb{E}\{ |\upsilon|^2 | h, u \}$, and the interference is conditionally uncorrelated with the input (i.e., $\mathbb{E}\{ x^{\star} \upsilon | h, u \} = 0$), then the ergodic channel capacity $C$ is lower bounded as
+\begin{equation} \label{eq:capacity-fading-channel-interference}
+C \geq \mathbb{E} \left\{ \log_2 \left(1+\frac{p |h|^2}{p_{\upsilon}(h,u) + \sigma^2} \right) \right\}
+\end{equation}
+where the expectation is taken with respect to $h$ and $u$, and the bound is achieved using the input distribution $x \sim \CN(0,p)$.
+\end{lemma}
+\begin{proof}
+The detailed proof can be found in \cite[App.~C.1.2]{massivemimobook}.
+\end{proof}
+
+Note that in Lemma~\ref{lemma:capacity-memoryless-random-interference}, we used the shorthand notation $\mathbb{E}\{ \upsilon | h, u \} $ for the conditional expectation $\mathbb{E}\{ \upsilon | \mathbb{H}= h, \mathbb{U} = u \} $. For notational convenience, we omit the random variables in similar expressions in the remainder of this monograph and only write out the realizations.
+
+The lower bound on the ergodic capacity in \eqref{eq:capacity-fading-channel-interference} is an achievable SE and will often be called that in this monograph. Except for the list of technical conditions that must be satisfied, the SE in \eqref{eq:capacity-fading-channel-interference} is essentially the same as for the case of deterministic channels in \eqref{eq:capacity-fixed-channel-interference}, but with an expectation in front of the logarithm.
+The expression $\frac{p |h|^2}{p_{\upsilon}(h,u) + \sigma^2}$ in \eqref{eq:capacity-fading-channel-interference} will be called the \emph{effective instantaneous SINR}, because it takes the same role as the instantaneous SNR in the ergodic capacity expression in \eqref{eq:capacity-fading-channel}. In other words, the capacity lower bound is equivalent to the ergodic capacity of a fading \gls{AWGN} channel where the instantaneous SNR is $\frac{p |h|^2}{p_{\upsilon}(h,u) + \sigma^2}$. This implies that the SE in \eqref{eq:capacity-fading-channel-interference} can be practically achieved using channel codes designed for fading \gls{AWGN} channels.
+
+
+When we use the SE expression result in Lemma~\ref{lemma:capacity-memoryless-random-interference} in later sections, the random interference term $\upsilon$ will not only include interference from other concurrent transmissions but also channel uncertainty due to estimation errors regarding the desired channel. In those cases, $h$ represents an estimate of the desired channel and $u$ represents the estimates of the interfering channels.
+
+
+\section{Maximization of Rayleigh Quotients}
+\label{sec:Rayleigh-quotient}
+
+A commonly appearing problem formulation in multi-antenna communications is that of maximizing a power ratio between the desired signal and interference plus noise. The optimization variable is a vector determining how the signal observations made at the different receive antennas are weighted together. For example, consider the received signal $\vect{y} \in \mathbb{C}^N$ at $N$ antennas. It is modeled as
+\begin{equation} \label{eq:Rayleigh-problem1}
+\vect{y} = \vect{h} x + \vect{n}
+\end{equation}
+where $\vect{h}  \in \mathbb{C}^N$ is a deterministic channel vector, $x$ is the random information signal with power $\mathbb{E}\{ |x|^2\} = 1$, and $\vect{n}\sim \CN(\vect{0}_N,\vect{I}_N)$ is independent noise.
+If we apply a receive combining vector $\vect{v}$ to \eqref{eq:Rayleigh-problem1}, we get
+\begin{equation}
+\vect{v}^{\Htran} \vect{y} =  \vect{v}^{\Htran} \vect{h} x +\vect{v}^{\Htran}  \vect{n}
+\end{equation}
+and the \gls{SNR} becomes
+\begin{equation} \label{eq:Rayleigh-problem1b}
+\frac{ \mathbb{E}\{ | \vect{v}^{\Htran} \vect{h} x  |^2 \} }{ \mathbb{E}\{ | \vect{v}^{\Htran}  \vect{n}  |^2 \} } = \frac{ | \vect{v}^{\Htran} \vect{h}  |^2  }{\vect{v}^{\Htran} \vect{v} }.
+\end{equation}
+The type of expression in the right-hand side of  \eqref{eq:Rayleigh-problem1b} is known as a \emph{Rayleigh quotient}\footnote{The expression in \eqref{eq:Rayleigh-problem1b} is also known as the Rayleigh--Ritz ratio. Note that the only connection between Rayleigh fading and Rayleigh quotient is that they have been named after the same researcher.} and can be maximized with respect to $\vect{v}$ as follows.
+
+\begin{lemma} \label{lemma:max-Rayleigh-quotient}
+For a given channel vector $\vect{h} \in \mathbb{C}^{N}$, it holds that 
+\begin{equation}
+\max_{\vect{v} \in \mathbb{C}^N} \quad \frac{  |  \vect{v}^{\Htran} \vect{h} |^2  }{ \vect{v}^{\Htran}  \vect{v}} = \| \vect{h} \|^2
+\end{equation}
+where the maximum is attained by $\vect{v} = \vect{h}$.
+\end{lemma}
+\begin{proof}
+The Cauchy-Schwarz inequality for two vectors $\vect{v}$ and $\vect{h}$ says~that \begin{equation}
+| \vect{v}^{\Htran} \vect{h} |^2 \leq \| \vect{v} \|^2 \, \| \vect{h} \|^2
+\end{equation}
+with equality if and only if $\vect{v}$ and $\vect{h}$ are linearly dependent. It follows that $\frac{| \vect{v}^{\Htran} \vect{h} |^2}{\| \vect{v} \|^2 } \leq  \| \vect{h} \|^2$ where the maximum is attained for $\vect{v} = \vect{h}$ (among other solutions where the vectors are linearly dependent).
+\end{proof}
+
+\enlargethispage{0.5\baselineskip} 
+
+The result in Lemma~\ref{lemma:max-Rayleigh-quotient} is commonly used in signal processing and the optimal vector $\vect{v}$ is known as \gls{MR} combining or matched filtering. This method maximizes the SNR, however, it is a generalization that will be particularly useful in this monograph. Let us generalize \eqref{eq:Rayleigh-problem1} by replacing the \gls{iid} noise term $\vect{n}$ with the colored noise term $\vect{n}' \sim \CN(\vect{0}_N,\vect{B})$ having a positive definite covariance matrix $\vect{B} \in \mathbb{C}^{N \times N}$. The new received signal is
+\begin{equation} \label{eq:Rayleigh-problem2}
+\vect{y} = \vect{h} x + \vect{n}'
+\end{equation}
+and by applying a receive combining vector $\vect{v}$ to \eqref{eq:Rayleigh-problem2}, the SNR becomes
+\begin{equation}
+\frac{ \mathbb{E}\{ | \vect{v}^{\Htran} \vect{h} x  |^2 \} }{ \mathbb{E}\{ | \vect{v}^{\Htran}  \vect{n}'  |^2 \} } = \frac{ | \vect{v}^{\Htran} \vect{h}  |^2  }{\vect{v}^{\Htran} \vect{B} \vect{v} }.
+\end{equation}
+This type of expression is known as a \emph{generalized Rayleigh quotient} and can be maximized with respect to $\vect{v}$ as follows.
+
+
+\begin{lemma} \label{lemma:gen-rayleigh-quotient}
+For a given channel vector $\vect{h} \in \mathbb{C}^{N}$ and Hermitian positive definite matrix $\vect{B} \in \mathbb{C}^{N \times N}$, it holds that
+\begin{equation} \label{eq:gen-rayleigh-quotient}
+\max_{\vect{v} \in \mathbb{C}^N} \quad \frac{  |  \vect{v}^{\Htran} \vect{h} |^2  }{ \vect{v}^{\Htran} \vect{B} \vect{v}} = \vect{h}^{\Htran} \vect{B}^{-1} \vect{h}
+\end{equation}
+where the maximum is attained by $\vect{v} = \vect{B}^{-1} \vect{h}$ or $\vect{v} = (\vect{h} \vect{h}^{\Htran}+\vect{B})^{-1} \vect{h}$.
+\end{lemma}
+\begin{proof}
+The matrix square root $\vect{B}^{\frac12}$ of $\vect{B}$ exists since $\vect{B}$ is positive definite, thus we can define the new variable $\bar{\vect{v} } = \vect{B}^{\frac12} \vect{v}$ and establish that
+\begin{equation}
+\frac{  |  \vect{v}^{\Htran} \vect{h} |^2  }{ \vect{v}^{\Htran} \vect{B} \vect{v}}  = \frac{  |  \bar{\vect{v}}^{\Htran} \vect{B}^{-\frac12} \vect{h} |^2  }{  \bar{\vect{v}}^{\Htran} \bar{\vect{v}}  }.
+\end{equation}
+The expression at the right-hand side is a Rayleigh quotient of the kind in Lemma~\ref{lemma:max-Rayleigh-quotient} and, thus, maximized by $\bar{\vect{v} } = \vect{B}^{-\frac12} \vect{h}$. Hence, the solution to \eqref{eq:gen-rayleigh-quotient} is $\vect{v} = \vect{B}^{-1} \vect{h}$ and the maximum value follows accordingly.
+Since any vector that is parallel to $ \vect{B}^{-1} \vect{h}$ also achieves the maximum value, we can also use
+$\vect{v} = (\vect{h} \vect{h}^{\Htran}+\vect{B})^{-1} \vect{h}$ since
+\begin{equation}
+(\vect{h} \vect{h}^{\Htran}+\vect{B})^{-1} \vect{h} = \frac{1}{1+\vect{h}^{\Htran} \vect{B}^{-1} \vect{h}} \vect{B}^{-1} \vect{h}
+\end{equation}
+according to the matrix-inversion lemma (Lemma~\ref{lemma:matrix-inversion} on p.~\pageref{lemma:matrix-inversion}).
+\end{proof}
+
+This lemma shows how to maximize a generalized Rayleigh quotient and what the maximum value is. The solution to \eqref{eq:gen-rayleigh-quotient} is not unique but  $\vect{v} = c \vect{B}^{-1} \vect{h}$ for any $c \neq 0$ will also maximize the expression.
+This lemma will be utilized several times in Section~\ref{c-uplink} on p.~\pageref{c-uplink} to optimize different kinds of receiver processing in the uplink.
+
+
+
+
+
+\section{Optimization Algorithms for Utility Maximization}
+\label{sec:optimization-algorithms}
+
+
+A utility function is a metric of system performance and can be formulated in different ways.
+In this section, we provide state-of-the-art optimization algorithms for solving two main types of utility maximization problems. These algorithms will be utilized in Section~\ref{c-resource-allocation} on p.~\pageref{c-resource-allocation} to solve several resource allocation problems.
+
+The SE is used in this monograph to measure the communication performance of each UE. When designing the network operation, there are $K$ different SEs to take into consideration and these are mutually conflicting due to interference. For example, we can improve the SE of one UE by reducing the transmit powers assigned to other UEs, but with the side-effect that the SEs achieved by the other UEs are then reduced. To identify a good tradeoff between the UEs' individual performance, a scalar-valued utility function can be defined to take all the SEs into consideration. This is called scalarization in the field of multi-objective optimization \cite{Bjornson2014c}. We will consider two utilities: max-min fairness and sum SE.
+
+Since we have not provided any explicit SE expressions for User-centric Cell-free Massive MIMO systems yet, the presentation in this section is based on a generic \gls{SISO} scenario. Suppose the received signal used for decoding the signal of UE $k$ can be expressed as 
+\begin{align}
+y_k=\mathrm{DS}_k\left(\vect{p}\right)s_k+\sum_{i=1}^K\mathrm{I}_{ki}\left(\vect{p}\right)s_i+n_k \label{eq:SISO-received}
+\end{align}
+where $s_k \in \mathbb{C}$ denotes the normalized, independent random data signal of UE $k$ with $\mathbb{E}\{|s_k|^2\}=1$ and $\vect{p}=[p_1 \, \ldots \, p_K]^{\Ttran}$ is the set of transmit power coefficients for all the $K$ UEs.\footnote{As we see in Section~\ref{c-downlink} on p.~\pageref{c-downlink}, there can be more than one transmit power coefficient per UE in the downlink. Although here we assume the length of the vector $\vect{p}$ is $K$, we can simply change it for the mentioned downlink power allocation optimization.} The transmit powers are non-negative: $p_k\geq0$, for $k=1,\ldots,K$. We write this as $\vect{p} \geq \vect{0}_K$.
+
+The received signal in \eqref{eq:SISO-received} contains three parts. The term $\mathrm{DS}_k(\vect{p})s_k$ is the desired part, containing the data signal $s_k$ multiplied with a deterministic amplitude $\mathrm{DS}_k(\vect{p})$ that is a function of $\vect{p}$ (it usually only depends on $p_k$). The interference term $\sum_{i=1}^K\mathrm{I}_{ki}(\vect{p})s_i$ contains the interfering data signal $s_i$ of UE $i$, for $i=1,\ldots,K$, and the term $\mathrm{I}_{ki}(\vect{p})$ is random and determines the strength of the interference caused to UE $k$ by UE $i$. This term is also a function of $\vect{p}$. Note that we have included a self-interference term $\mathrm{I}_{kk} (\vect{p})s_k$ with a random amplitude $\mathrm{I}_{kk}(\vect{p})$, which we further assume to have zero mean. This term can model the uncertainty that the receiver has regarding the channel that the desired signal propagated over, which will be utilized and further explained in later sections. Finally, $n_k \sim \mathcal{N}_{\mathbb{C}}\left(0,\sigma^2\right)$ is the independent additive noise.
+
+We obtain the following result by using Lemma~\ref{lemma:capacity-memoryless-deterministic-interference}. 
+
+\begin{lemma} \label{lemma:generic-SINR-expression}
+An achievable SE of the channel for UE $k$ in \eqref{eq:SISO-received} is 
+\begin{align} \label{eq:SISO-received-SE}
+\mathrm{SE}_k\left(\vect{p}\right)=\log_2\left(1+\mathrm{SINR}_k\left(\vect{p}\right)\right)
+\end{align}
+where the effective SINR is
+\begin{align}\label{eq:SISO-received-SINR}
+\mathrm{SINR}_k\left(\vect{p}\right)=\frac{\left|\mathrm{DS}_k\left(\vect{p}\right)\right|^2}{\sum\limits_{i=1}^K\mathbb{E}\left\{\left|\mathrm{I}_{ki}\left(\vect{p}\right)\right|^2\right\}+\sigma^2}.
+\end{align}
+\end{lemma}
+\begin{proof}
+We obtain this result from Lemma~\ref{lemma:capacity-memoryless-deterministic-interference} by letting $y=y_k$ be the received signal in the lemma, $x= s_k$ is the desired signal, $h=\mathrm{DS}_k(\vect{p})$ is the channel response, and $n=n_k$ is the noise. The interference term $\upsilon = \sum_{i=1}^K\mathrm{I}_{ki}(\vect{p})s_i$ is random with zero mean and variance  $p_{\upsilon} = \sum_{i=1}^K\mathbb{E}\{|\mathrm{I}_{ki}(\vect{p})|^2\}$ since the data signals have zero mean, unit variance, and are independent. The condition $\mathbb{E}\{ x^{\star} \upsilon \} = 0$ is satisfied since $\mathrm{I}_{kk}(\vect{p})$ was assumed to have zero mean.
+\end{proof}
+
+With the notation provided by Lemma~\ref{lemma:generic-SINR-expression}, the individual performance of the UEs are represented by their $K$ SEs $\{\mathrm{SE}_k(\vect{p}):k=1,\ldots,K\}$, which are $K$ different performance metrics. 
+For each choice of the transmit power vector $\vect{p}$, the $K$ UEs will achieve a certain combination of SEs that can be gathered in a $K$-dimensional vector $[ \mathrm{SE}_1(\vect{p}) \, \ldots \, \mathrm{SE}_K(\vect{p})]^{\Ttran}$. By considering the set of all such vectors that can be obtained with feasible transmit power vectors (i.e., those satisfying a set of power constraints that exist in the system), we can generate a $K$-dimensional region that represents all the possible ways of operating the system. This region is called an SE region and is exemplified in Figure~\ref{figure:basic_rate_region} for $K=2$. The shaded region contains all the feasible operating points. We need to select one of these points and there is no truly optimal way to do it. All the points in the interior of the region are strictly suboptimal since there are points at the outer boundary where all the UEs achieve higher SEs. On the other hand, each point on the outer boundary represents one possible tradeoff between the performance achieved by the different UEs. When comparing two points on the outer boundary, one UE will prefer the first point and another UE will prefer the second point. This conflict cannot be resolved in a fully objective manner but the network operator must inject a subjective opinion of what kind of operating point is preferred by the network as a whole.
+
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section3/basic_rate_region}
+		\put(15,46){\small{Outer boundary}}
+		\put(80.5,29){\small{Maximum}}
+		\put(80.5,26){\small{sum SE}}
+		\put(89,17){\small{$45^\circ$}}
+		\put(14,9){\small{$45^\circ$}}
+		\put(48,42){\small{Max-min fairness}}
+		\put(48,0){\small{$\mathrm{SE}_1(\vect{p})$}}
+		\put(0,23){\rotatebox{90}{\small{$\mathrm{SE}_2(\vect{p})$}}}
+	\end{overpic}  
+	\caption{Example of the SE region (shaded) containing all the points $(\mathrm{SE}_1(\vect{p}),\mathrm{SE}_2(\vect{p}))$ that can be obtained by different feasible selections of the power coefficient vector $\vect{p}$. The points at the outer boundary that give max-min fairness and maximum sum SE are indicated.}
+	\label{figure:basic_rate_region}  
+\end{figure}
+
+As mentioned at the beginning of this section, we will adopt the scalarization approach to identify a tradeoff between the $K$ metrics \cite{Bjornson2014c}. This means that we combine the  $K$ SE metrics into a single scalar utility function representing the network-wide performance. We consider the two most common utility functions from the literature: max-min fairness and sum SE. These utilities represent two extremes in how to balance between transmitting many bits and obtaining user fairness.
+The max-min fairness utility requires every UE to get the same SE, which means that the optimal operating point in Figure~\ref{figure:basic_rate_region} lies on a line from the origin with $45^\circ$ slope. As indicated in the figure, the max-min fairness solution is the point where this line intersects the outer boundary.
+The maximum sum SE is generally obtained at another operating point, as illustrated in Figure~\ref{figure:basic_rate_region}. It lies on a line with equation $\mathrm{SE}_1(\vect{p})+\mathrm{SE}_2(\vect{p})=c$, where $c$ is the maximum achievable sum SE. While this point maximizes the number of bits that are transmitted in total, the downside is that the bits are unequally distributed among the UEs. In this example, UE 2 gets a smaller SE than at the max-min fairness point, while UE 1 gets a larger SE. In the remainder of this section, we will describe algorithms for finding these operating points in networks with arbitrarily many UEs.
+
+
+\subsection{Max-Min SE Fairness}
+
+The aim of max-min SE fairness is to maximize the lowest SE among all the UEs in the network, which is known as max-min fairness. Since the SE of UE $k$ in \eqref{eq:SISO-received-SE} is an increasing function of the effective SINR, $\mathrm{SINR}_k(\vect{p})$, maximizing the minimum SE is the same as maximizing the minimum effective SINR among all the UEs.
+We assume there are $R$ linear constraints on the transmit power vector:
+\begin{equation}
+\vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R,
+\end{equation}
+where the fixed vector $\vect{a}_r\in \mathbb{R}_{\geq 0}^{K}$ specifies the weighting coefficient for each UE's power coefficient and $p_{\textrm{max}}$ is the maximum allowed power,\footnote{This model can be utilized for both downlink and uplink power allocations. In the downlink, per-AP power constraints are considered, which leads to $L$ power constraints (one per AP). In this case, the non-zero elements of $\vect{a}_{l}$ are multiplied with the power coefficients for the UEs that are served by AP $l$. On the other hand, in the uplink, there are $K$ individual power constraints (one per UE). Hence, only the $k$th element of the vector $\vect{a}_k$ is non-zero while all other elements are zero.} the max-min fairness problem can be formulated as
+\begin{align} \label{eq:maxmin-fairness-problem}
+&\underset{\vect{p} \geq \vect{0}_K}{\textrm{maximize}} \quad \min\limits_{k\in \{1,\ldots,K\}} \quad \mathrm{SINR}_k\left(\vect{p}\right) \\
+&\textrm{subject to} \quad \vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R.  \nonumber
+\end{align}
+To solve this problem, we first introduce the auxiliary variable $t$ that represents the lowest SINR among all the UEs. We can then obtain the following optimization problem that is equivalent to \eqref{eq:maxmin-fairness-problem} in terms of having the same maximum utility value and optimal value of $\vect{p}$:
+\begin{align} \label{eq:maxmin-fairness-problem-t}
+&\underset{\vect{p}\geq \vect{0}_K, t \geq 0}{\textrm{maximize}} \quad t \\
+&\textrm{subject to} \quad  \mathrm{SINR}_k\left(\vect{p}\right)\geq t, \quad k=1,\ldots,K \nonumber \\
+&\hspace{21mm} \vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R.\nonumber
+\end{align}
+The equivalence of the two problems can be verified by noting that $t$ is at most equal to the lowest SINR among the UEs and it should be equal to that value to maximize the objective function. The reformulation in \eqref{eq:maxmin-fairness-problem-t} is known as the epigraph form of \eqref{eq:maxmin-fairness-problem} \cite[Sec.~3.1.7]{Boyd2004a}.
+
+An optimal solution to the problem in \eqref{eq:maxmin-fairness-problem-t} can be obtained by a bisection search over $t$. To see this, let $t^{\rm opt}$ denote the optimal objective value of the problem in \eqref{eq:maxmin-fairness-problem-t}. If we select $t>t^{\rm opt}$ in \eqref{eq:maxmin-fairness-problem-t}, the problem will obviously be infeasible.
+On the other hand, if we select any $t<t^{\rm opt}$, the problem in \eqref{eq:maxmin-fairness-problem-t} is feasible. Hence, we can apply a bisection search over $t$ to find $t^{\rm opt}$ \cite[Sec.~4.2.5]{Boyd2004a}.
+At each iteration, we consider a value $t=t^{\rm candidate}$ and need to solve the following feasibility problem:
+\begin{align} \label{eq:maxmin-fairness-feasibility}
+&\textrm{find} \quad \vect{p} \\
+&\textrm{subject to} \quad  \mathrm{SINR}_k\left(\vect{p}\right)\geq t^{\rm candidate}, \quad k=1,\ldots,K \nonumber \\
+&\hspace{21mm} \vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R \nonumber \\
+&\hspace{21mm} \vect{p} \geq \vect{0}_K \nonumber.
+\end{align}
+The goal of solving the feasibility problem in \eqref{eq:maxmin-fairness-feasibility} is to find any solution $\vect{p}$ that satisfies the constraints. The numerical precision that is needed to find the value of $t^{\rm candidate}$ that corresponds to the global optimum can be extremely high, particularly if some variables in $\vect{p}$ have a much smaller impact on the SINR of the UE with the worst channel conditions than the other variables.
+One can prove by contradiction that all UEs should get identical SINRs at the global optimum but this is only one of the many feasible solutions to the feasibility problem in \eqref{eq:maxmin-fairness-feasibility} for any $t^{\rm candidate}<t^{\rm opt}$. We have noticed experimentally that this is a real issue when optimizing large cell-free networks, where some of the serving APs have much weaker channels than other serving APs.
+To improve the convergence rate, we will therefore replace the feasibility problem with a problem having the same constraints but where the total power $\sum_{k=1}^{K}p_k $ is minimized as well. This will encourage numerical solvers to identify the feasible point where all UEs get the same SINR, while retaining optimality. By utilizing this property, we obtain Algorithm~\ref{alg:bisection} where the revised subproblem is given in \eqref{eq:maxmin-fairness-feasibility2}. 
+\begin{algorithm}
+	\caption{Bisection search algorithm for solving the max-min fairness problem in \eqref{eq:maxmin-fairness-problem-t}.} \label{alg:bisection}
+	\begin{algorithmic}[1]
+\State {\bf Initialization:} Set the solution accuracy $\epsilon>0$
+\State Set the initial lower and upper bounds for the max-min SINR:
+\State $t^{\rm lower}\gets0$
+\State $t^{\rm upper}\gets \underset{k\in \{1,\ldots,K\}}{\min}\quad  \underset{\vect{p} \geq \vect{0}_K}{\max} \quad  \textrm{SINR}_k\left(\vect{p}\right)$
+\State Initialize solution variables: $\vect{p}^{\rm opt}=\vect{0}_K$, $t^{\rm opt}=0$
+\While{$t^{\rm upper}-t^{\rm lower}>\epsilon$}
+\State $t^{\rm candidate}\gets \frac{t^{\rm lower}+t^{\rm upper}}{2}$
+\State Solve the following problem for fixed $t=t^{\rm candidate}$:
+\begin{align} \label{eq:maxmin-fairness-feasibility2}
+&\underset{\vect{p} \geq \vect{0}_K}{\textrm{minimize}} \quad \, \sum_{k=1}^Kp_k \\
+&\textrm{subject to} \quad  \mathrm{SINR}_k\left(\vect{p}\right)\geq t^{\rm candidate}, \quad k=1,\ldots,K \nonumber \\
+&\hspace{21mm} \vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R \nonumber \\
+&\hspace{21mm} \vect{p} \geq \vect{0}_K \nonumber
+\end{align}
+\If{\eqref{eq:maxmin-fairness-feasibility2} is feasible}
+\State $t^{\rm lower}\gets t^{\rm candidate}$
+\State $\vect{p}^{\rm opt} \gets \vect{p}$, which is the solution to \eqref{eq:maxmin-fairness-feasibility2}
+\Else
+\State  $t^{\rm upper}\gets t^{\rm candidate}$
+\EndIf
+\EndWhile
+		\State {\bf Output:} $\vect{p}^{\rm opt}$, $t^{\rm opt}=\underset{k\in \{1,\ldots,K\}}{\min} \textrm{SINR}_k\left(\vect{p}^{\rm opt}\right)$
+	\end{algorithmic}
+	\end{algorithm}
+
+Instead of solving a sequence of optimization problems, as in Algorithm~\ref{alg:bisection}, a fixed-point algorithm can be implemented when the SINR expression satisfies certain additional conditions stated in the next lemma from \cite[Lemma~1, Theorem~1]{Hong2014}. 
+
+\newpage
+
+\begin{lemma}\label{lemma:fixed-point}
+Suppose $\left\{\textrm{SINR}_k\left(\vect{p}\right):k=1,\ldots,K\right\}$ satisfy the following:
+\begin{enumerate}	
+   \item $\textrm{SINR}_k\left(\vect{p}\right)>0$ if $\vect{p}>\vect{0}_K$ and $\textrm{SINR}_k\left(\vect{p}\right)=0$ if and only if $p_k=0$, $\forall k$;
+   \item $\textrm{SINR}_k\left(\vect{p}\right)$ is strictly increasing with respect to $p_k$ and is strictly decreasing with respect to $p_i$, for $i\neq k$, when $p_k>0$, $\forall k$;
+  \item For $\lambda > 1$ and $p_k > 0$, $\textrm{SINR}_k\left(\lambda\vect{p}\right)>\textrm{SINR}_k\left(\vect{p}\right)$, $\forall k$. 
+  \end{enumerate}
+The optimal solution to the optimization problem in \eqref{eq:maxmin-fairness-problem-t} then satisfies $t^{\rm opt}>0$ and $\vect{p}^{\rm opt}>\vect{0}_K$. Moreover, $\textrm{SINR}_k\left(\vect{p}^{\rm opt}\right)=t^{\rm opt}$, for all $k$ and $\vect{a}_r^{\Ttran}\vect{p}^{\rm opt}= p_{\textrm{max}}$, for at least one $r$. 
+
+Define $\vect{T}\left(\vect{p}\right)=\left[ p_1\big/\textrm{SINR}_1\left(\vect{p}\right) \ \ldots \  p_K\big/\textrm{SINR}_K\left(\vect{p}\right) \right]^{\Ttran}$ and let $\mathcal{U}$ denote the set of feasible $\vect{p}$ that satisfies this last property:
+\begin{align}
+\mathcal{U}=\big\{\vect{p}\geq \vect{0}_K: \, & \vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R, \nonumber \\ 
+&\text{ with at least one equality for some }r \big\}.
+\end{align} 
+The power vector $\vect{p}$ computed by Algorithm~\ref{alg:fixed-point} converges to the optimal solution to \eqref{eq:maxmin-fairness-problem-t} if the following additional conditions are satisfied:
+\begin{itemize}
+\item  There exist numbers $a > 0$, $b > 0$, and a vector $\vect{e} > \vect{0}_K$ such that $a\vect{e} \leq \vect{T}\left(\vect{p}\right) \leq b\vect{e}$, for all $\vect{p}\in \mathcal{U}$;
+\item For any $\vect{p}_1, \vect{p}_2 \in \mathcal{U}$ and $0\leq \lambda \leq 1$: $\lambda\vect{p}_1\leq \vect{p}_2 \implies \lambda\vect{T}\left(\vect{p}_1\right)\leq \vect{T}\left(\vect{p}_2\right)$;
+\item For any $\vect{p}_1, \vect{p}_2 \in \mathcal{U}$ and $0\leq \lambda < 1$:  $\lambda\vect{p}_1\leq \vect{p}_2$ and $\lambda\vect{p}_1\neq \vect{p}_2$  $\implies \lambda\vect{T}\left(\vect{p}_1\right)< \vect{T}\left(\vect{p}_2\right)$.
+\end{itemize}
+\end{lemma}
+
+
+Whenever the conditions stated in Lemma~\ref{lemma:fixed-point} are satisfied, the fixed-point algorithm in Algorithm~\ref{alg:fixed-point} should be utilized to solve the max-min fairness problem since it fully utilizes the SINR structure.
+
+
+\begin{algorithm}
+	\caption{Fixed-point algorithm for solving the max-min fairness problem in \eqref{eq:maxmin-fairness-problem-t}.} \label{alg:fixed-point}
+	\begin{algorithmic}[1]
+		\State {\bf Initialization:} Set arbitrary $\vect{p}>\vect{0}_K$ and the solution accuracy $\epsilon>0$
+		\While{$\underset{k\in\{1,\ldots,K\}}{\max} \textrm{SINR}_k\left(\vect{p}\right)-\underset{k\in\{1,\ldots,K\}}{\min} \textrm{SINR}_k\left(\vect{p}\right) > \epsilon$} 
+		\State $p_k \gets \frac{p_k}{\textrm{SINR}_k\left(\vect{p}\right)}$, $k=1,\ldots,K$
+		\State $\vect{p} \gets \frac{p_{\rm max}}{\underset{r\in\{1,\ldots,R\}}{\max}\vect{a}_r^{\Ttran}\vect{p}}\vect{p}$
+		\EndWhile
+		\State {\bf Output:} $\vect{p}$, $t=\underset{k\in\{1,\ldots,K\}}{\min} \textrm{SINR}_k\left(\vect{p}\right)$
+	\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Sum SE Maximization}
+
+A potential drawback of the max-min SE fairness problem is that all the emphasis is put on the UEs with the worst channel conditions. When having a large network where every UE only causes interference to a small subset of neighboring UEs, it is likely that many UEs can achieve substantially larger SEs while barely affecting the UEs having the worst conditions. 
+In these situations, it might be better to maximize the sum SE, which represents the total number of bits that are transmitted without considering how the bits are assigned between the UEs.
+The sum SE maximization problem can be expressed as
+ \begin{align}
+ &\underset{\vect{p} \geq \vect{0}_K}{\textrm{maximize}} \quad \sum\limits_{k=1}^K  \log_2\left(1+\mathrm{SINR}_k\left(\vect{p}\right)\right) \nonumber\\
+ &\textrm{subject to} \quad \vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R. \label{eq:sum-SE-maximization}
+ \end{align}
+Note that the above problem is usually not convex and, hence, it is hard to obtain the optimal solution \cite{Luo2008a}. There exist global optimization methods \cite{Bjornson2013d}, \cite{Weeraddana2012a} that find the optimum but their computational complexity is unsuitable for real-time applications. A pragmatic solution is to instead settle for a local optimum. A common approach for finding a local optimum to sum SE maximization problems is the \emph{weighted MMSE} method \cite{Shi2011}, which results in iterative algorithms.
+
+
+
+
+To obtain the weighted MMSE reformulation of the sum SE maximization problem at hand, we recall the \gls{SISO} channel for UE $k$ in \eqref{eq:SISO-received} where the received signal is $y_k$. The receiver can compute an estimate $\widehat{s}_{k}=u_{k}^{\star}y_{k}$ of the desired signal $s_{k}$ using a scalar combining coefficient $u_{k} \in\mathbb{C}$ that can amplify it and rotate the phase. The corresponding \gls{MSE} is given by
+\begin{align} \nonumber
+&e_k\left(\vect{p}, u_k\right)=\mathbb{E}\left\{\left|\widehat{s}_{k}-s_{k}\right|^2\right\} \\
+&=\left|u_{k}\right|^2\left(\left|\textrm{DS}_{k}\left(\vect{p}\right)\right|^2+\sum\limits_{i=1}^K\mathbb{E}\left\{\left|\textrm{I}_{ki}\left(\vect{p}\right)\right|^2\right\}+\sigma^2\right) -2\Re\left(u_{k}^{\star}\textrm{DS}_{k}\left(\vect{p}\right)\right)+1  \label{eq:ek-MSE}
+\end{align}
+and it is a convex function of $u_k$. One can show that the value of $u_k$ that minimizes the MSE for UE $k$ in \eqref{eq:ek-MSE} for a given $\vect{p}$ is 
+\begin{align} \label{eq:uk}
+u_{k}\left(\vect{p}\right)=\frac{\textrm{DS}_{k}\left(\vect{p}\right)}{\left|\textrm{DS}_{k}\left(\vect{p}\right)\right|^2+\sum\limits_{i=1}^K\mathbb{E}\left\{\left|\textrm{I}_{ki}\left(\vect{p}\right)\right|^2\right\}+\sigma^2}.
+\end{align} 
+After plugging $u_{k}\left(\vect{p}\right)$ into \eqref{eq:ek-MSE}, it follows that the corresponding $e_k$ is equal to $1/\left(1+\textrm{SINR}_{k}\left(\vect{p}\right)\right)$. 
+
+The main idea of the weighted MMSE method is to introduce the auxiliary weight $d_{k}\geq 0$ for the MSE $e_{k}$ and attempt to solve the following optimization problem:
+\begin{align} \label{eq:sum-SE-maximization-weighted-MMSE} 
+&\underset{\vect{p} \geq \vect{0}_K,  \left\{u_{k}, \ d_{k}\geq 0 : \, k=1,\ldots,K\right\}}{\textrm{minimize}} \quad \sum_{k=1}^K\Big(d_{k}e_{k}\left(\vect{p},u_k\right)-\ln\left( d_{k}\right)\Big)  \\
+&\hspace{1.1cm}\textrm{subject to} \quad \vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R. \nonumber
+\end{align}
+The problem is equivalent to the original sum SE maximization problem in \eqref{eq:sum-SE-maximization} in the sense that they have the same global optimal solution.
+The equivalence of the two problems follows from the fact that the optimal $d_{k}$ in \eqref{eq:sum-SE-maximization-weighted-MMSE} is $1/e_{k}$, which is equal to $1+\textrm{SINR}_{k}$. Hence, we obtain the original sum SE maximization problem  in \eqref{eq:sum-SE-maximization} with the same constraints. The benefit of the reformulation in \eqref{eq:sum-SE-maximization-weighted-MMSE} is that we have the following result that is adapted from \cite[Theorem 3]{Shi2011}.
+
+
+
+\begin{lemma}  \label{theorem:weighted-MMSE-convergence} The block coordinate descent algorithm given in Algorithm~\ref{alg:sum-SE} converges to a local optimum (stationary point) of the problem in \eqref{eq:sum-SE-maximization-weighted-MMSE} by alternating between optimizing three blocks of variables: $\left\{u_{k}:k=1,\ldots,K\right\}$, $\left\{d_{k}:k=1,\ldots,K\right\}$, and $\vect{p}$. The obtained $\vect{p}$ is also a local optimum to the problem in \eqref{eq:sum-SE-maximization}.
+	\end{lemma}
+
+
+\begin{algorithm}
+	\caption{Block coordinate descent algorithm for solving the sum SE maximization problem in \eqref{eq:sum-SE-maximization-weighted-MMSE}.} \label{alg:sum-SE}
+	\begin{algorithmic}[1]
+		\State {\bf Initialization:} Set the solution accuracy $\epsilon>0$
+		\State Set an arbitrary feasible $\vect{p}$
+		\While{ the objective function is either improved more than $\epsilon$ or not improved at all}
+		\State $u_{k} \gets \frac{\textrm{DS}_{k}\left(\vect{p}\right)}{\left|\textrm{DS}_{k}\left(\vect{p}\right)\right|^2+\sum\limits_{i=1}^K\mathbb{E}\left\{\left|\textrm{I}_{ki}\left(\vect{p}\right)\right|^2\right\}+\sigma^2}, \quad k=1,\ldots,K$
+		\State $d_k \gets 1/e_k\left(\vect{p},u_k\right), \quad k=1,\ldots,K$
+		\State Solve the following problem for the current values of  $u_k$ and $d_k$:
+		\begin{align}
+		&\underset{\vect{p} \geq \vect{0}_K}{\textrm{minimize}} \quad \sum_{k=1}^Kd_{k}e_{k}\left(\vect{p},u_k\right) \label{eq:sum-SE-maximization-weighted-MMSE-subproblem} \\
+		&\hspace{0cm}\textrm{subject to} \quad \vect{a}_r^{\Ttran}\vect{p}\leq p_{\textrm{max}}, \quad r=1,\ldots,R  \nonumber
+		\end{align}
+		\State Update $\vect{p}$ by the obtained solution to \eqref{eq:sum-SE-maximization-weighted-MMSE-subproblem}
+		\EndWhile
+		\State {\bf Output:} $\vect{p}$
+	\end{algorithmic}
+\end{algorithm}
+
+When implementing Algorithm~\ref{alg:sum-SE}, the subproblem in \eqref{eq:sum-SE-maximization-weighted-MMSE-subproblem} is required to be solved optimally with respect to $\vect{p}$ (when the other variables are kept constant), otherwise, the block coordinate descent algorithm will not converge to a local optimum. Fortunately, the problem in \eqref{eq:sum-SE-maximization-weighted-MMSE-subproblem} is convex for the power allocation problems we consider in Section~\ref{c-resource-allocation} on p.~\pageref{c-resource-allocation} and the optimal solution can, thus, be obtained by any of the standard algorithms from convex optimization theory \cite{Boyd2004a}.
+We elaborate further on this in Remark~\ref{remark:convex-solvers} on p.~\pageref{remark:convex-solvers}.
+
+
+\newpage
+
+\section{Summary of the Key Points in Section~\ref{c-theoretical-foundations}}
+\label{c-theoretical-foundations-summary}
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+\item The realization of a complex Gaussian distributed random variable can be estimated using the \gls{MMSE} estimator presented in Lemma~\ref{lemma:MMSE-estimator}. It will be used in later sections for channel estimation.
+
+\item The channel capacity is a suitable performance metric in broadband applications and will be utilized throughout this monograph. The exact capacity is hard to compute in situations with interference or limited channel knowledge, but there are lower bounds that can be utilized and achieved in practice. Lemma~\ref{lemma:capacity-memoryless-deterministic-interference} presents a lower bound for deterministic channels and Lemma~\ref{lemma:capacity-memoryless-random-interference} presents a lower bound for fading channels. Both will be utilized in later sections.
+
+\item A lower bound on the capacity is called an achievable SE if there is a known way to achieve it. The capacity lower bounds presented in this section will be called SEs in later sections and are achievable using channel codes designed for AWGN channels.
+
+\item A commonly appearing problem in multi-antenna communications is that of maximizing a power ratio between the desired signal and interference plus noise. This problem can be formalized as a generalized Rayleigh quotient. Lemma~\ref{lemma:gen-rayleigh-quotient} shows how to maximize it and what its maximum value is.
+
+
+\item The $K$ SEs of the UEs can be combined into a single scalar utility function that can be maximized, for example, with respect to the transmit power coefficients. Two examples of utility functions are max-min fairness and sum SE. The corresponding utility maximization problems are solved by Algorithm~\ref{alg:bisection} and Algorithm~\ref{alg:sum-SE}, respectively.
+
+\end{itemize}
+
+\end{mdframed}

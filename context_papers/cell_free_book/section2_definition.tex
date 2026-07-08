@@ -1,0 +1,688 @@
+%!TEX root = cell-free-book.tex
+
+
+\chapter{User-Centric Cell-Free Massive MIMO Networks}
+\label{c-cell-free-definition} 
+
+This section introduces the basic system model and concepts related to a User-centric Cell-free Massive MIMO network, which will be used in the remainder of this monograph. Section~\ref{def:cell-free-Massive-MIMO} provides a formal definition of Cell-free Massive MIMO. The user-centric operation is introduced in Section~\ref{sec:dynamic-clustering} based on the \gls{DCC} framework. The modulation and communication protocol are defined in Section~\ref{sec:signal-model-UL-and_DL}, along with the uplink and downlink system models. Section~\ref{sec:scalability} defines the meaning of network scalability and reviews the system model from that perspective. A sufficient condition for a cell-free network being scalable is provided. Section~\ref{sec:channel-modeling} introduces the channel model that will be used for analysis and performance evaluation in later sections. Section~\ref{sec:hardening-favorable} defines the concepts of channel hardening and favorable propagation, and analyzes them in the context of cell-free networks.
+The key points are summarized in Section~\ref{c-cell-free-definition-summary}.
+
+\enlargethispage{\baselineskip} 
+
+\section{Definition of Cell-Free Massive MIMO}\label{def:cell-free-Massive-MIMO}
+
+In Section~\ref{subsec-history-cellfree} on p.~\pageref{subsec-history-cellfree}, we defined Cell-free Massive MIMO as an ultra-dense network (i.e., many more APs than UEs) where the APs are cooperating to serve the UEs by joint coherent transmission and reception, while making use of the physical layer concepts from the Cellular Massive MIMO area. We will now turn this into a technical framework and then progressively add more details to it in later sections.
+
+
+
+We consider a network with $L$ \glspl{AP}, each equipped with $N$ antennas, that are geographically distributed over the coverage area, as shown in Figure~\ref{fig:cell-free-repeated}. We let $M=NL$ denote the total number of AP antennas in the network. The \glspl{AP}  are jointly serving $K$ single-antenna \glspl{UE}. More precisely, each \gls{UE} is communicating with a subset of the \glspl{AP}, which is selected based on the \gls{UE}'s needs. The \glspl{AP} are connected via fronthaul links to CPUs, which facilitate the \gls{AP} coordination.
+The cell-free architecture can also handle multi-antenna UEs, where the extra antennas are utilized to suppress interference or spatially multiplex several signals per UE. This case is not covered in this monograph because it substantially complicates the analysis and one can easily apply the presented theory to the multi-antenna case by treating each UE antenna as a separate UE. More intricate solutions can be found in \cite{Alonzo2019a}, \cite{Buzzi2017b}, \cite{Buzzi2020b}, \cite{Jin2019a}, \cite{Li2016b}, \cite{Mai2020a}. 
+
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section2/cellfree-repeated}
+		\put(79,40){\footnotesize{CPU}}
+		\put(2,23){\footnotesize{AP $l$}}
+		\put(45,42){\footnotesize{UE $k$}}
+	\end{overpic} 
+	\caption{A Cell-free Massive MIMO network consists of $L$  geographically distributed APs that jointly serve $K$ geographically distributed UEs. Each AP is equipped with $N$ antennas, while each UE has a single antenna.} 
+	\label{fig:cell-free-repeated}  
+\end{figure}
+
+\pagebreak
+The intended operating regime of Cell-free Massive \gls{MIMO} is $L \gg K$  \cite{Nayebi2017a}, \cite{Ngo2017b}, which is the mathematical definition of an ultra-dense network. This also implies $M \gg K$; that is, the total number of \gls{AP} antennas is much larger than the total number of \glspl{UE}, as in conventional Cellular Massive \gls{MIMO} systems \cite{Marzetta2010a}.
+The intention is that the cell-free network will, under these circumstances, have sufficiently many spatial degrees-of-freedom so that the \glspl{UE} can be separated in space by processing the transmitted and received signals. For example, whenever the \glspl{AP} focus the transmission towards a particular \gls{UE}, the focus area will be sufficiently small so that no other UE receives high interference. Moreover, the number of antennas $N$ per AP is intended to be small and each AP might serve more UEs than its antennas, thus AP cooperation is essential to suppress interference between the UEs.
+However, we stress that there is no need for a formal assumption of $M \gg K$ or $L \gg K$ in the analysis of User-centric Cell-free Massive \gls{MIMO} networks. The concepts and signal processing methods presented in this monograph hold for any value of $L$, $K$, and $N$. In fact, we will later extract Cellular Massive MIMO and small-cell networks as two special cases of the framework presented in this monograph, which enables a fair comparison between the technologies.
+
+
+\section{User-Centric Dynamic Cooperation Clustering}\label{sec:dynamic-clustering}
+
+The first papers on Cell-free Massive MIMO assumed all UEs were served by all APs, as mentioned in Section~\ref{subsec-history-cellfree} on p.~\pageref{subsec-history-cellfree}. This is both impractical and unnecessary in a geographically large network, where each UE is only physically close to a subset of APs. 
+By limiting the set of \glspl{AP} that is allowed to transmit to the \gls{UE}, the service quality will inevitably be reduced. However, if all APs that can reach the \gls{UE} with a signal power that is non-negligible compared to the thermal noise power take an active part in serving that \gls{UE}, then the performance loss should be negligible. This calls for a user-centric approach to the formation of the \gls{AP} clusters that serve each \gls{UE}. The practical benefits are that the fronthaul signaling is reduced when only a subset of the \glspl{AP} must receive the downlink data intended for the \gls{UE} and send their corresponding estimates of the uplink data to the \gls{CPU}. Moreover, the computational complexity is reduced when each \gls{AP} only needs to process signals related to a subset of the \glspl{UE}.
+
+To model which \glspl{AP} are serving which \glspl{UE}, we will make use of the \gls{DCC} framework initially proposed in \cite{Bjornson2011a}, \cite{Bjornson2013d}.\footnote{The \gls{DCC} framework was introduced to enable ``\emph{unified analysis of anything from interference channels to Network MIMO}''. Therefore, the user-centric cooperation clusters considered in Cell-free Massive MIMO is only one of the many instances of this framework.}
+
+\begin{definition}\label{definition:DCC}
+Dynamic cooperation clustering (DCC) means that \gls{UE} $k$ is served only by the \glspl{AP} with indices in the set $\mathcal{M}_k \subset \{ 1, \ldots, L\}$.
+\end{definition}
+
+The word \emph{dynamic} refers to the fact that the sets $\mathcal{M}_k$ can be adapted to time-variant characteristics, such as UE locations, service requirements, interference situation, etc. Figure~\ref{fig:illustrateCooperation} illustrates one instance of the DCC framework with four \glspl{UE} and a large number of \glspl{AP}. The colored regions illustrate which clusters of \glspl{AP} are serving which \glspl{UE}. The \glspl{AP} within a colored region are those with indices in the set $\mathcal{M}_k$ and we select them to involve all the neighboring ones. The fact that the clusters are partially overlapping between the \glspl{UE} is showcasing that this is a user-centric cell-free network; we cannot divide the \glspl{AP} into disjoint sets that serve disjoint subsets of the UEs. More generally, every AP is co-serving UEs with a set of other APs, which in turn are co-serving other UEs with another set of APs, and the chain continues like this until all APs have been considered (at least when many UEs are distributed over the coverage area).
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section2/cellfree-cooperation}
+		\put(13,35){\footnotesize{UE 1}}
+		\put(24,43){\footnotesize{AP cluster}}
+		\put(24,40){\footnotesize{for UE 1}}
+		\put(22,22){\footnotesize{UE 2}}
+		\put(3,17){\footnotesize{AP cluster}}
+		\put(3,14){\footnotesize{for UE 2}}
+		\put(50,42){\footnotesize{UE 3}}
+		\put(73,41){\footnotesize{AP cluster}}
+		\put(73,38){\footnotesize{for UE 3}}
+		\put(55,11){\footnotesize{UE 4}}
+		\put(83,3){\footnotesize{AP cluster}}
+		\put(83,0){\footnotesize{for UE 4}}
+	\end{overpic}  
+	\caption{Example of dynamic cooperation clusters for four \glspl{UE} in a Cell-free Massive MIMO network with a large number of \glspl{AP}.}
+	\label{fig:illustrateCooperation}  
+\end{figure}
+
+
+When analyzing the performance of the data transmission, we assume the sets $\mathcal{M}_k$, for $k=1,\ldots,K$, are fixed and known everywhere needed. The reason is that the dynamic variations occur over much larger time intervals than channel fading variations. More precisely, the data is transmitted in blocks that are sufficiently large to be subject to many fading realizations but only one realization of $\mathcal{M}_1,\ldots,\mathcal{M}_K$. Different ways to select these sets are later discussed in Section~\ref{sec:selecting-DCC} on p.~\pageref{sec:selecting-DCC}.
+
+For notational convenience, we also define a set of diagonal matrices $\vect{D}_{kl} \in \mathbb{C}^{N \times N}$, for $k=1,\ldots,K$ and $l=1,\ldots,L$, determining which APs communicate with which UEs. More precisely, $\vect{D}_{kl}$ is the identity matrix ${\bf I}_N$ if AP $l$ is allowed to transmit to and decode signals from UE $k$ and ${\bf 0}_{N\times N}$ otherwise. Following the notation from Definition~\ref{definition:DCC}, we have that
+\begin{equation}\label{eq:user-centric}
+\vect{D}_{kl}= \begin{cases}
+\vect{I}_N &  l \in \mathcal{M}_k \\ 
+\vect{0}_{N \times N} &  l \not \in \mathcal{M}_k. \end{cases}
+\end{equation}
+Note that if we select $\mathcal{M}_k=\{ 1, \ldots, L\}$, for $k=1,\ldots,K$ and, hence, all matrices $\vect{D}_{kl}=\vect{I}_N$, then we obtain the original form of Cell-free Massive \gls{MIMO} from \cite{Nayebi2017a}, \cite{Ngo2017b}, where all \glspl{AP} jointly serve all \glspl{UE} in the network.
+Another special case of the \gls{DCC} framework is a small-cell network, which is obtained by selecting $\mathcal{M}_k$ to have a single element for $k=1,\ldots,K$, so that each \gls{UE} is only served by one \gls{AP}.
+
+
+
+\section{System Models for Uplink and Downlink}\label{sec:signal-model-UL-and_DL}
+
+In electrical engineering, a \emph{system} is something that takes an input signal and filters it to produce an output signal. A wireless communication channel is an example of such a system: it filters the transmitted signal and outputs the received signal. In this subsection, we motivate and describe the system model for User-centric Cell-free Massive MIMO that is used in the remainder of this monograph. We begin by describing the block-fading model and introducing the coherence block concept.
+
+\subsection{Block Fading and Coherence Blocks}\label{sec:block-fading}
+
+The type of systems that are convenient to analyze is linear and time-invariant.
+Wireless channels are linear due to the superposition principle prescribed by Maxwell's equations. However, the channels are generally time-varying since the transmitter, receiver, and objects in the wireless propagation environment can move. Even minor movements over a distance proportional to the wavelength (i.e., a few millimeters or centimeters) will substantially change the channel. For example, the UE at the focus point in Figure~\ref{fig:distributed-focusing} on p.~\pageref{fig:distributed-focusing} only needs to move a quarter-of-a-wavelength to leave the area where the SNR is high. 
+However, if we consider a sufficiently short time interval, the channel can be approximated as constant and, therefore, the communication system is time-invariant. That interval is called \emph{channel coherence time}. This time is determined by the speed of movement and is typically a few milliseconds in mobile networks. Since it is important for the communication system to know the channel properties, it needs to estimate them once per coherence time interval.
+
+Within the coherence time, the channel can be described by a \gls{FIR} filter where each term of the impulse response describes one distinguishable propagation path in a multipath environment with a distinct time delay and pathloss. Such a filter reacts differently to input signals with different frequencies, but the variations are rather smooth when varying the signal frequency. Hence, if we consider a sufficiently narrow frequency range, the channel can be considered constant. The \emph{channel coherence bandwidth} defines the frequency interval in which the frequency response is approximately constant.
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=\columnwidth,tics=10]{images/section2/basic_block_fading}
+		\put(0,32){Frequency}
+		\put(44,1){Time}
+		\put(97,22){$B_c$}
+		\put(69,30){$T_c$}
+		\put(56,22){One coherence block}
+	\end{overpic}  
+	\caption{In the block-fading model, the time-frequency resources are divided into coherence blocks in which the channel is time-invariant and frequency-flat. The channel is modeled as independent between different coherence blocks.}
+	\label{basic_block_fading}  
+\end{figure}
+
+
+A \emph{channel coherence block} is a time-frequency block with a time duration that equals the coherence time and a frequency width that equals the coherence bandwidth. The channel between two antennas is constant and frequency-flat within a coherence block, which implies that it can be described by only one scalar coefficient. The time-frequency resources of a communication system can be divided into different coherence blocks as illustrated in Figure~\ref{basic_block_fading}. Note that the blocks are distributed over both time and frequency. When developing communication algorithms, it is convenient to break down the operation into blocks like this and then design, analyze, and optimize them separately. If one further assumes that the channel-describing scalar coefficient takes an independent random realization in each coherence block, then one can study one block at a time without loss of generality. This is called the \emph{block-fading model} since the channel fading takes one independent realization in each coherence block. The block-fading model is assumed throughout this monograph.
+
+Let $T_c$ denote the coherence time (in seconds) and $B_c$ denote the coherence bandwidth (in Hertz). According to the Nyquist-Shannon sampling theorem, a signal that fits into this block is uniquely described by
+$\tau_c = T_cB_c$ complex-valued samples. These are the parameters that can be used to convey information in a communication system. We will call them \emph{transmission symbols} or just symbols.
+
+In practice, the coherence time and bandwidth depend on many factors such as the channel delay spread (i.e., the time difference between the shortest and longest resolvable paths), UE mobility, and carrier frequency. The exact values are user-dependent and can be measured experimentally, but we will provide some rules-of-thumb.
+A common approximation of the coherence time is $T_c = \lambda/(4 \upsilon)$ \cite[Sec.~2.3]{Tse2005a}, where $\lambda$ is the wavelength and $\upsilon$ is the velocity of the UE. This is the time it takes to move a quarter-of-a-wavelength. Hence, if the carrier frequency is high, the channel changes more rapidly for a given velocity. The same happens if the UE velocity increases for a given carrier frequency. The coherence bandwidth can be approximated by $B_c=1/(2 T_d)$ where $T_d$ is the channel delay spread; that is, the time difference between the earliest and last propagation path.
+
+We need a common block size when operating the system but every UE has different values of $T_c$ and $B_c$. A practical solution is to fix $\tau_c$ based on the worst-case scenario that the network should support \cite[Sec.~2.1]{massivemimobook}. To give quantitative numbers, suppose the carrier frequency is 2\,GHz, which gives the wavelength $\lambda = 15$\,cm. We consider two examples:
+
+\begin{itemize}
+\item Outdoor scenario: Suppose the delay spread is up to 2.5\,$\mu$s (i.e., 750\,m path differences) and we want to support mobility up to $\upsilon = 37.5 \, \textrm{m/s} = 135 \, \textrm{km/h}$. The approximations above then become  $T_c = 1$\,ms and $B_c = 200$\,kHz. The coherence block contains $\tau_c=200$ transmission symbols in this scenario that supports fairly high mobility and high channel dispersion.
+
+\item Indoor scenario: Suppose the delay spread is up to 0.1\,$\mu$s (or 30\,m path differences) and we want to support mobility up to $\upsilon = 0.75 \, \textrm{m/s} = 2.7 \, \textrm{km/h}$. The approximations above then become $T_c = 50$\,ms and $B_c = 5$\,MHz. The coherence block contains $\tau_c=250\,000$ transmission symbols in this scenario with low mobility and low channel dispersion. 
+\end{itemize}
+
+In summary, the number of transmission symbols per coherence block ranges from hundreds (with high mobility and high channel dispersion) to hundreds of thousands of samples (with low mobility and low channel dispersion). Setups similar to the outdoor scenario with  $\tau_c=200$ are commonly studied in the literature on Cellular Massive MIMO \cite{massivemimobook}, \cite{Marzetta2016a}. If a cell-free network is deployed to serve the same type of \glspl{UE} as in conventional cellular networks, we can safely assume that $\tau_c \geq 200$. However, the coherence blocks can be much larger in cell-free networks if we primarily target low-mobility use cases and deploy the antennas closer to the \glspl{UE}, so that the delay spread shrinks.
+
+\begin{remark}[Relation to practical systems]
+The main reason for study\nolinebreak ing\linebreak block-fading channels, instead of a system with a practical multicarrier modulation scheme, is that we can neglect many of the technicalities that appear in practical systems. In this way, we can focus on the~main concepts and develop a theory that applies to many types of systems. In a practical system where \gls{OFDM} is utilized, the available band\nolinebreak width\linebreak is divided into many subcarriers and each one features a scalar chan\nolinebreak nel.\linebreak Several subcarriers will then fit into what we have defined as a coherence block \cite[Sec.~2.1.6]{Marzetta2016a}. These subcarriers will not have identical~channels, but there is a known transformation between them, thus if~one~learns\linebreak the channel coefficient at some of the subcarriers, the other ones can be obtained by interpolation \cite{Kashyap2016a}.
+Moreover, the channel coefficients~will~not change abruptly every coherence block but gradually. In particular,~the channel realizations will be correlated between adjacent coherence blocks, which can actually be utilized to improve the performance compared to the methods described in this monograph. This is especially important for low-mobility UEs for which the channel might be constant for a much longer time than the worst-case value of $T_c$ that is used by the system.
+\end{remark}
+
+\enlargethispage{\baselineskip} 
+
+\subsection{Time-Division Duplex Protocol}\label{sec:tdd-protocol}
+
+The channel between AP $l$ and UE $k$ in an arbitrary coherence block is represented by the vector $\vect{h}_{kl} \in \mathbb{C}^N$. It is an $N$-dimensional vector where the $n$th element represents the complex-valued scalar channel coefficient between the UE and the $n$th antenna of the AP. We also define the collective channel $\vect{h}_k \in \mathbb{C}^{M}$ from all APs to UE $k$ as
+\begin{equation}\label{eq:collective-channel}
+\vect{h}_k = \begin{bmatrix} \vect{h}_{k1} \\ \vdots \\  \vect{h}_{kL}
+\end{bmatrix}. 
+\end{equation}
+According to the block-fading model assumption, the channel vector $\vect{h}_{kl}$ takes one independent realization in each coherence block from a stationary random distribution. Due to the channel reciprocity of physical channels, the channel realization is the same in both uplink and downlink. We will define the channel distribution later in Section~\ref{sec:channel-modeling}.
+
+The APs must know the channel realizations, at least partially, to perform coherent processing both between the antennas on each AP and across the cooperating APs. The most efficient way to estimate the channels is to consider a \gls{TDD} protocol where each coherence block is used for both uplink and downlink transmissions. It is then sufficient to transmit pilots only in the uplink. Based on the received uplink signals, each AP can then estimate the channels between itself and all the UEs. These channel estimates can be utilized for both uplink and downlink transmissions, thanks to the channel reciprocity. By applying coherent precoding in the downlink based on the channel estimates, the complex-valued $M$-dimensional channel vector to each UE is transformed into a scalar channel that is positive (except for minor perturbations due to estimation errors). This scalar channel can be deduced at the UE from the downlink data signals, without sending explicit pilots \cite{Ngo2017a}. We will elaborate more on this later in this monograph.
+We refer to \cite[Sec.~1.3.5]{massivemimobook} for a more detailed discussion on this and a comparison with the alternative \gls{FDD} protocol, in terms of signaling overhead. While the uplink can operate identically in \gls{TDD} and \gls{FDD} systems, the downlink must be implemented differently in \gls{FDD}.
+Applications of \gls{FDD} protocols to Cell-free Massive MIMO can be found in 
+\cite{Abdallah2020a}, \cite{Kim2020a}, \cite{Kim2018a} and will not be covered in this monograph.
+
+
+\begin{figure}[t!]
+	\centering 
+	\begin{overpic}[width=.8\columnwidth,tics=10]{images/section2/basic_protocol}
+		\put(13,19){Uplink data: $\tau_u$}
+		\put(48,19){Downlink data: $\tau_d$}
+		\put(93,19){$B_c$}
+		\put(42,33){$T_c$}
+		\put(15,3){Uplink pilots: $\tau_p$}
+	\end{overpic}  
+	\caption{A \gls{TDD} protocol is considered where each coherence block is used for both uplink and downlink transmissions.}
+	\label{figure:basic_protocol}  
+\end{figure}
+
+We consider the standard Cellular Massive \gls{MIMO} \gls{TDD} protocol, where the $\tau_c$ transmission symbols of a coherence block are used for three purposes:
+\begin{enumerate}
+\item $\tau_p$ symbols for uplink pilots; 
+\item $\tau_u$ symbols for uplink data; 
+\item $\tau_d$ symbols for downlink data.
+\end{enumerate}
+This protocol is illustrated in Figure~\ref{figure:basic_protocol}. The three sets of transmission symbols can be divided between the three purposes in different ways, under the constraint that $\tau_c = \tau_p + \tau_u + \tau_d$. Note that the pilots and data are transmitted at different times and that the TDD protocol is synchronized across the APs. 
+The uplink pilots must be transmitted before the downlink data so that the downlink transmission can be precoded based on the uplink estimates. However, it is plausible to transmit uplink data before the uplink pilots, or to change the order between the uplink and downlink data transmissions, as long as it all fits into a single coherence block. The drawback with the former variation is that the latency increases since the data detection cannot be initiated until after the pilots have been received. The drawback with the latter variation is that the switch between downlink and uplink requires a guard time interval so that all UEs receive the downlink data before they switch to uplink transmission mode.
+
+
+\subsection{Uplink System Model}\label{sec:uplink-system-model}
+
+During the uplink data transmission, all APs will receive a superposition of the signals sent from all UEs. The received signal ${\bf y}_{l}^{\rm{ul}} \in \mathbb {C}^{N}$ at AP $l$ is
+\begin{align}\label{eq:DCC-uplink}
+	{\bf y}_{l}^{\rm{ul}} = \sum\limits_{i=1}^{K} {\bf h}_{il}s_{i} + {\bf n}_{l}
+\end{align}
+where $s_{i} \in \mathbb{C}$ is the signal transmitted from UE $i$ with a power that we denote as $p_i = \mathbb{E} \{ |s_i|^2 \}$ during the uplink data transmission and as $\eta_i = |s_i|^2$ in the uplink pilot transmission.
+The independent additive receiver noise is ${\bf n}_{l}  \sim \CN({\bf 0}_N,\sigmaUL{\bf I}_{N})$. The uplink signals can either contain data or pilots. While the channels are constant within a coherence block, the signals and noise take new realizations at every transmission symbol.
+
+Based on the received signal in \eqref{eq:DCC-uplink}, AP $l$ can compute an estimate $\widehat{s}_{kl}$ of the signal $s_k$ transmitted by UE $k$. This is the first step towards decoding the information that the signal contains.
+However, the AP should only do that if $l\in \mathcal {M}_k$ or, equivalently, $\vect{D}_{kl}=\vect{I}_N$. For notational convenience, we want to represent both cases jointly by setting $\widehat{s}_{kl}=0$ if  $l \not \in \mathcal {M}_k$.
+This is achieved by defining a receive combining vector $\vect{v}_{kl} \in \mathbb {C}^{N}$ that AP $l$ could use if it serves UE $k$. We then define the \emph{effective receive combining vector}
+\begin{equation}
+\vect{D}_{kl} \vect{v}_{kl} = \begin{cases}
+\vect{v}_{kl} & l\in \mathcal {M}_k \\
+\vect{0}_N & l \not \in \mathcal {M}_k. \label{eq:effective-receive-combining}
+\end{cases}
+\end{equation}
+Note that it is equal to the actual receive combining vector for APs that serve UE $k$ and zero otherwise. The estimate of $s_k$ at AP $l$ can then be computed by taking the inner product between $\vect{D}_{kl}  \vect{v}_{kl}$ and ${\bf y}_{l}^{\rm{ul}}$ (noting that $\vect{D}_{kl}= \vect{D}_{kl}^{\Htran}$):
+\begin{align}
+\widehat{s}_{kl} &= \vect{v}_{kl}^{\Htran} \vect{D}_{kl} {\bf y}_{l}^{\rm{ul}}\label{eq:uplink-data-estimate}.
+\end{align}
+By utilizing \eqref{eq:effective-receive-combining}, the expression in \eqref{eq:uplink-data-estimate} can be rewritten as
+\begin{equation}
+\widehat{s}_{kl} =\begin{cases}
+\vect{v}_{kl}^{\Htran}  {\bf h}_{kl}s_{k} + \condSum{i=1}{i \neq k}{K} \vect{v}_{kl}^{\Htran} {\bf h}_{il}s_{i} + \vect{v}_{kl}^{\Htran} {\bf n}_{l} & l\in \mathcal {M}_k \\
+0 & l \not \in \mathcal {M}_k.
+\end{cases}
+\label{eq:uplink-data-estimate-2}
+\end{equation}
+However, we will be utilizing the general expression in \eqref{eq:uplink-data-estimate} in the majority of this monograph since it allows us to cover both cases in a joint manner, instead of treating them separately.
+
+The receive combining vectors ${\bf v}_{kl}$, for $l\in \mathcal {M}_k$, should be selected based on the \gls{CSI} available at the APs. Different designs based on various degrees of cooperation among the APs will be introduced and analyzed in detail in Section~\ref{c-uplink} on p.~\pageref{c-uplink}. Channel estimation is considered in Section~\ref{c-channel-estimation} on p.~\pageref{c-channel-estimation}.
+
+\subsection{Downlink System Model} \label{sec:downlink-system-model-ch2}
+
+In the downlink, we let $\vect{x}_l \in \mathbb{C}^N$ denote the signal transmitted by AP $l$.~The received signal at UE $k$ can then be written as
+\begin{align} \label{eq:DCC-downlink-0}
+y_k^{\rm{dl}} = \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran}\vect{x}_l + n_k
+\end{align}
+where $n_k \sim \CN(0,\sigmaDL)$ is the receiver noise.
+Note that we have represented the downlink channel by $\vect{h}_{kl}^{\Htran}$, although there will only be a transpose and not any complex conjugate in practice.
+However, the \linebreak additional conjugation is a standard way of simplifying the notation without changing the performance. We will therefore adopt this convention.\footnote{When applying the downlink results of this monograph in practical systems, we should transmit $\vect{x}_l^{\star}$ instead of $\vect{x}_l$, we should treat $(y_k^{\rm{dl}})^{\star}$ as the true received signal, and the true noise term will be $n_k^{\star}  \sim \CN(0,\sigmaDL)$. Hence, it is only a few conjugates that differ, while the communication performance is identical.}
+
+We let $\varsigma_i \in \mathbb{C}$ denote the independent unit-power data signal intended for UE $i$, thus $\mathbb{E} \{{|\varsigma_i |^2}\} = 1$.
+The signal transmitted by AP $l$ consists of a precoded superposition of the signals intended for the different UEs that this AP serves. This can be expressed as
+\begin{align} 
+\vect{x}_l = \sum_{i=1}^{K} \vect{D}_{il}  \vect{w}_{il} \varsigma_i \label{eq:DCC-transmit-downlink}
+\end{align}
+where  $\vect{w}_{il} \in \mathbb{C}^N$ denotes the transmit precoding vector that AP $l$ assigns to UE $i$. This vector has two important impacts on the transmission: the direction $\vect{w}_{il}/\|\vect{w}_{il}\|$ determines the spatial directionality and the average squared norm $\mathbb{E}\{ \| \vect{w}_{il} \|^2 \}$ determines the average transmit power.
+We can define the \emph{effective transmit precoding vector} as
+\begin{equation} \label{eq:effective-precoding}
+\vect{D}_{il}  \vect{w}_{il} = \begin{cases} \vect{w}_{il} & l \in \mathcal{M}_i \\
+\vect{0}_{N} & l \not \in \mathcal{M}_i
+\end{cases}
+\end{equation}
+since $ \vect{D}_{il}=\vect{0}_{N\times N}$ implies $\vect{D}_{il}  \vect{w}_{il}=\vect{0}_N$. Hence, each AP only needs to select precoding vectors for the UEs that it serves.
+
+By substituting the transmitted signal in \eqref{eq:DCC-transmit-downlink} into \eqref{eq:DCC-downlink-0}, the received downlink signal at UE $k$ becomes
+\begin{align} \notag
+y_k^{\rm{dl}} & = \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \left( \sum_{i=1}^{K} \vect{D}_{il}  \vect{w}_{il} \varsigma_i \right)+ n_k \\&= \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \vect{D}_{kl}  \vect{w}_{kl} \varsigma_k + \condSum{i=1}{i \neq k}{K}  \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran}\vect{D}_{il}  \vect{w}_{il} \varsigma_i + n_k.\label{eq:DCC-downlink}
+\end{align}
+The first term in \eqref{eq:DCC-downlink} is the desired signal, the second term is inter-user interference, and the third term is noise. The property of the effective transmit precoding vectors in \eqref{eq:effective-precoding} can be used to rewrite \eqref{eq:DCC-downlink} as
+\begin{align} 
+y_k^{\rm{dl}} = \sum_{l \in \mathcal{M}_k}  \vect{h}_{kl}^{\Htran}  \vect{w}_{kl} \varsigma_k + \condSum{i=1}{i \neq k}{K}  \sum_{l \in \mathcal{M}_i}  \vect{h}_{kl}^{\Htran} \vect{w}_{il} \varsigma_i + n_k
+\end{align}
+which will not simplify but rather complicate the notation later in this monograph. We will therefore utilize the general form in \eqref{eq:DCC-downlink} for performance analysis and keep in mind that one can always utilize \eqref{eq:effective-precoding} to get alternative expressions.
+
+As in the uplink, the selection of the precoding vectors $ \vect{w}_{kl}$ depends on the available channel estimates and the degree of cooperation among the \glspl{AP}. This will be thoroughly discussed in Section~\ref{c-downlink} on p.~\pageref{c-downlink}.
+
+
+\section{Network Scalability}\label{sec:scalability}
+
+Since the geographical coverage area of the network can be huge, the technology must be designed to be scalable in the sense that one can add more APs and/or UEs to the network without having to increase the capabilities of the existing ones.
+Conventional cellular networks achieve scalability through a divide-and-conquer approach. The coverage area is divided into cells and each cell operates autonomously. Within a cell, there is a maximum number of UEs that can be simultaneously served by spatial multiplexing (if there are more UEs, then time-frequency scheduling must be used). However, the cell operation is unaffected by the addition of new APs or UEs belonging to other cells. Therefore, cellular technology is inherently scalable and this is also confirmed by the fact that nation-wide cellular networks exist all over the world.
+
+The situation is more complicated in cell-free networks since all APs are somehow involved in the service of all UEs. A given AP can either be directly involved in the service of a particular UE $k$, in the sense of sending/receiving data to/from the UE, or indirectly involved; for example, by serving another UE together with an AP that transmits to UE $k$. When we deploy an AP, it will have a maximum computational capability and a maximum fronthaul capacity. These resources must remain sufficient even as the network size increases, in terms of deploying new APs, and as the network load grows, in terms of adding more UEs.
+
+To determine if a cell-free network is scalable or not, it is instrumental to let $K \to \infty$ and see which of the following tasks remain practically implementable at each AP:
+\begin{enumerate}
+\item \emph{Signal processing for channel estimation};
+\item\emph{Signal processing for data reception and transmission};
+\item \emph{Fronthaul signaling for data and \gls{CSI} sharing};
+\item \emph{Power allocation optimization}.
+\end{enumerate}
+
+Based on this list, we make the following definition.
+
+\begin{definition}[Scalability] \label{def:scalable}
+A Cell-free Massive MIMO network is\linebreak \emph{scalable} if all the four above-listed tasks have finite computational complexity and resource requirements with respect to each AP as $K \to \infty$.
+\end{definition}
+
+\enlargethispage{0.5\baselineskip} 
+
+The intention with this definition is \emph{not} that a cell-free network will serve an infinitely large number of UEs in practice, but to uncover fundamental scalability issues that become clear in the asymptotic regime. There are many algorithms that have manageable complexity for generating simulations in academic papers, but cannot be used in practice where the number of APs and UEs will be much larger than in a basic simulation. Definition~\ref{def:scalable} might give the impression that all the signal processing and optimization must be carried out locally at the AP, but this is not necessary. An implementation where each AP sends the data and CSI to a CPU, which carries out those tasks, can be scalable as long as the corresponding complexity and fronthaul signaling do not grow with $K$.
+
+\enlargethispage{\baselineskip}
+
+\subsection{Example of Unscalable Network Operation}
+
+Before explaining how to achieve scalability in a cell-free network, we will exemplify the opposite: an unscalable network operation. Suppose AP $l$ is serving all the $K$ UEs in the entire cell-free network, which implies that $l \in \mathcal{M}_k$, for $k=1,\ldots,K$. The AP carries out the signal processing and optimization locally. Four potential scalability issues were mentioned in Definition~\ref{def:scalable} and we will go through them one after the other to explain why they are not satisfied.
+
+Firstly, we have the complexity of the signal processing related to channel estimation. If AP $l$ should serve $K$ UEs, it will have to learn the channels of all these UEs.
+The details on channel estimation are provided in Section~\ref{c-channel-estimation} on p.~\pageref{c-channel-estimation}, but since there are $K$ channel vectors ${\bf h}_{1l},\ldots,{\bf h}_{Kl}$ to estimate, the computational complexity will for sure grow at least linearly with the number of UEs. Hence, the complexity approaches infinity as $K \to \infty$. Moreover, the memory size needed to store these channel estimates will be proportional to $K$ and, thus, any finite-sized memory module will be insufficient as $K \to \infty$.
+
+Secondly, AP $l$ needs to create the downlink signal $\sum_{i=1}^{K} \vect{w}_{il} \varsigma_i$ in \eqref{eq:DCC-transmit-downlink}, where the summation implies infinite complexity as $K \to \infty$. The complexity of computing the $K$ precoding vectors $\{\vect{w}_{kl}: k=1,\ldots,K\}$ depends on the precoding scheme, but will also grow at least linearly with $K$ since there are $NK$ coefficients to compute, and every vector also needs to be properly scaled. The same scalability issue appears in the uplink, where the AP needs to compute $\{\vect{v}_{kl}^{\Htran}{\bf y}_{l}^{\rm{ul}}: k=1,\ldots,K\}$ using $K$ different combining vectors $\{\vect{v}_{kl}: k=1,\ldots,K\}$.
+
+Thirdly, AP $l$ needs to receive the $K$ downlink data signals $\{\varsigma_k: k=1,\ldots,K\}$ from a CPU and must forward its $K$ processed received signals $\{\vect{v}_{kl}^{\Htran}{\bf y}_{l}^{\rm{ul}}: k=1,\ldots,K\}$ over the fronthaul links. The number of scalars to be sent over the fronthaul grows unboundedly as $K \to \infty$, thus the AP's fronthaul capacity will be insufficient. Moreover, the memory capacity required to temporarily store the data symbols of the $K$ UEs at AP $l$ will also grow unboundedly with $K$.
+
+Fourthly, AP $l$ needs to select how to allocate its transmit power between the $K$ UEs. Any power allocation algorithm that makes use of channel knowledge related to all UEs will have a complexity that grows at least linearly with $K$, which is not scalable as $K \to \infty$. 
+
+This example demonstrates that the core of the scalability issue is that AP $l$ serves all the UEs. Based on this observation, we will provide a sufficient condition for achieving a scalable implementation of cell-free networks.
+
+\subsection{A Sufficient Condition for Scalability}
+
+Recall that $\vect{D}_{il}$ is non-zero only if AP $l$ serves UE $i$. Hence, the set of \glspl{UE} served by AP $l$ can be defined as
+\begin{equation}\label{eq:definition-of-the-set-D_l}
+\mathcal{D}_l = \bigg\{ i : \tr(\vect{D}_{il})\geq 1, i \in \{ 1, \ldots, K \} \bigg\}.
+\end{equation}
+The following lemma presents a condition on $\mathcal{D}_l$ that partially guarantees scalability in a cell-free network.
+
+\begin{lemma} \label{lemma:D-requirement}
+	If the cardinality $|\mathcal{D}_l |$ remains finite as $K \to \infty$ for $l=1,\ldots,L$, then the cell-free network satisfies the first three scalability tasks in Definition~\ref{def:scalable}.
+\end{lemma}
+\begin{proof}
+	\gls{AP} $l$ only needs to compute the channel estimates and precoding/combining vectors for $|\mathcal{D}_l |$ \glspl{UE}. This has a finite complexity as $K \to \infty$ if $|\mathcal{D}_l |$ remains finite. Moreover, \gls{AP} $l$ only needs to send/receive data related to these $|\mathcal{D}_l |$ \glspl{UE} over the fronthaul links, which is a finite number as $K \to \infty$.
+\end{proof}
+
+The implication of Lemma~\ref{lemma:D-requirement} is that we need to limit the number of active UEs that each AP can serve. Ideally, we should assign APs to UEs so that every UE is served by all the surrounding APs; that is, the APs that will influence the UE's performance noticeably. At the same time, we need to make sure that $|\mathcal{D}_l |$ remains small and finite. How to determine sets $\mathcal{D}_l$ that guarantee both scalability and good service to the \glspl{UE} will be explored first in Section~\ref{sec:selecting-DCC} on p.~\pageref{sec:selecting-DCC} and then in further detail in Section~\ref{sec:selecting-DCC-advanced} on p.~\pageref{sec:selecting-DCC-advanced}. Until then, we  assume that $\mathcal{D}_1,\ldots,\mathcal{D}_L$ are given.
+
+Note that only the fourth scalability condition (regarding the complexity of the power allocation) is not guaranteed by the finite cardinality of $\mathcal{D}_l$ in Lemma~\ref{lemma:D-requirement}. The next lemma provides the missing piece.
+
+\begin{lemma} \label{lemma:scalability2}
+Suppose every AP $l$ selects its downlink transmit power based only on information about the $|\mathcal{D}_l|$ UEs served by that AP. Furthermore, suppose every UE is assigned a transmit power by only one of the serving APs and this AP selects that power based only on information about the $|\mathcal{D}_l|$ UEs that it serves. If Lemma~\ref{lemma:D-requirement} is satisfied, then the cell-free network satisfies all the scalability conditions in Definition~\ref{def:scalable}.
+\end{lemma}
+\begin{proof}
+\gls{AP} $l$ only needs to compute the downlink transmit power for $|\mathcal{D}_l|$ UEs using an information set that is proportional to $|\mathcal{D}_l|$, but independent of $K$. Furthermore, every AP will at most compute the uplink transmit powers for $|\mathcal{D}_l|$ UEs. If the condition in Lemma~\ref{lemma:D-requirement} is satisfied, then the fourth condition in Definition~\ref{def:scalable} will also be satisfied as $K \to \infty$ by following the power allocation requirements specified in this lemma.
+\end{proof}
+
+The implication of Lemma~\ref{lemma:scalability2} is that the transmit powers should be selected in a distributed manner to achieve scalability. There exist several network-wide power allocation algorithms that jointly select the uplink or downlink powers. 
+These can, for instance, be the solutions to linear or convex optimization problems, whose computational complexity grows polynomially in the number of optimization variables and, thus, are unscalable.
+Some key examples are provided in Section~\ref{sec:optimized-power-allocation} on p.~\pageref{sec:optimized-power-allocation} but these are meant as benchmarks rather than as practical solutions.
+
+Scalable power allocation algorithms should preferably be implemented separately for every AP, with no or limited interaction between the APs. It is easy to design such algorithms; for example, every UE can transmit with full power in the uplink and every AP can divide its transmit power equally between the UEs that it serves.
+However, it is much harder to create algorithms that operate close to the network-wide power allocation benchmarks. State-of-the-art algorithms for scalable power allocation will be reviewed in Section~\ref{sec:scalable-power-allocation} on p.~\pageref{sec:scalable-power-allocation}. Until then, we will assume the transmit powers are fixed and given.
+
+\begin{remark}[Scalability in centralized operation]
+The sufficient condition for scalability in Lemma~\ref{lemma:scalability2} states that APs make decisions related to the transmit powers. This does not mean that each decision has to be made in a local processor at an AP, but it can also be carried out at a neighboring CPU that is associated with the AP. In other words, a centralized operation where the CPUs carry out almost all the signal processing and optimization can also be scalable if designed to satisfy Definition~\ref{def:scalable}.
+\end{remark}
+
+
+ \vspace{-3mm}
+ \section{Channel Modeling}
+\label{sec:channel-modeling}  
+
+A realistic performance assessment of any MIMO technology requires the use of a channel model that reflects its main characteristics. The wireless channel is deterministic in nature but is often so complicated, due to multipath propagation, that the channel variations appear as random. Hence, both deterministic and stochastic channel models can be used for analysis (cf.~\cite[Sec.~7.3]{massivemimobook}). Deterministic models can be based on ray-tracing or recorded channel measurements. The free-space \gls{LoS} propagation model is another example of a deterministic model \cite[Sec.~1.3.2]{massivemimobook}. The general drawback of deterministic models is that they are only valid for specific scenarios. In contrast, stochastic models are independent of a particular propagation environment and, consequently, allow for more far-reaching quantitative analysis. Nevertheless, the random distribution and its parameter values limit the scope of each stochastic model to a certain category of propagation conditions, such as urban, suburban, or rural scenarios.
+
+\enlargethispage{-\baselineskip}
+
+A classical stochastic model for \gls{NLoS} communications is \emph{uncorrelated Rayleigh fading} where the channel between \gls{AP} $l$ and \gls{UE} $k$ is generated as $\vect{h}_{kl} \sim \CN( \vect{0}_N, \beta_{kl}\vect{I}_N)$.
+The complex Gaussian distribution accounts for the random small-scale fading caused by small-scale movements of the transmitter, receiver, or other objects in the propagation environment. More precisely, the received signal is the summation of signal copies arriving from a large number of propagation paths with seemingly random phase shifts. This gives rise to constructive and destructive interference between the paths that can be modeled by  a Gaussian distribution thanks to the central limit theorem. This fading model is called Rayleigh fading since the magnitude of each element of $\vect{h}_{kl}$ has a Rayleigh distribution.
+
+When Rayleigh fading is used in a block-fading model, a new independent realization is drawn from the Gaussian distribution in each coherence block.
+Moreover, the variance $\beta_{kl}$ describes the large-scale fading and determines the average channel quality as the UE moves around in a relatively small area.
+In other words, $\beta_{kl}$ is determined by the geometric pathloss and shadow fading. The uncorrelated Rayleigh fading model has been (and still is) the basis of most theoretical research in multiple antenna communications since it is an analytically tractable model.
+However, the physical consequence of having independently and identically distributed elements in $\vect{h}_{kl}$ is that the AP can transmit signals in any direction and the average received power at the UE will always be the same. 
+Measurements campaigns have repeatedly shown that this model is inadequate in practical systems since the elements of the channel vector will be statistically correlated \cite{Sanguinetti2019a}. This is called \emph{spatial correlation} and originates from two phenomena: 1) Transmissions in some spatial directions are more likely to lead to the UE than other directions; 2) The geometry of the antenna array (i.e., shape and antenna spacing) makes it more suited to transmit/receive signals in some directions than in other directions. 
+It is only under very strict technical conditions that perfectly uncorrelated fading can be achieved \cite{Pizzo2020}.\footnote{The classical example is a \gls{ULA} with half-wavelength-spaced omni-directional antennas that are placed in an isotropic scattering environment \cite[Sec.~7.2.1]{Marzetta2016a}, where the scattering objects are uniformly distributed over all angles in three dimensions. Note that both the omni-directionality and isotropic scattering are theoretical constructs that are not practically occurring.}
+
+
+\enlargethispage{\baselineskip} 
+
+ \subsection{Correlated Rayleigh Fading}\label{sec:correlated-rayleigh-fading}
+
+In this monograph, we capture the spatial correlation characteristics by making use of the relatively tractable \emph{correlated Rayleigh fading model}. This model is suitable for NLoS channels with substantial multipath propagation so that the elements of the channel vector can be modeled as being complex Gaussian distributed. The channel between \gls{AP} $l$ and \gls{UE} $k$ is generated as
+\begin{equation}
+\vect{h}_{kl} \sim \CN( \vect{0}_N, \vect{R}_{kl})
+\end{equation}
+where $\vect{R}_{kl} \in \mathbb{C}^{N \times N}$ is the spatial correlation matrix between \gls{AP} $l$ and \gls{UE} $k$. Note that this is the correlation matrix of $\vect{h}_{kl}$ since $\mathbb{E} \{ \vect{h}_{kl} \vect{h}_{kl}^{\Htran} \} = \vect{R}_{kl}$.
+The Gaussian distribution models the small-scale fading whereas the positive semi-definite correlation matrix $\vect{R}_{kl}$ describes the large-scale fading, including geometric pathloss, shadowing, antenna gains, and spatial channel correlation \cite[Sec.~2.2]{massivemimobook}. 
+
+The diagonal elements of $\vect{R}_{kl}$ might be different but, in analogy with uncorrelated Rayleigh fading, we define the large-scale fading coefficient as the average value:
+ \begin{equation} \label{eq:beta-definition-lk}
+ \beta_{kl} = \frac{1}{N} \tr \left( \vect{R}_{kl} \right).
+ \end{equation}
+This is the average channel gain between an antenna at \gls{AP}~$l$ and \gls{UE}~$k$. Moreover, we assume the channel vectors of different APs are independently distributed, thus ${\mathbb{E}}\{\vect{h}_{kn} \vect{h}_{kl}^{\Htran}\} = {\bf 0}_{N\times N}$ for $l\ne n$. This is a reasonable assumption whenever the APs are separated by tens of wavelengths or more, which will be an underlying assumption in this monograph. 
+The collective channel is thus distributed as follows:
+\begin{equation}\label{eq:collective_channel}
+\vect{h}_k \sim \CN(\vect{0}_M, \vect{R}_{k}) 
+\end{equation}
+where $\vect{R}_{k} = \diag(\vect{R}_{k1}, \ldots,  \vect{R}_{kL}) \in \mathbb{C}^{M \times M}$
+is the block-diagonal collective spatial correlation matrix. 
+
+The correlated Rayleigh fading model is used throughout this monograph.
+Furthermore, we assume the spatial correlation matrices $\vect{R}_{kl}$ are available wherever needed; see \cite{BSD16A}, \cite{CaireC17a}, \cite{NeumannJU17}, \cite{Sanguinetti2019a}, \cite{UpadhyaJU17} for practical methods for estimating spatial correlation matrices.
+
+
+
+ \subsection{Large-Scale Fading Model for Urban Deployments}
+ \label{subsec:large-scale-fading-model}
+
+The mathematical analysis in this monograph is applicable for arbitrary values of the large-scale fading coefficients but we will now define a model that will be used for simulations.
+We assume that the APs are deployed in urban environments to serve a dense population of UEs. Moreover, the APs are deployed ten meters above the plane where the UEs are located. This matches well with the 3GPP Urban Microcell model that is defined in \cite[Table~B.1.2.1-1]{LTE2017a}. 
+The model is designed for the traditional 2\,GHz band but is representative also for other sub-6 GHz frequency bands.
+We follow that model in the simulations and compute the large-scale fading coefficient (channel gain) in dB as 
+\begin{equation}\label{eq:pathloss-coefficient}
+\beta_{kl} \,  [\textrm{dB}] = -30.5 - 36.7 \log_{10}\left( \frac{d_{kl}}{1\,\textrm{m}} \right)  + F_{kl}
+\end{equation}
+where $d_{kl}$\,[m] is the three-dimensional distance between \gls{AP} $l$ and \gls{UE} $k$, taking the height difference into account.
+Moreover, $F_{kl} \sim \mathcal{N}(0,4^2)$ is the shadow fading. The shadowing terms from an AP to different UEs are correlated as \cite[Table B.1.2.2.1-4]{LTE2017a}
+\begin{equation} \label{eq:shadowing-decorrelation}
+\mathbb{E} \{ F_{kl} F_{ij} \} = 
+\begin{cases}
+4^2 2^{-\delta_{ki}/9\,\textrm{m}} & l = j \\
+0 & l \neq j
+\end{cases}
+\end{equation}
+where $\delta_{ki}$ is the distance between UE $k$ and UE $i$. The second row in \eqref{eq:shadowing-decorrelation} accounts for the correlation of the shadowing terms related to two different APs, which is assumed to be zero. The reason is that APs are typically distributed in the network at a distance larger than tens of meters and purposely deployed to view the deployment area from different directions than other APs. Note that it is only the simulations that rely on these specific assumptions, while all the analytical results in this monograph can be applied to any propagation environment that features Rayleigh fading.
+
+
+ 
+ \subsection{Local Scattering Model for Spatial Correlation}
+ \label{subsec:local-scattering-model}
+
+The spatial correlation matrix depends on two main factors: the array geometry and the angular distribution of the multipath components. For small-sized APs, which are envisioned to be used in cell-free networks, it is common to utilize a \gls{ULA} where the $N$ antennas are equally spaced on a horizontal line.
+We will consider a \gls{ULA} with half-wavelength-spacing in the simulations of this monograph. If all the multipaths arrive from the far-field of the array, the $(m,\ell)$th element of a generic spatial correlation matrix $\vect{R}$ can be computed as
+\begin{equation} \label{eq:elements-of-R}
+\left[\vect{R}\right]_{m\ell} = \beta \int \int e^{\imagunit \pi (m-\ell) \sin(\bar{\varphi}) \cos (\bar{\theta})} f(\bar{\varphi},\bar{\theta})  d\bar{\varphi} d\bar{\theta}
+\end{equation}
+where $\beta$ is the common large-scale fading coefficient while $\bar{\varphi}$ denotes the azimuth angle and $\bar{\theta}$ denotes the elevation angle of a multipath component, both computed with respect to the broadside of the array \cite[Sec.~7.3.2]{massivemimobook}. Moreover, $f(\bar{\varphi},\bar{\theta})$ is the joint \gls{PDF} of $\bar{\varphi}$ and $\bar{\theta}$. Hence, the double-integral in \eqref{eq:elements-of-R} computes $\mathbb{E}\{ e^{\imagunit \pi (m-\ell) \sin(\bar{\varphi}) \cos (\bar{\theta})}  \}$ with respect to randomly located multipath components that are distributed according to $f(\bar{\varphi},\bar{\theta})$.
+
+ \begin{figure}[t!]
+  	\begin{center}
+ 	\begin{overpic}[width=\columnwidth,tics=10]{images/section2/local_scattering}
+		\put(33,23.5){Multipath component}
+		\put(55,6){Multipath component}
+		\put(1,0){AP}
+		\put(83.5,21){UE}
+		\put(15,0){Nominal azimuth angle $\varphi$}
+		\put(75,31){Scattering cluster}
+		\put(7,19.5){Angular interval with}
+		\put(7,16){standard deviation $\sigma_{\varphi}$}
+	\end{overpic} 
+ 	\end{center} \vskip-5mm
+ 	\caption{Illustration of \gls{NLoS} propagation under the local scattering model, where the scattering is localized around the \gls{UE}. The figure only shows the azimuth plane and two of the many multipath components are indicated. The nominal angle $\varphi$ and the {ASD} $\sigma_{\varphi}$ of the multipath components are key parameters to model the spatial correlation matrix.} \label{figure:local_scattering} 
+ \end{figure} 
+ 
+ \enlargethispage{\baselineskip} 
+
+The integrals in \eqref{eq:elements-of-R} can be computed numerically for any \gls{PDF}. In the simulations, we will adopt the local scattering model, which is a common way to select the \gls{PDF} by assuming the multipath components are symmetrically distributed around a straight line drawn between the AP and UE. The intention with this model is that there is a scattering cluster centered around the UE and the multipath components are arriving from nearby angles.
+ The model has been utilized in numerous studies along with Gaussian \cite{Adachi1986a},  \cite{massivemimobook}, \cite{Trump1996a}, \cite{Yin2013a}, \cite{Zetterberg1995a}, Laplace \cite{jiang2015achievable}, \cite{Molisch2007}, \cite{Pedersen1997a}, and uniform \cite{Adhikary2013a}, \cite{Salz1994a}, \cite{Shiu2000a}, \cite{Yin2013a} angular distributions.
+We will consider the jointly Gaussian distribution
+\begin{equation} \label{eq:Gaussian-ASD}
+f(\bar{\varphi},\bar{\theta}) = \frac{1}{2\pi \sigma_{\varphi} \sigma_{\theta}} e^{-\frac{(\bar{\varphi} - \varphi)^2}{2 \sigma_{\varphi}^2 }} e^{-\frac{(\bar{\theta} - \theta)^2}{2 \sigma_{\theta}^2 }}
+\end{equation}
+where $\varphi$ and $\theta$ are the nominal azimuth and elevation angles, computed by drawing a straight line between the AP and UE. 
+Note that the random variations in the azimuth and elevation angles are assumed to be independent.
+The standard deviations $\sigma_{\varphi}\ge 0$ and $\sigma_{\theta}\ge 0$ are called the \emph{\gls{ASD}}. This model is illustrated from the above in Figure~\ref{figure:local_scattering}, where the multipath variations in the azimuth angle are visible.
+
+
+\begin{remark}[Beyond correlated Rayleigh fading]
+The theoretical framework of this monograph applies to any scenario with correlated Rayleigh fading channels and is not limited to the local scattering model. However, not all practical channels are well modeled by Rayleigh fading since the Gaussian distribution can only be motivated when there are many propagation paths and these have pathlosses drawn from a common distribution.
+These conditions are not satisfied when there are few propagation paths or in LoS scenarios where the direct path is substantially stronger than all other paths.
+Under those circumstances, one can either consider channel models with a finite number of paths \cite{Femenias2019a}, \cite{Jin2019a} or Rician fading where there is one strong path plus Rayleigh fading that describes all the other paths
+\cite{Alonzo2019a}, \cite{Demir2020b}, \cite{Jin2019a}, \cite{Ngo2018b}, \cite{Ozdogan2019a}, \cite{Zhang2020b}. We will not cover any of these models in this monograph to keep the presentation simple, but we note that correlated Rayleigh fading can be viewed as a worst-case approximation of the aforementioned models if one uses the same spatial correlation matrices but replaces the more structured fading distribution with the Gaussian distribution \cite[Sec.~2.2]{massivemimobook}.
+\end{remark}
+
+
+One way to quantify the effect of spatial channel correlation is~by studying the eigenvalues of $\vect{R}$. Figure~\ref{figureSec1_eigenvalue_variations} shows the eigenvalues in decreasing order for an \gls{AP} equipped with $N=8$ antennas. 
+ The nominal azimuth and elevation angles are set as ${\varphi} = 30^\circ$ and ${\theta} = -15^\circ$, respectively. We consider the Gaussian local scattering model described above with three different sets of \gls{ASD} values: $\sigma_{\varphi}=\sigma_{\theta}=5^\circ$, $\sigma_{\varphi}=\sigma_{\theta}=10^\circ$, and $\sigma_{\varphi}=\sigma_{\theta}=20^\circ$. The correlation matrices are normalized such that $\tr(\vect{R})/N=1$. The figure also shows the reference case of uncorrelated Rayleigh fading with $\vect{R}= \vect{I}_N$ for which all eigenvalues are equal to one.
+
+
+ \begin{figure}[t!]
+	\begin{center}
+		\includegraphics[width=\columnwidth]{images/section2/section2_figure6}
+	\end{center} \vskip-5mm
+	\caption{Eigenvalues of the spatial correlation matrix $\vect{R}$ when using the local scattering model with $N=8$, the nominal azimuth angle ${\varphi} = 30^\circ$, and the nominal elevation angle ${\theta} = -15^\circ$. The correlation matrix is computed based on \eqref{eq:elements-of-R} using the Gaussian local scattering model in \eqref{eq:Gaussian-ASD}. Three different ASDs are considered: $\sigma_{\varphi}=\sigma_{\theta} \in \{ 5^\circ, 10^\circ, 20^\circ\}$. Uncorrelated Rayleigh fading is shown as a reference case.} \label{figureSec1_eigenvalue_variations} 
+\end{figure}
+
+The main observation from Figure~\ref{figureSec1_eigenvalue_variations} is that the eigenvalues are widely different when the \gls{ASD} is small, but the eigenvalue spread decreases with an increasing \gls{ASD}. In the case of $\sigma_{\varphi}=\sigma_{\theta} = 5^\circ$, the first four eigenvalues contribute to $99.99\%$ of the sum of the eigenvalues. Hence, the correlation matrix is nearly rank-deficient and all channel realizations will essentially be linear combinations of the corresponding four eigenvectors. In fact, the single largest (dominant) eigenvalue contributes to 80\% of the sum. Therefore, most channel realizations will point in similar directions as the dominant eigenvector. The eigenvalue variations are substantially smaller for $\sigma_{\varphi}=\sigma_{\theta} = 20^\circ$, but there is still a 425 times difference between the largest and smallest eigenvalues. This can be compared to the extreme case of uncorrelated fading, represented by the dotted curve, where all eigenvalues are identical.
+
+Spatial correlation is of fundamental importance in Cellular Massive MIMO \cite{Sanguinetti2019a}, where the number of antennas is so large that the eigenvalue variations play a key role in mitigating interference between UEs \cite{BjornsonHS17}, \cite{Huh2012a},  \cite{Yin2016a}, \cite{Yin2013a}.
+We refer to \cite[Sec.~2]{massivemimobook} for more details on the basic impact that spatial correlation can have on a multi-user system. Since the number of antennas per AP is envisaged to be fairly small in Cell-free Massive MIMO, spatial correlation cannot be utilized as efficiently but we will anyway consider it throughout this monograph.
+In particular, we will analyze the effect of the eigenvalue spread on the channel estimation performance in Section~\ref{c-channel-estimation} on p.~\pageref{c-channel-estimation}. 
+
+
+
+
+
+
+\section{Channel Hardening and Favorable Propagation}
+\label{sec:hardening-favorable}
+
+	
+In Cellular Massive \gls{MIMO} systems, two important properties appear when employing a large number of antennas at an AP: \emph{channel hardening} and \emph{favorable propagation}. These properties provide an insightful explanation for the performance gain of Cellular Massive MIMO and are elaborated for channels featuring correlated fading in \cite[Sec.~2.5]{massivemimobook} and for some other types of channels in \cite[Ch.~7]{Marzetta2016a}. Whether these properties appear or not depends strongly on the number of antennas and the spatial channel correlation properties.
+
+In this section, we define and  analyze channel hardening and favorable propagation in Cell-free Massive \gls{MIMO}, which are rather different from the cellular case since multiple APs serve each UE. There are several different definitions in the cellular literature and we have selected those that extend most naturally to the cell-free case. We will observe that the two properties are now affected not only by the spatial correlation and the total  number of antennas in the network, $M=LN$, but also by the variations in the large-scale fading coefficients among the APs and the power allocation.
+Recall from Section~\ref{subsec:large-scale-fading-model} that the large-scale fading is determined by the distances between the APs and UEs, as well as other macroscopic propagation effects (e.g., shadow fading). 
+We stress that, although we dedicate a section to describe when channel hardening and favorable propagation might appear in practice, these properties are not formally required to make use of any of the results presented in this monograph. We refer to \cite{Chen2018b} for a more detailed analysis of the two properties in Cell-free Massive MIMO. 
+
+
+\subsection{Channel Hardening}
+\label{subsec-channel-hardening}
+
+Each element of a channel vector takes a new independent realization in every coherence block, but these small-scale fading variations will not necessarily affect the communication performance. As can be seen in \eqref{eq:DCC-downlink}, the received downlink signal at  \gls{UE} $k$ contains the desired signal component $\sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \vect{D}_{kl}  \vect{w}_{kl} \varsigma_k$, where the \emph{effective channel} is
+\begin{equation} \label{eq:effective-DL-channel}
+\sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran} \vect{D}_{kl}  \vect{w}_{kl} = \sum_{l \in \mathcal{M}_k}  \vect{h}_{kl}^{\Htran}  \vect{w}_{kl}.
+\end{equation}
+This is the summation of the inner product between the channel vector $\vect{h}_{kl}$ and the precoding vector $\vect{D}_{kl} \vect{w}_{kl}$ from all the APs.
+The value of this effective channel can potentially remain almost constant even if the individual elements of the $L$ channel vectors $ \vect{h}_{k1},\ldots, \vect{h}_{kL}$ are changing.
+More precisely, when the random realizations of the effective channel in \eqref{eq:effective-DL-channel} are close to the mean value (i.e., the variance is small), then approximately the same effective scalar channel will appear in every coherence block and we can, thus, operate the system as if we were communicating over a deterministic channel.
+When this happens, we say that we have achieved \emph{channel hardening}, where the word ``harden'' refers to the fact that the effective channel is becoming more deterministic.
+
+\subsubsection{Definition and Sufficient Condition for Channel Hardening}
+
+To give a formal definition of the channel hardening property, we assume all serving APs apply  \gls{MR} precoding, which we define as
+\begin{equation} \label{eq:MR-precoding-hardening}
+\vect{w}_{kl} = \sqrt{\frac{\rho_{kl}}{\mathbb{E} \{\| \vect{h}_{kl} \|^2 \}} } \vect{h}_{kl}
+\end{equation}
+with $\rho_{kl}\geq 0$ determining how much power AP $l$ is assigning for transmission to UE $k$. Note that MR is the precoding method that maximizes the received signal power at the UE. If we insert this precoding into \eqref{eq:effective-DL-channel}, the effective channel becomes
+\begin{equation} \label{eq:effective-DL-channel2}
+\sum_{l \in \mathcal{M}_k} \sqrt{\frac{\rho_{kl}}{\mathbb{E} \{\| \vect{h}_{kl} \|^2 \}} } \| \vect{h}_{kl} \|^2.
+\end{equation}
+Note that the following channel hardening definition considers the combined channel from all the serving APs to a particular UE $k$, which is the natural extension of the definition in Cellular Massive \gls{MIMO} where only a single AP serves each UE \cite[Sec.~2.5.1]{massivemimobook}.
+
+\begin{definition}[Channel hardening] \label{def:channel-hardening-new}
+For a given set $\mathcal{M}_k$ of serving APs and downlink power allocation coefficients $\rho_{k1},\ldots,\rho_{kL}$, the effective channel to \gls{UE} $k$ is said to provide
+asymptotic channel hardening if
+\begin{equation} \label{eq:channel-hardening-definition}
+\frac{ \sum\limits_{l \in \mathcal{M}_k} \sqrt{\frac{\rho_{kl}}{\mathbb{E} \{\| \vect{h}_{kl} \|^2 \}} } \| \vect{h}_{kl} \|^2 }{ \mathbb{E} \left\{ \sum\limits_{l \in \mathcal{M}_k} \sqrt{\frac{\rho_{kl}}{\mathbb{E} \{\| \vect{h}_{kl} \|^2 \}} } \| \vect{h}_{kl} \|^2  \right\} } \rightarrow 1
+\end{equation}
+in the mean-squared sense as $N \to \infty$.\footnote{Convergence in the mean-squared sense also implies convergence in probability and in distribution. The exact type of convergence is of limited importance since we are not interested in the asymptotic regime but to get a structured way to evaluate when we can obtain approximate channel hardening for a finite number of antennas.}
+\end{definition}
+
+
+
+The expectation in~\eqref{eq:channel-hardening-definition} is computed with respect to the independent channel realizations in different coherence blocks, while $\mathcal{M}_k$ and the power allocation coefficients are assumed to be constant.
+
+This definition says that the effective channel in \eqref{eq:effective-DL-channel2} is close to its mean value when the number of AP antennas grows large.
+Since the $N$-length channel vectors become larger as more antennas are added, the underlying assumption is that the antenna arrays are deployed according to some distribution that determines the evolution of the channel statistics (e.g., spatial correlation matrices). This is why the convergence is specified in the mean-squared sense. When considering correlated Rayleigh fading, a sufficient condition for channel hardening is as follows.
+
+\begin{lemma}
+For correlated Rayleigh fading channels, a sufficient condition for the effective channel of \gls{UE} $k$ to provide asymptotic channel hardening is that
+\begin{equation} \label{eq:sufficient-hardening}
+\frac{ \sum\limits_{l \in \mathcal{M}_k} \rho_{kl} \frac{\tr ( \vect{R}_{kl}^2 ) }{N \beta_{kl} }
+}{N \bigg( \sum\limits_{l \in \mathcal{M}_k} \sqrt{\rho_{kl} \beta_{kl}} 
+\bigg)^2 } \to 0 \quad  \textrm{ as } N \to \infty.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The ratio in the left-hand side of \eqref{eq:channel-hardening-definition} has a mean value of one, thus we want to prove convergence to the mean value. In this case, convergence in the mean-squared sense requires that the variance of the ratio goes asymptotically to zero. The variance can be computed as
+\begin{equation}
+\mathbb{V}\left\{ 
+\frac{ \sum\limits_{l \in \mathcal{M}_k} \sqrt{\frac{\rho_{kl}}{\mathbb{E} \{\| \vect{h}_{kl} \|^2 \}} } \| \vect{h}_{kl} \|^2 }{ \mathbb{E} \left\{ \sum\limits_{l \in \mathcal{M}_k} \sqrt{\frac{\rho_{kl}}{\mathbb{E} \{\| \vect{h}_{kl} \|^2 \}} } \| \vect{h}_{kl} \|^2  \right\} } 
+\right\} = \frac{ \sum\limits_{l \in \mathcal{M}_k} \rho_{kl} \frac{\tr ( \vect{R}_{kl}^2 ) }{\tr ( \vect{R}_{kl} ) }
+}{ \bigg( \sum\limits_{l \in \mathcal{M}_k} \sqrt{\rho_{kl} \tr ( \vect{R}_{kl} )} 
+\bigg)^2 } 
+\end{equation}
+by utilizing the statistical independence of the channels to the different \glspl{AP} and by applying \cite[Lemma B.14]{massivemimobook} to compute the expectations. We then obtain the sufficient condition in \eqref{eq:sufficient-hardening} by utilizing the definition of $\beta_{kl}$ in \eqref{eq:beta-definition-lk}, which implies that $ \tr ( \vect{R}_{kl} ) = N \beta_{kl}$.
+\end{proof}
+
+
+
+
+Although the definition of channel hardening relies on asymptotic arguments, we can use it to evaluate the \emph{degree of channel hardening} for setups with a finite number of antennas. If the expression in \eqref{eq:sufficient-hardening} is close to zero, this means that the left-hand side of \eqref{eq:channel-hardening-definition} is close to one and thus channel hardening is approximately achieved.
+ 
+It has been shown in the Cellular Massive MIMO literature that spatial correlation reduces the convergence rate to channel hardening \cite[Sec.~2.5.1]{massivemimobook}; that is, more antennas are needed to achieve a certain degree of channel hardening.
+This can be also observed in \eqref{eq:sufficient-hardening} where $\tr ( \vect{R}_{kl}^2 )$ can be computed as the sum of the squared eigenvalues of the spatial correlation matrix $\vect{R}_{kl}$. Recall from Figure~\ref{figureSec1_eigenvalue_variations} that spatial correlation is represented by large eigenvalue variations.
+Since the sum of the eigenvalues equals $\tr(\vect{R}_{kl}) = N \beta_{kl}$ by definition, the squared sum of the eigenvalues can take values between $N \beta_{kl}^2$ (when all eigenvalues equal to $ \beta_{kl}$) and $N^2\beta_{kl}^2$ (when there is only one non-zero eigenvalue that equals $N \beta_{kl}$).
+The latter represents an extreme case of high spatial correlation.
+To achieve a high degree of channel hardening, we want the expression in \eqref{eq:sufficient-hardening} to be small and the case when all eigenvalues are the same (i.e., no spatial correlation) achieves the smallest value.
+
+\subsubsection{Impact of the Number and Geographical Distribution of APs}
+
+In the context of Cell-free Massive MIMO, where each AP is supposed to have a relatively small number of antennas but there will be many APs instead, it is interesting to evaluate if one can compensate for having a small $N$ by having many APs.
+To analyze this further, we assume that $\vect{R}_{kl} = \beta_{kl} \vect{I}_N$ so that there is no spatial correlation. The expression  in \eqref{eq:sufficient-hardening} then simplifies to
+\begin{equation} \label{eq:sufficient-hardening-iid}
+\frac{ \sum\limits_{l \in \mathcal{M}_k} \rho_{kl}  \beta_{kl} 
+}{ N \bigg( \sum\limits_{l \in \mathcal{M}_k} \sqrt{\rho_{kl}  \beta_{kl}} 
+\bigg)^2 } .
+\end{equation}
+If $|\mathcal{M}_k |=1$, or one AP has a much larger value on $\rho_{kl}  \beta_{kl} $ than the other APs that serve UE $k$, then \eqref{eq:sufficient-hardening-iid} becomes approximately $1/N$. If we instead consider the case when all the serving APs have the same value of $\rho_{kl}  \beta_{kl} $, then \eqref{eq:sufficient-hardening-iid} becomes $1/( N | \mathcal{M}_k|)$. Hence, it is plausible to achieve the same degree of channel hardening by having many APs with few antennas as with one AP with many antennas in some cases. If $\rho_{kl}  \beta_{kl} $ is the same for all the serving APs, it is only the total number of AP antennas that determines the degree of channel hardening.
+However, when the APs have different values of  $\rho_{kl}  \beta_{kl} $, then the total number of antennas needed to achieve a certain degree of channel hardening will likely be larger than in Cellular Massive MIMO.
+
+The geographical distribution of the APs, with respect to the UE, determines the values of the large-scale fading coefficients $\{ \beta_{kl} \}$. There can naturally be tens of dB differences between the serving APs, even if they have rather similar distances to the UE.
+One can compensate for this by applying a power allocation algorithm where the powers $\{\rho_{kl} \}$ are selected to even out the differences. More precisely, we can reduce the power from nearby APs (with larger $\beta_{kl}$) and increase the power from APs that are further away  (with smaller $\beta_{kl}$) to achieve roughly the same value of $\rho_{kl}  \beta_{kl} $ for all the serving APs. This will increase the degree of channel hardening but will not necessarily be desirable from an end-to-end performance perspective since we can achieve a higher total received power at the UE by allocating the same power in the opposite way (more power from the nearby APs).
+
+ \begin{figure}[t!]
+	\begin{center}
+		\includegraphics[width=\columnwidth]{images/section2/section2_figure7}
+	\end{center} \vskip-5mm
+	\caption{The value of \eqref{eq:sufficient-hardening-iid}, which represents the variance of the ratio between the effective channel and its mean value, is plotted for different $N$. When \eqref{eq:sufficient-hardening-iid} is small, there is a high degree of channel hardening. The reference case corresponds to a 64-antenna Cellular Massive MIMO setup. The cell-free setup consists of 64 randomly distributed APs and a varying number of antennas per AP. The line shows the median value while the bars show the interval containing 90\% of the random realizations.} \label{figureSec2_hardening} 
+\end{figure}
+
+Figure~\ref{figureSec2_hardening} exemplifies how the degree of channel hardening depends on the geographical AP distribution and the number of antennas per AP. We consider the channel to a UE in the center of $400\,$m $\times$ $400$\,m area. $L=64$ APs are uniformly distributed in the area and transmit with equal power to the UE. We use the large-scale fading model in \eqref{eq:pathloss-coefficient} and assume \gls{iid} Rayleigh fading. The figure shows the value of the expression in \eqref{eq:sufficient-hardening-iid} for different values of $N$. Since the value depends on the AP distribution, the dashed line shows the median value while the vertical bars indicate the interval in which 90\% of all realizations occur. As a reference, the dotted horizontal line shows the value of \eqref{eq:sufficient-hardening-iid} for a single AP with 64 antennas, which represents a Cellular Massive MIMO setup that would achieve a high degree of channel hardening.
+If single-antenna APs are used, then the degree of channel hardening is far from that of the reference case, even if the total number of antennas is the same. The median reaches the reference case for $N=5$ but half of the realizations give substantially larger values. It is first when the number of antennas per AP reaches 8 or 10 that  the degree of channel hardening is comparable to that of Cellular Massive MIMO. Note that the total number of antennas is then an order of magnitude larger than in the reference case.
+ 
+ 
+ \subsubsection{Takeaways}
+In summary, channel hardening is a desirable property but not mandatory for the operation of Cell-free Massive MIMO. In fact, we can expect a substantially lower degree of channel hardening in cell-free networks than in cellular networks when the number of serving antennas is the same. Channel hardening makes some capacity lower bounds (that we will present later in this monograph) closer to the true capacity and also serves as a motivation for not trying to optimize the power allocation in every coherence block but rather on average. We will return to these things later in this monograph.
+
+Note that we defined channel hardening from a downlink precoding perspective in this section. The same argumentation can be made also in the uplink, in which case the precoding vectors are replaced by combining vectors, and the power allocation coefficients are replaced by weights that the CPU uses when fusing the signals $\hat{s}_{kl}$ from different APs. The details on this will be provided in Section~\ref{c-uplink} on p.~\pageref{c-uplink}.
+
+
+
+
+\subsection{Favorable Propagation}
+\label{subsec-favorable-propagation}
+
+When multiple UEs are spatially multiplexed in the system, there will generally be interference between their transmissions, and the precoding/combining can be selected to strike a balance between achieving strong desired signals and causing little interference. 
+However, if the UEs' channels are spatially orthogonal, then the inter-user interference is automatically mitigated by MR processing so one can basically ignore it. When this happens, we say that \emph{favorable propagation} is experienced.
+
+If we consider the received downlink signal of UE $k$ in \eqref{eq:DCC-downlink}, then the interference caused by the concurrent transmission to UE $i$ is $ \sum_{l=1}^{L}  \vect{h}_{kl}^{\Htran}\vect{D}_{il}  \vect{w}_{il} \varsigma_i $. If the MR precoding defined in \eqref{eq:MR-precoding-hardening} is utilized, then the \emph{effective interfering channel} is
+\begin{equation}\label{effective-interfering-channel}
+ \sum_{l=1}^{L}   \sqrt{\frac{\rho_{il}}{\mathbb{E} \{\| \vect{h}_{il} \|^2 \}} }   \vect{h}_{kl}^{\Htran}\vect{D}_{il}\vect{h}_{il} =  \sum_{l \in \mathcal{M}_i}   \sqrt{\frac{\rho_{il}}{\mathbb{E} \{\| \vect{h}_{il} \|^2 \}} } \vect{h}_{kl}^{\Htran}  \vect{h}_{il}.
+\end{equation}
+It is the magnitude of this term compared to the magnitude of the effective channel of the desired signal in \eqref{eq:effective-DL-channel2} that determines how strong the interference is in relative terms. If the ratio is close to zero, then the interference will be negligible and we benefit from favorable propagation. 
+
+
+
+ \subsubsection{Definition and Sufficient Condition for Favorable Propagation}
+
+There are several different formal definitions of favorable propagation in the Cellular Massive MIMO literature but none of them is a perfect fit for the case when multiple APs are transmitting coherently. Hence, we provide the following new definition that is tailored to the cell-free scenario.
+
+\begin{definition}[Favorable propagation]\label{def:favorable-propagation-new} \index{favorable propagation}
+A given UE $k$ experiences asymptotically favorable propagation with respect to UE $i$ (with $i \neq k$) if
+	\begin{equation} \label{eq:asympt-favorable-new}
+	\frac{ \sum\limits_{l \in \mathcal{M}_i}   \sqrt{\frac{\rho_{il}}{\mathbb{E} \{\| \vect{h}_{il} \|^2 \}} } \vect{h}_{kl}^{\Htran}  \vect{h}_{il} }{ \mathbb{E} \left\{ \sum\limits_{l \in \mathcal{M}_k} \sqrt{\frac{\rho_{kl}}{\mathbb{E} \{\| \vect{h}_{kl} \|^2 \}} } \| \vect{h}_{kl} \|^2  \right\} } \rightarrow 0
+	\end{equation}
+	in the mean-squared sense as  $N  \rightarrow \infty$.
+\end{definition}
+
+This definition says that the effective interfering channel in~\eqref{effective-interfering-channel} (i.e., a weighted sum of the inner products between the channel vectors of the two UEs) should go asymptotically to zero, when it is normalized by the average value of the desired effective channel in~\eqref{eq:effective-DL-channel2}. The weights are the downlink transmit powers.
+Note that the numerator depends on the set $\mathcal{M}_i$ of APs that serve the interfering UE $i$, while the denominator depends on the set $\mathcal{M}_k$ of APs serving the considered UE $k$. For correlated Rayleigh fading channels, a sufficient condition for favorable propagation is obtained as follows.
+
+\begin{lemma}
+For correlated Rayleigh fading channels, a sufficient condition for UE $k$ to experience 
+asymptotically favorable propagation with respect to UE $i$ is that 
+\begin{equation} \label{eq:sufficient-favorable}
+\frac{ \sum\limits_{l \in \mathcal{M}_i} \rho_{il} \frac{\tr ( \vect{R}_{il} \vect{R}_{kl} ) }{N \beta_{il} }
+}{ N \bigg( \sum\limits_{l \in \mathcal{M}_k} \sqrt{\rho_{kl}  \beta_{kl}} 
+\bigg)^2 } \to 0 \quad  \textrm{ as } N \to \infty.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The ratio in the left hand side of \eqref{eq:asympt-favorable-new} has a mean value of zero, thus we want to prove convergence to the mean value. In this case, convergence in mean-squared sense requires that the variance of the ratio goes asymptotically to zero. The variance can be computed as
+\begin{equation}
+\mathbb{V}\left\{ 
+\frac{ \sum\limits_{l \in \mathcal{M}_i}   \sqrt{\frac{\rho_{il}}{\mathbb{E} \{\| \vect{h}_{il} \|^2 \}} } \vect{h}_{kl}^{\Htran}  \vect{h}_{il} }{ \mathbb{E} \left\{ \sum\limits_{l \in \mathcal{M}_k} \sqrt{\frac{\rho_{kl}}{\mathbb{E} \{\| \vect{h}_{kl} \|^2 \}} } \| \vect{h}_{kl} \|^2  \right\} }  
+\right\} = \frac{ \sum\limits_{l \in \mathcal{M}_i} \rho_{il} \frac{\tr ( \vect{R}_{il} \vect{R}_{kl} ) }{\tr ( \vect{R}_{il} ) }
+}{ \bigg( \sum\limits_{l \in \mathcal{M}_k} \sqrt{\rho_{kl} \tr ( \vect{R}_{kl} )} 
+\bigg)^2 } 
+\end{equation}
+by utilizing the statistical independence of the channels to the different \glspl{AP} and by applying \cite[Lemma B.14]{massivemimobook} to compute the expectations. We then obtain the sufficient condition in \eqref{eq:sufficient-favorable} by utilizing the definition of $\beta_{kl}$ in \eqref{eq:beta-definition-lk}, which implies that $ \tr ( \vect{R}_{kl} ) = N \beta_{kl}$.
+\end{proof}
+
+Although the definition of favorable propagation relies on asymptotic arguments, we can use it to evaluate the degree of favorable propagation for setups with a finite number of antennas. If the expression in \eqref{eq:sufficient-favorable} is close to zero, this means that the left-hand side of \eqref{eq:asympt-favorable-new} is close to zero and thus favorable propagation is approximately achieved.
+
+The value of the expression in \eqref{eq:sufficient-favorable} depends on the spatial correlation properties in a nontrivial manner. The term $\tr ( \vect{R}_{il} \vect{R}_{kl} )$ in the numerator takes its largest value when the spatial correlation matrices $\vect{R}_{il}$ and $\vect{R}_{kl}$ are identical up to a scaling factor, which represents the case when the two UEs have almost the same spatial directivity of their channels (statistically speaking).
+In contrast, the term takes its smallest value when  the spatial correlation matrices have identical eigenvectors but the eigenvalues are matched together in the opposite order (i.e., large eigenvalues from one matrix are multiplied with small eigenvalues from the other matrix). This represents the case when the two UEs have very different spatial directivity. Clearly, it is the latter case that leads to the highest degree of favorable propagation.
+
+\subsubsection{Impact of the Geographical Distribution of APs}
+
+To instead focus on the different large-scale fading variations that the UEs experience, we can assume that $\vect{R}_{kl} = \beta_{kl} \vect{I}_N$ so that there is no spatial correlation. The expression in \eqref{eq:sufficient-favorable} then simplifies to
+\begin{equation} \label{eq:sufficient-favorable-2}
+\frac{ \sum\limits_{l \in \mathcal{M}_i} \rho_{il} \beta_{kl} 
+}{ N \bigg( \sum\limits_{l \in \mathcal{M}_k} \sqrt{\rho_{kl}  \beta_{kl}} 
+\bigg)^2 } .
+\end{equation}
+This expression decays as $1/N$ so more antennas lead to a higher degree of favorable propagation. Moreover, the set $\mathcal{M}_i$ of APs that serve UE $i$ plays an important role in determining the value of \eqref{eq:sufficient-favorable-2}. If those APs are far from UE $k$, all the $\beta_{kl} $ terms in the numerator will likely be very small and then we can achieve favorable propagation even with $N=1$. However, if $\mathcal{M}_i = \mathcal{M}_k$, the numerator and denominator might be of comparable size and then we might need many antennas per AP to achieve favorable propagation.
+The power allocation also plays a key role; to make the term $ \rho_{il} \beta_{kl} $ in the numerator small, we can either have a small value of $\beta_{kl} $ and/or use a low transmit power $ \rho_{il}$ on that AP.
+
+ \begin{figure}[t!]
+	\begin{center}
+		\includegraphics[width=\columnwidth]{images/section2/section2_figure8}
+	\end{center} \vskip-5mm
+	\caption{The value of \eqref{eq:sufficient-favorable-2}, which represents the variance of the ratio between the effective interfering channel and the mean of the desired effective channel, is plotted for different $N$. When \eqref{eq:sufficient-favorable-2} is small for a selected UE pair, there is a high degree of favorable propagation between them. The reference case corresponds to a 64-antenna Cellular Massive MIMO setup. The cell-free setup consists of 64 randomly distributed APs and a varying number of antennas per AP. The UEs are either 10 or 100\,m apart, and are each served by the 8 APs providing the best channels. The line shows the median value while the bars show the interval containing 90\% of the random realizations.} \label{figureSec2_favorable} 
+\end{figure}
+
+
+Figure~\ref{figureSec2_favorable} exemplifies how the degree of favorable propagation depends on the geographical AP distribution, the distance between the UEs, and the number of antennas per AP. We consider the same setup as in Figure~\ref{figureSec2_hardening} but add an interfering UE that is either 10\,m or 100\,m to the east of the desired UE. We assume each UE is served by the 8 APs that provide the eight largest large-scale fading coefficients and these APs transmit with equal power.
+The figure shows the value of the expression in \eqref{eq:sufficient-favorable-2} for different $N$. Since the value depends on the AP distribution, the dashed line shows the median value while the vertical bars indicate the interval in which 90\% of all realizations occur. As a reference, the dotted horizontal line shows the value of \eqref{eq:sufficient-favorable-2} when a single AP with 64 antennas serves both UEs, which represents a Cellular Massive MIMO setup. 
+We notice that the distance between the UEs strongly determines the degree of favorable propagation. When the UEs are close together, we need around $N=10$ antennas per AP before favorable propagation is approximately achieved. When the UEs are 100\,m apart, most realizations of the AP locations lead to favorable propagation even for $N=1$, but there are still large variations. We can expect that, in practice, some UEs that are far apart might still not achieve favorable propagation with respect to each other.
+
+\subsubsection{Takeaways}
+
+In summary, favorable propagation is a desirable property that makes inter-user interference disappear when using MR precoding (which does not actively suppress any interference). However, favorable propagation is not a necessary property. We have observed that UEs that are served by partially the same APs might not experience it with respect to each other. In those cases, the interference can instead be suppressed by using precoding methods that are actively suppressing interference. This is covered in detail in Section~\ref{c-downlink} on p.~\pageref{c-downlink}.
+
+Note that we defined favorable propagation from a downlink precoding perspective in this section. The same argumentation can be made also in the uplink, as previously discussed in relation to channel hardening. When there is a lack of favorable propagation in the uplink,  we can use receive combining to deal with the interference instead; see Section~\ref{c-uplink} on p.~\pageref{c-uplink}. Although there are clear mathematical similarities between channel hardening and favorable propagation, the properties are different. In particular, a UE might exhibit channel hardening but not favorable propagation or vice versa. It is also likely that some pairs of UEs will experience favorable propagation with respect to each other, while other pairs will not.
+
+
+
+
+
+\newpage
+\section{Summary of the Key Points in Section~\ref{c-cell-free-definition}}
+\label{c-cell-free-definition-summary}
+
+\begin{mdframed}[style=GrayFrame]
+
+\begin{itemize}
+\item A Cell-free Massive \gls{MIMO} network consists of $L$ \glspl{AP}, each equipped with $N$ antennas, that are arbitrarily distributed over the coverage area. The \glspl{AP}  may jointly serve $K$ single-antenna \glspl{UE} in each channel coherence block. More precisely, each \gls{UE} is communicating with a subset of the \glspl{AP}, which is selected based on the \gls{UE}'s needs.
+
+\item  By having a total number of $M=LN$ AP antennas much larger than $K$, the cell-free network typically has sufficiently many spatial degrees-of-freedom to separate  \glspl{UE} in space by linearly processing the transmitted and received signals. 
+
+\item Since a cell-free network may have a large geographical coverage area, it must be designed to be scalable in the sense that the computational capability and fronthaul capacity of existing APs must remain sufficient as new APs are deployed and as more UEs are being served.
+A cell-free network in which each AP serves all the UEs is not scalable.
+
+\item Although the number of co-located antennas per AP is envisaged to be fairly small, the spatial correlation must be anyway considered in the analysis since the channel fading is spatially correlated in practice.
+
+\item When employing a large number of co-located antennas at an AP, two important properties appear: channel hardening and favorable propagation. In cell-free networks, the antennas at multiple APs contribute to these properties. However, a lower degree of channel hardening is expected than in cellular networks because of the fairly small number of antennas per AP. Cell-free networks are expected to provide a high degree of favorable propagation between UEs that are relatively far apart, but not among those that are closely spaced.
+\end{itemize}
+
+\end{mdframed}
