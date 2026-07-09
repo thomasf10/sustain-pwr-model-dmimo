@@ -59,7 +59,7 @@ class PrecodingScheme(str, Enum):
     """Downlink transmit precoding schemes (Section: Transmit Precoding Schemes).
 
     Centralized (jointly designed at the CPU): ``MMSE``, ``P_MMSE``, ``P_RZF``,
-    ``RZF``, ``ZF``. Distributed (formed locally per AP): ``L_MMSE``,
+    ``RZF``, ``ZF``. Distributed (formed locally per AP): ``L_MMSE``, ``L_RZF``,
     ``LP_MMSE``, ``MR``.
     """
 
@@ -70,6 +70,7 @@ class PrecodingScheme(str, Enum):
     P_MMSE = "P-MMSE"    # scalable partial MMSE (centralized)
     P_RZF = "P-RZF"      # scalable partial RZF (centralized)
     L_MMSE = "L-MMSE"    # locally optimal, unscalable (distributed)
+    L_RZF = "L-RZF"      # local regularized ZF (distributed)
     LP_MMSE = "LP-MMSE"  # scalable local partial MMSE (distributed)
 
 
@@ -78,6 +79,20 @@ class OperationMode(str, Enum):
 
     CENTRALIZED = "centralized"  # CPU designs all directions from global CSI
     DISTRIBUTED = "distributed"  # each AP designs its directions from local CSI
+
+
+class ChannelModel(str, Enum):
+    """Backend used to draw channel realizations.
+
+    ``SIONNA_UMI`` generates realistic 3GPP TR 38.901 Urban Microcell channels
+    through Sionna's geometry-based stochastic model (path loss, shadowing, and
+    spatial correlation all follow 38.901). ``RAYLEIGH`` uses the tractable
+    analytical correlated-Rayleigh model built from :meth:`DMIMOConfig.path_loss_dB`
+    and the local scattering correlation matrices.
+    """
+
+    SIONNA_UMI = "sionna-umi"  # 3GPP TR 38.901 UMi via Sionna (requires sionna)
+    RAYLEIGH = "rayleigh"      # analytical correlated-Rayleigh (numpy only)
 
 
 @dataclass
@@ -91,7 +106,7 @@ class DMIMOConfig:
     """
 
     # --- Topology ---------------------------------------------------------
-    L: int = 100                # Number of APs
+    L: int = 10                # Number of APs
     M: int = 4                  # Antennas per AP
     K: int = 20                 # Single-antenna users
     Q: int = 64                 # OFDM data subcarriers evaluated
@@ -111,10 +126,18 @@ class DMIMOConfig:
     kappa: float = 0.5          # Fractional power-control exponent
     rzf_reg: Optional[float] = None  # RZF loading lambda; None -> sigma^2 (see property)
 
+    # --- Channel model backend --------------------------------------------
+    channel_model: ChannelModel = ChannelModel.SIONNA_UMI
+    force_nlos: bool = True      # Force all links NLOS (keeps the channel zero-mean)
+    o2i_model: str = "low"      # 38.901 outdoor-to-indoor model; UEs are outdoor here
+    antenna_pattern: str = "omni"  # AP element pattern ("omni" or "38.901")
+
     # --- Propagation / deployment -----------------------------------------
     area_size: float = 1000.0   # Square coverage-area side [m] (wrap-around)
     ap_height: float = 10.0     # AP height [m]
     ue_height: float = 1.5      # UE height [m]
+    # The following four parameters drive the analytical RAYLEIGH channel only;
+    # the SIONNA_UMI backend takes its path loss and shadowing from 38.901.
     pathloss_exponent: float = 3.67  # Log-distance path-loss exponent (= 36.7/10)
     pathloss_ref_loss_dB: float = 30.5  # Path loss at d0 (3GPP UMi, 2 GHz) [dB]
     shadow_std_dB: float = 4.0  # Log-normal shadowing std [dB]
@@ -133,6 +156,7 @@ class DMIMOConfig:
         # Accept plain strings for the enum fields (e.g. from a config file).
         self.precoding = PrecodingScheme(self.precoding)
         self.operation = OperationMode(self.operation)
+        self.channel_model = ChannelModel(self.channel_model)
 
         for name in ("L", "M", "K", "Q", "tau_c", "tau_p", "n_realizations"):
             if getattr(self, name) <= 0:
@@ -158,7 +182,8 @@ class DMIMOConfig:
                 stacklevel=2,
             )
         # MR/L-MMSE/LP-MMSE are local schemes; ZF/RZF/MMSE/P-* are centralized.
-        local = {PrecodingScheme.MR, PrecodingScheme.L_MMSE, PrecodingScheme.LP_MMSE}
+        local = {PrecodingScheme.MR, PrecodingScheme.L_MMSE, PrecodingScheme.L_RZF,
+                 PrecodingScheme.LP_MMSE}
         is_local = self.precoding in local
         if is_local and self.operation is OperationMode.CENTRALIZED:
             warnings.warn(
@@ -256,6 +281,8 @@ class DMIMOConfig:
             f"({self.noise_power*1e12:.3f} pW)\n"
             f"  max power/AP rho_max  : {watt_to_dbm(self.rho_max):.1f} dBm "
             f"({self.rho_max:.2f} W)\n"
+            f"  channel model         : {self.channel_model.value}"
+            f"{' (NLOS)' if self.force_nlos else ''}\n"
             f"  precoding / operation : {self.precoding.value} / {self.operation.value}\n"
             f"  power-control kappa   : {self.kappa}\n"
             f"  coherence tau_c/tau_p : {self.tau_c}/{self.tau_p} "

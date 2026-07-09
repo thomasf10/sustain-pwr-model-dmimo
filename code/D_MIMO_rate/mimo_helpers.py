@@ -28,11 +28,60 @@ from __future__ import annotations
 
 import numpy as np
 
-from config_dmimo import DMIMOConfig, PrecodingScheme
+from config_dmimo import ChannelModel, DMIMOConfig, PrecodingScheme
 
 # ======================================================================
-# Channel model  --  IMPLEMENT YOURSELF
+# Channel model
 # ======================================================================
+#
+# The channel model has two backends, selected by ``cfg.channel_model``:
+#
+# * ``SIONNA_UMI`` -- realistic 3GPP TR 38.901 UMi channels from Sionna. This is
+#   the default and is fully implemented via :mod:`sionna_channel`.
+# * ``RAYLEIGH`` -- the analytical correlated-Rayleigh model, whose per-step
+#   pieces (``spatial_correlation``, ``generate_channels``, ``estimate_channels``)
+#   are left as stubs to implement.
+#
+# Both share :func:`draw_positions`. Use :func:`build_channel` once, then
+# :func:`channel_realization` per drop, to get ``(H, beta)`` regardless of backend.
+
+
+def build_channel(cfg: DMIMOConfig):
+    """Build the channel backend selected by ``cfg.channel_model`` (once).
+
+    Returns a stateful generator for :func:`channel_realization` when Sionna is
+    selected (Sionna is imported lazily so the analytical path needs no heavy
+    dependencies), or ``None`` for the analytical Rayleigh backend.
+    """
+    if cfg.channel_model is ChannelModel.SIONNA_UMI:
+        from sionna_channel import SionnaUMiChannel
+        return SionnaUMiChannel(cfg)
+    return None
+
+
+def channel_realization(cfg: DMIMOConfig, channel, ap_pos, ue_pos,
+                        rng: np.random.Generator):
+    """One channel realization ``(H, beta)`` for a drop, for either backend.
+
+    Args:
+        cfg: System configuration.
+        channel: Object from :func:`build_channel` (Sionna generator or ``None``).
+        ap_pos, ue_pos: AP/UE coordinates from :func:`draw_positions`.
+        rng: Random generator for the analytical backend.
+
+    Returns:
+        Tuple ``(H, beta)`` with channels ``(Q, K, M_tot)`` and large-scale
+        fading ``(L, K)``.
+    """
+    if channel is not None:
+        return channel.generate(ap_pos, ue_pos, rng)
+
+    raise NotImplementedError("channel model: analytical correlated-Rayleigh use Sionna channel model instead or implement the stubs in mimo_helpers.py")
+    # # Analytical correlated-Rayleigh backend.
+    # beta = large_scale_fading(cfg, ap_pos, ue_pos, rng)
+    # R = spatial_correlation(cfg, ap_pos, ue_pos, beta)
+    # H = generate_channels(cfg, rng, R)
+    # return H, beta
 
 
 def draw_positions(cfg: DMIMOConfig, rng: np.random.Generator):
@@ -122,29 +171,60 @@ def generate_channels(cfg: DMIMOConfig, rng: np.random.Generator,
 
 
 def estimate_channels(cfg: DMIMOConfig, rng: np.random.Generator,
-                      H: np.ndarray, R: np.ndarray) -> np.ndarray:
+                      H: np.ndarray) -> np.ndarray:
     """Return the CSI used to build the precoders.
 
-    For perfect CSI simply return ``H``. For a pilot-based study, return the MMSE
-    estimates (including pilot contamination when ``tau_p < K``).
+    Currently perfect CSI: the true channels ``H`` are returned unchanged. For a
+    pilot-based study, replace this with the MMSE estimates (including pilot
+    contamination when ``tau_p < K``), which for the analytical backend needs the
+    correlation matrices ``R`` and for the Sionna backend needs them estimated
+    from Monte Carlo averaging.
 
     Returns:
         Array ``(Q, K, M_tot)`` of channel estimates, same layout as ``H``.
     """
-    raise NotImplementedError("channel model: channel estimation (or return H for perfect CSI)")
+    print("mimo_helpers.estimate_channels: perfect CSI (H_hat = H)")
+
+    return H
 
 
 # ======================================================================
-# Transmit precoding  --  IMPLEMENT YOURSELF
+# Transmit precoding
 # ======================================================================
+#
+# The centralized precoders (MR, ZF, RZF, MMSE) act on the M_tot collective
+# antennas jointly; the local ones (L-RZF, L-MMSE) build each AP's block from its
+# own CSI. Both families are implemented below. The scalable partial variants
+# (P-MMSE, P-RZF, LP-MMSE), which need user-centric clustering, remain stubs.
 
 
 def precoding_directions(cfg: DMIMOConfig, H_hat: np.ndarray) -> np.ndarray:
     """Unnormalized precoding directions wbar_k[q] for the configured scheme.
 
-    Dispatch on ``cfg.precoding`` (see :class:`PrecodingScheme`). Centralized
-    schemes (ZF/RZF/MMSE/P-*) use the full collective estimates; distributed
-    schemes (MR/L-MMSE/LP-MMSE) act per AP block of ``M`` rows.
+    Implements the centralized and local precoders of the cell-free downlink from
+    the collective channel estimates. Writing ``E = H_hat[q].T`` for the
+    ``(M_tot, K)`` matrix whose columns are the user estimates ``h_k[q]`` and
+    ``G = E^H E`` for their ``(K, K)`` Gram matrix, the centralized directions are
+
+    * ``MR``   : ``wbar_k = h_k``                          (maximum ratio)
+    * ``ZF``   : ``Wbar   = E (E^H E)^{-1}``               (zero forcing)
+    * ``RZF``  : ``Wbar   = E (E^H E + lambda I_K)^{-1}``  (regularized ZF)
+    * ``MMSE`` : ``Wbar   = E (E^H E + sigma^2 I_K)^{-1}``
+
+    and the local (per-AP, distributed) directions ``L-RZF`` / ``L-MMSE`` build
+    each AP's block from only its own local CSI (see :func:`_local_regularized_zf`).
+
+    ZF/RZF/MMSE use the ``K x K`` signal-domain form, which is the push-through
+    equivalent of the ``M_tot x M_tot`` form ``(E E^H + lambda I)^{-1} E`` but
+    only inverts a ``K x K`` matrix. The RZF loading is ``cfg.rzf_regularization``
+    (default ``sigma^2``); MMSE uses the noise power ``sigma^2``. Under the
+    current perfect-CSI setup the error-aware MMSE precoder reduces to this
+    regularized-ZF form, so MMSE and RZF coincide when the RZF loading is left at
+    its ``sigma^2`` default; they diverge once that loading is retuned or a
+    channel-estimation-error covariance is modeled (the same holds for the local
+    pair L-MMSE / L-RZF). The loading is the noise power for a unit-power dual
+    uplink; for physically-scaled channels you may want to set ``cfg.rzf_reg`` to
+    ``sigma^2 / p`` for the intended per-user power ``p``.
 
     Args:
         cfg: System configuration.
@@ -154,7 +234,77 @@ def precoding_directions(cfg: DMIMOConfig, H_hat: np.ndarray) -> np.ndarray:
         Directions ``Wbar`` shaped ``(Q, M_tot, K)`` (power/normalization applied
         later in :func:`normalize_precoder`).
     """
-    raise NotImplementedError(f"precoding: directions for {cfg.precoding.value}")
+    scheme = cfg.precoding
+    # E[q] has columns h_k[q]; this is already the (Q, M_tot, K) direction layout.
+    E = H_hat.transpose(0, 2, 1)                     # (Q, M_tot, K)
+
+    if scheme is PrecodingScheme.MR:
+        return E.copy()
+
+    # Local (per-AP) regularized-ZF family: each AP designs from its own block.
+    if scheme is PrecodingScheme.L_RZF:
+        return _local_regularized_zf(cfg, H_hat, E, cfg.rzf_regularization)
+    if scheme is PrecodingScheme.L_MMSE:
+        return _local_regularized_zf(cfg, H_hat, E, cfg.noise_power)
+
+    # Centralized regularized-ZF family: Wbar = E (E^H E + load * I_K)^{-1}, the
+    # members differing only in the diagonal loading of the Gram matrix.
+    if scheme is PrecodingScheme.ZF:
+        load = 0.0                       # no loading; gram must be full rank (K <= M_tot)
+    elif scheme is PrecodingScheme.RZF:
+        load = cfg.rzf_regularization    # heuristic loading (default sigma^2)
+    elif scheme is PrecodingScheme.MMSE:
+        load = cfg.noise_power           # noise-power loading sigma^2
+    else:
+        raise NotImplementedError(f"precoding: directions for {scheme.value}")
+
+    gram = np.conj(H_hat) @ E                        # (Q, K, K), [k,i] = h_k^H h_i
+    if load:
+        gram = gram + load * np.eye(cfg.K)
+
+    # Wbar = E @ inv(gram). Solved stably as (inv(gram) @ E^H)^H, using that gram
+    # is Hermitian and E^H (per subcarrier) is conj(H_hat).
+    X = np.linalg.solve(gram, np.conj(H_hat))        # (Q, K, M_tot) = inv(gram) @ E^H
+    return np.conj(X).transpose(0, 2, 1)             # (Q, M_tot, K)
+
+
+def _local_regularized_zf(cfg: DMIMOConfig, H_hat: np.ndarray, E: np.ndarray,
+                          load: float) -> np.ndarray:
+    """Local (per-AP) regularized-ZF directions for L-RZF / L-MMSE.
+
+    Each AP ``l`` designs its ``M x K`` precoder from only its own channel block
+    ``E_l`` (the ``M`` rows of ``E`` for that AP, whose columns are the local
+    estimates ``h_kl``), as ``W_l = (E_l E_l^H + load * I_M)^{-1} E_l``, and the
+    blocks are stacked into the collective ``(Q, M_tot, K)`` precoder. This uses
+    the ``M x M`` antenna-domain form (the per-AP array is small) and the loading
+    keeps it invertible even when ``M < K``, unlike a plain local ZF.
+
+    Under perfect CSI L-MMSE reduces to this form (its estimation-error
+    covariance term ``C_il`` vanishes), so L-MMSE and L-RZF differ only in the
+    loading and coincide at the ``sigma^2`` default. As with the centralized
+    schemes, the loading assumes a unit-power dual uplink; retune
+    ``cfg.rzf_reg`` to ``sigma^2 / p`` for physically-scaled channels.
+
+    Args:
+        cfg: System configuration.
+        H_hat: Channel estimates ``(Q, K, M_tot)``.
+        E: Direction-layout estimates ``H_hat.transpose(0, 2, 1)`` ``(Q, M_tot, K)``.
+        load: Diagonal loading (``sigma^2`` for L-MMSE, ``cfg.rzf_reg`` for L-RZF).
+
+    Returns:
+        Directions ``Wbar`` shaped ``(Q, M_tot, K)``.
+    """
+    Q, K, M, L = cfg.Q, cfg.K, cfg.M, cfg.L
+    Wbar = np.empty((Q, cfg.M_tot, K), dtype=np.complex128)
+    loadI = load * np.eye(M)
+    for l in range(L):
+        blk = slice(l * M, (l + 1) * M)
+        E_l = E[:, blk, :]                           # (Q, M, K), columns h_kl
+        H_l = H_hat[:, :, blk]                        # (Q, K, M), rows h_kl
+        A_l = E_l @ np.conj(H_l) + loadI              # (Q, M, M) = sum_k h_kl h_kl^H + load*I
+        Wbar[:, blk, :] = np.linalg.solve(A_l, E_l)   # (Q, M, K) = inv(A_l) @ E_l
+    return Wbar
+
 
 
 # ======================================================================

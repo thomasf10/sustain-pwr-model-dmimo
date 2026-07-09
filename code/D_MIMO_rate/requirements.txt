@@ -1,0 +1,12 @@
+# Distributed MIMO downlink rate model (dl_rate.py).
+#
+# The default channel backend (cfg.channel_model = SIONNA_UMI) uses Sionna's
+# 3GPP TR 38.901 UMi model, which pulls in a heavy stack (PyTorch plus the
+# Dr.Jit/Mitsuba sionna-rt dependency). Sionna 2.x needs Python >= 3.10; this
+# model was developed and tested on Python 3.13 in a dedicated virtualenv.
+#
+# The analytical RAYLEIGH backend needs only numpy (once its stubs are filled in),
+# so if you do not need Sionna you can skip the sionna line below.
+
+numpy>=1.21
+sionna>=2.0        # 38.901 UMi channel model (brings in torch, sionna-rt)

@@ -5,9 +5,12 @@ Orchestrates one Monte Carlo experiment for the downlink system model of
 :mod:`mimo_helpers`, where the channel model, precoding, and power control are
 implemented. Each realization runs:
 
-    positions -> large-scale fading -> correlation -> channels -> CSI
+    positions -> channel realization (H, beta) -> CSI
               -> precoding directions -> power control -> precoders
               -> effective channel -> SINR -> spectral efficiency
+
+The channel realization comes from the backend selected by ``cfg.channel_model``
+(Sionna 38.901 UMi by default, or the analytical Rayleigh model).
 
 Per-user SEs are averaged over realizations to give the ergodic result. The DL
 sum rate in bit/s is ``sum_k SE_k * B`` and is what feeds the encoder/MIMO terms
@@ -62,13 +65,15 @@ def simulate_downlink(cfg: DMIMOConfig,
     se_acc = np.zeros(cfg.K)
     power_acc = np.zeros(cfg.L)
 
+    # Build the channel backend once (Sionna UMi model or analytical Rayleigh).
+    channel = mh.build_channel(cfg)
+
     for _ in range(cfg.n_realizations):
         # --- Channel model (mimo_helpers) --------------------------------
         ap_pos, ue_pos = mh.draw_positions(cfg, rng)
-        beta = mh.large_scale_fading(cfg, ap_pos, ue_pos, rng)
-        R = mh.spatial_correlation(cfg, ap_pos, ue_pos, beta)
-        H = mh.generate_channels(cfg, rng, R)
-        H_hat = mh.estimate_channels(cfg, rng, H, R)
+        H, beta = mh.channel_realization(cfg, channel, ap_pos, ue_pos, rng)
+        H_hat = mh.estimate_channels(cfg, rng, H)
+        print(f"Realization:H_hat.shape={H_hat.shape}")
 
         # --- Precoding + power control (mimo_helpers) --------------------
         Wbar = mh.precoding_directions(cfg, H_hat)

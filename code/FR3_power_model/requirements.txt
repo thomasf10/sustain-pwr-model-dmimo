@@ -2,6 +2,6 @@
 numpy>=1.21
 matplotlib>=3.5
 
-# Rate model (Fig 2c) only -- heavy, GPU recommended. Uncomment to install.
-# sionna
-# tensorflow
+# Rate model (Fig 2c) lives in ../D_MIMO_rate and has its own requirements.txt.
+# Its Sionna 38.901 backend is heavy (Sionna 2.x pulls in PyTorch, not
+# TensorFlow) and needs Python >= 3.10; install it separately in that folder.
