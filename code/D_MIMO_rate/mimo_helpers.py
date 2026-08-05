@@ -28,7 +28,13 @@ from __future__ import annotations
 
 import numpy as np
 
-from config_dmimo import ChannelModel, DMIMOConfig, PrecodingScheme
+from config_dmimo import (
+    ChannelModel,
+    DMIMOConfig,
+    OperationMode,
+    PowerControlScheme,
+    PrecodingScheme,
+)
 
 # ======================================================================
 # Channel model
@@ -107,6 +113,190 @@ def draw_positions(cfg: DMIMOConfig, rng: np.random.Generator):
     return ap_pos, ue_pos
 
 
+def cpu_position(cfg: DMIMOConfig, cpu_pos=None) -> np.ndarray:
+    """Coordinate ``(2,)`` [m] of the central unit (CPU/CU).
+
+    The CPU is a logical entity with no location in the system model; absent an
+    explicit ``cpu_pos`` it is placed at the coverage-area centre. This position
+    is used only for display (:func:`plot_network`) and for the fronthaul-length
+    bookkeeping (:func:`fronthaul_lengths`), never in the signal model.
+    """
+    if cpu_pos is None:
+        return np.array([cfg.area_size / 2, cfg.area_size / 2])
+    return np.asarray(cpu_pos, dtype=float)
+
+
+def fronthaul_lengths(cfg: DMIMOConfig, ap_pos, cpu_pos=None) -> np.ndarray:
+    """Planar CPU-to-AP fronthaul link lengths ``(L,)`` [m] for one drop.
+
+    Euclidean distance in the horizontal plane from the CPU (see
+    :func:`cpu_position`) to each AP. This is the straight-line separation; it
+    ignores AP height and any real cable/fibre routing, so it is a lower bound on
+    the physical fronthaul run. Because :func:`draw_positions` redraws the APs
+    each realization, these lengths describe the given drop, not a fixed
+    deployment.
+
+    Args:
+        cfg: System configuration (``area_size`` for the default CPU location).
+        ap_pos: AP coordinates ``(L, 2)`` [m] from :func:`draw_positions`.
+        cpu_pos: Optional CPU coordinate ``(2,)`` [m]; defaults to the centre.
+
+    Returns:
+        Array ``(L,)`` of link lengths [m].
+    """
+    ap = np.asarray(ap_pos, dtype=float)
+    return np.linalg.norm(ap - cpu_position(cfg, cpu_pos), axis=1)
+
+
+def fronthaul_summary(cfg: DMIMOConfig, ap_pos, cpu_pos=None) -> str:
+    """Human-readable overview of the per-link and total fronthaul lengths.
+
+    Lists the CPU-to-AP length of every fronthaul link and the aggregate, mean,
+    and maximum, for the AP drop in ``ap_pos`` (see :func:`fronthaul_lengths`).
+    """
+    cpu = cpu_position(cfg, cpu_pos)
+    d = fronthaul_lengths(cfg, ap_pos, cpu_pos)
+    lines = [f"Fronthaul overview (CPU at ({cpu[0]:.1f}, {cpu[1]:.1f}) m, {cfg.L} links)"]
+    for l, dl in enumerate(d):
+        lines.append(f"  AP {l:2d} -> CPU : {dl:7.1f} m")
+    total = d.sum()
+    lines.append(f"  total fronthaul length : {total:.1f} m ({total/1e3:.3f} km)")
+    lines.append(f"  mean / max link        : {d.mean():.1f} / {d.max():.1f} m")
+    return "\n".join(lines)
+
+
+def plot_network(cfg: DMIMOConfig, ap_pos, ue_pos, cpu_pos=None, ax=None,
+                 annotate: bool = False, show: bool = True, save_path=None):
+    """Scatter the cell-free network drop: APs, UEs, and the central unit (CPU).
+
+    Draws the ``L`` access points, the ``K`` users, and the CPU over the square
+    coverage area, with light fronthaul links from the CPU to every AP. The CPU
+    is a logical entity with no coordinate in the system model; absent an
+    explicit ``cpu_pos`` it is placed at the area centre for display only. The
+    deployment lives on a wrap-around torus, so the straight fronthaul segments
+    are drawn for readability and are not the wrap-around distances.
+
+    Matplotlib is imported lazily so importing this module stays dependency-free.
+
+    Args:
+        cfg: System configuration (``L``, ``K``, ``area_size``).
+        ap_pos: AP coordinates ``(L, 2)`` [m] from :func:`draw_positions`.
+        ue_pos: UE coordinates ``(K, 2)`` [m] from :func:`draw_positions`.
+        cpu_pos: Optional CPU coordinate ``(2,)`` [m]; defaults to the area centre.
+        ax: Optional Matplotlib ``Axes`` to draw into; a new figure is made if
+            omitted.
+        annotate: If true, label each AP and UE with its index.
+        show: If true, call ``plt.show()`` before returning.
+        save_path: If given, save the figure to this path (dpi 150).
+
+    Returns:
+        The Matplotlib ``Axes`` the network was drawn on.
+    """
+    import matplotlib.pyplot as plt
+
+    ap = np.asarray(ap_pos, dtype=float)
+    ue = np.asarray(ue_pos, dtype=float)
+    cpu = cpu_position(cfg, cpu_pos)
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(6, 6))
+
+    # Fronthaul links CPU <-> each AP (drawn under the markers).
+    for l in range(ap.shape[0]):
+        ax.plot([cpu[0], ap[l, 0]], [cpu[1], ap[l, 1]],
+                color="0.8", lw=0.8, zorder=1)
+
+    ax.scatter(ue[:, 0], ue[:, 1], marker="o", s=40, c="tab:blue",
+               edgecolors="k", linewidths=0.4, label=f"UEs (K={cfg.K})", zorder=3)
+    ax.scatter(ap[:, 0], ap[:, 1], marker="^", s=90, c="tab:red",
+               edgecolors="k", linewidths=0.5, label=f"APs (L={cfg.L})", zorder=4)
+    ax.scatter(cpu[0], cpu[1], marker="s", s=150, c="tab:green",
+               edgecolors="k", linewidths=0.6, label="CPU", zorder=5)
+
+    if annotate:
+        for l in range(ap.shape[0]):
+            ax.annotate(str(l), ap[l], textcoords="offset points", xytext=(4, 4),
+                        fontsize=8, color="tab:red")
+        for k in range(ue.shape[0]):
+            ax.annotate(str(k), ue[k], textcoords="offset points", xytext=(4, 4),
+                        fontsize=8, color="tab:blue")
+
+    ax.set_xlim(0, cfg.area_size)
+    ax.set_ylim(0, cfg.area_size)
+    ax.set_aspect("equal")
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    ax.set_title(f"Cell-free network: {cfg.L} APs, {cfg.K} UEs "
+                 f"({cfg.area_size:.0f} m x {cfg.area_size:.0f} m)")
+    ax.legend(loc="upper right", framealpha=0.9)
+    ax.grid(True, ls=":", alpha=0.4)
+
+    if save_path is not None:
+        ax.figure.savefig(save_path, dpi=150, bbox_inches="tight")
+    if show:
+        plt.show()
+    return ax
+
+
+def plot_se_cdf(se_samples, ax=None, label=None, show: bool = True, save_path=None):
+    """Empirical CDF of the per-user downlink spectral efficiency.
+
+    Each sample is one user's SE in one channel realization; pooling them over
+    users and realizations gives the standard cell-free SE distribution over
+    random user locations and fading, which the ergodic sum SE hides. The 5th
+    percentile (the 95%-likely SE) and the median are marked, since the lower
+    tail is the fairness metric that matters in cell-free deployments.
+
+    Matplotlib is imported lazily so importing this module stays dependency-free.
+
+    Args:
+        se_samples: Per-user SE values [bit/s/Hz]; any shape, flattened here
+            (e.g. :attr:`dl_rate.DownlinkResult.se_samples`, shape ``(n, K)``).
+        ax: Optional Matplotlib ``Axes`` to draw into (for overlaying schemes);
+            a new figure is made if omitted.
+        label: Optional curve label (shown in a legend when given).
+        show: If true, call ``plt.show()`` before returning.
+        save_path: If given, save the figure to this path (dpi 150).
+
+    Returns:
+        The Matplotlib ``Axes`` the CDF was drawn on.
+    """
+    import matplotlib.pyplot as plt
+
+    se = np.sort(np.asarray(se_samples, dtype=float).ravel())
+    if se.size == 0:
+        raise ValueError("se_samples is empty")
+    cdf = np.arange(1, se.size + 1) / se.size
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(6, 4))
+
+    line, = ax.plot(se, cdf, lw=2, label=label)
+    color = line.get_color()
+    p05, p50 = np.percentile(se, 5), np.percentile(se, 50)
+    for x, y in ((p05, 0.05), (p50, 0.50)):
+        ax.plot([x, x, 0], [0, y, y], ls=":", color=color, lw=1, zorder=1)
+    ax.annotate(f"5% = {p05:.2f}", (p05, 0.05), textcoords="offset points",
+                xytext=(6, -2), fontsize=8, color=color)
+    ax.annotate(f"median = {p50:.2f}", (p50, 0.50), textcoords="offset points",
+                xytext=(6, -10), fontsize=8, color=color)
+
+    ax.set_xlim(left=0)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel("per-user spectral efficiency [bit/s/Hz]")
+    ax.set_ylabel("CDF")
+    ax.set_title("Downlink per-user SE distribution")
+    ax.grid(True, ls=":", alpha=0.4)
+    if label is not None:
+        ax.legend(loc="lower right")
+
+    if save_path is not None:
+        ax.figure.savefig(save_path, dpi=150, bbox_inches="tight")
+    if show:
+        plt.show()
+    return ax
+
+
 def large_scale_fading(cfg: DMIMOConfig, ap_pos, ue_pos,
                        rng: np.random.Generator) -> np.ndarray:
     """Large-scale fading (average channel gain) beta[l, k] between AP l and UE k.
@@ -183,8 +373,6 @@ def estimate_channels(cfg: DMIMOConfig, rng: np.random.Generator,
     Returns:
         Array ``(Q, K, M_tot)`` of channel estimates, same layout as ``H``.
     """
-    print("mimo_helpers.estimate_channels: perfect CSI (H_hat = H)")
-
     return H
 
 
@@ -313,25 +501,114 @@ def _local_regularized_zf(cfg: DMIMOConfig, H_hat: np.ndarray, E: np.ndarray,
 
 
 def power_control(cfg: DMIMOConfig, beta: np.ndarray, Wbar: np.ndarray) -> np.ndarray:
-    """Downlink power-control coefficients.
+    """Downlink power-control coefficients from the large-scale fading.
 
-    Return per-user powers ``rho`` shaped ``(K,)`` for centralized operation, or
-    per-AP-per-user powers shaped ``(L, K)`` for distributed operation (e.g. the
-    fractional rule rho_kl = rho_max * beta_kl^kappa / sum_i beta_il^kappa).
+    The allocation is dispatched on ``cfg.operation`` so that the level of
+    cooperation and the power-control rule stay consistent (the same coupling
+    that :class:`DMIMOConfig` enforces between ``operation`` and ``precoding``):
+
+    * ``CENTRALIZED`` returns a per-user vector ``rho`` shaped ``(K,)``. Two
+      heuristics are available through ``cfg.power_alloc``: ``EQUAL`` splits the
+      total network power equally, ``rho_k = P_tot / K``; ``FRACTIONAL`` weights
+      users by their aggregate large-scale gain, ``rho_k = P_tot * beta_k^v /
+      sum_i beta_i^v`` with ``beta_k = sum_l beta_kl``. Both sum to the total
+      power budget ``P_tot = L * rho_max`` (every AP transmitting at full power).
+    * ``DISTRIBUTED`` returns a per-AP-per-user matrix ``rho`` shaped ``(L, K)``
+      using the (only) local rule, the per-AP fractional allocation
+      ``rho_kl = rho_max * beta_kl^v / sum_i beta_il^v``. This satisfies
+      ``sum_k rho_kl = rho_max`` for every AP by construction, so each AP meets
+      its per-antenna-array power budget with equality.
+
+    The exponent ``v`` interpolates between equal power (``v = 0``),
+    gain-proportional allocation that favours strong users (``v > 0``), and
+    fairness-oriented allocation that boosts weak users (``v < 0``). These
+    coefficients are nominal targets defined from the large-scale statistics;
+    :func:`normalize_precoder` performs the final direction/power split and is
+    responsible for enforcing the exact per-AP budget on the realized precoders.
+
+    Args:
+        cfg: System configuration (``operation``, ``power_alloc``, ``v``,
+            ``rho_max``, ``L``, ``K``).
+        beta: Large-scale fading ``(L, K)`` [linear], e.g. from
+            :func:`channel_realization`.
+        Wbar: Precoding directions ``(Q, M_tot, K)``. Unused by these
+            statistics-only heuristics; kept for signature parity with rules
+            that shape power from the instantaneous directions.
 
     Returns:
-        Array ``(K,)`` or ``(L, K)`` of non-negative powers [W].
+        Array ``(K,)`` (centralized) or ``(L, K)`` (distributed) of non-negative
+        powers [W].
     """
-    raise NotImplementedError("power control: power coefficients rho")
+    del Wbar  # heuristics depend only on the large-scale fading beta
+    beta = np.asarray(beta, dtype=float)
+    if beta.shape != (cfg.L, cfg.K):
+        raise ValueError(
+            f"beta must have shape (L, K)=({cfg.L}, {cfg.K}), got {beta.shape}"
+        )
+
+    if cfg.operation is OperationMode.CENTRALIZED:
+        return _centralized_power_control(cfg, beta)
+    if cfg.operation is OperationMode.DISTRIBUTED:
+        return _local_power_control(cfg, beta)
+    raise NotImplementedError(f"power control: operation {cfg.operation.value}")
+
+
+def _centralized_power_control(cfg: DMIMOConfig, beta: np.ndarray) -> np.ndarray:
+    """Per-user centralized allocation ``rho`` shaped ``(K,)`` summing to P_tot.
+
+    ``EQUAL`` gives ``rho_k = P_tot / K``; ``FRACTIONAL`` gives ``rho_k = P_tot *
+    beta_k^v / sum_i beta_i^v`` with the aggregate user gain
+    ``beta_k = sum_l beta_kl`` and ``P_tot = L * rho_max``.
+    """
+    P_tot = cfg.L * cfg.rho_max
+    if cfg.power_alloc is PowerControlScheme.EQUAL:
+        return np.full(cfg.K, P_tot / cfg.K)
+    if cfg.power_alloc is PowerControlScheme.FRACTIONAL:
+        beta_k = beta.sum(axis=0)                 # (K,) aggregate gain per user
+        weights = beta_k ** cfg.v                 # (K,)
+        return P_tot * weights / weights.sum()
+    raise NotImplementedError(
+        f"power control: centralized rule {cfg.power_alloc.value}"
+    )
+
+
+def _local_power_control(cfg: DMIMOConfig, beta: np.ndarray) -> np.ndarray:
+    """Per-AP fractional allocation ``rho`` shaped ``(L, K)``.
+
+    ``rho_kl = rho_max * beta_kl^v / sum_i beta_il^v``; the denominator is
+    the per-AP sum over the served users, so ``sum_k rho_kl = rho_max`` and each
+    AP spends its full budget. This is the only local (distributed) rule.
+    """
+    weights = beta ** cfg.v                        # (L, K)
+    denom = weights.sum(axis=1, keepdims=True)    # (L, 1) per-AP normalizer
+    return cfg.rho_max * weights / denom
 
 
 def normalize_precoder(cfg: DMIMOConfig, Wbar: np.ndarray, rho: np.ndarray) -> np.ndarray:
     """Scale directions into precoders that meet the per-AP power budget.
 
-    Applies the direction/power split ``w_k = sqrt(rho_k) * wbar_k / ||wbar_k||``
-    (per-user), or the per-AP variant, and enforces
-    ``sum_q sum_k ||w_kl[q]||^2 <= rho_max`` for every AP l (see
-    :func:`ap_powers` to check it).
+    The direction/power split depends on the shape of ``rho`` (which encodes the
+    cooperation level, see :func:`power_control`):
+
+    * Per-user ``rho`` shaped ``(K,)`` (centralized). Each user direction is first
+      normalized over all antennas and subcarriers to radiate ``rho_k`` in total,
+      ``w_k = sqrt(rho_k) * wbar_k / sqrt(sum_q ||wbar_k[q]||^2)``. Because the
+      centralized precoder is designed jointly across APs, its columns cannot be
+      rescaled per AP without breaking the interference nulling, so the per-AP
+      budget is met by a single global scaling ``sqrt(rho_max / max_l P_l)`` that
+      brings the busiest AP to ``rho_max``. With ``sum_k rho_k = L * rho_max`` the
+      per-AP powers average to ``rho_max``, so this factor is at most one and the
+      constraint is always feasible.
+    * Per-AP-per-user ``rho`` shaped ``(L, K)`` (distributed). Each AP normalizes
+      its own ``M``-antenna block independently to radiate ``rho_kl`` for user k,
+      ``w_kl = sqrt(rho_kl) * wbar_kl / sqrt(sum_q ||wbar_kl[q]||^2)``. The per-AP
+      power is then ``sum_k rho_kl``, which the local fractional rule sets to
+      ``rho_max``, so every AP meets its budget with equality using only local
+      quantities (no CPU-side global scaling).
+
+    A direction with zero energy (e.g. a local block that a per-AP precoder left
+    empty) is left at zero rather than divided by zero. Verify the result with
+    ``ap_powers(cfg, W) <= rho_max``.
 
     Args:
         cfg: System configuration.
@@ -341,7 +618,47 @@ def normalize_precoder(cfg: DMIMOConfig, Wbar: np.ndarray, rho: np.ndarray) -> n
     Returns:
         Normalized precoders ``W`` shaped ``(Q, M_tot, K)``.
     """
-    raise NotImplementedError("power control: normalize directions into precoders")
+    Wbar = np.asarray(Wbar)
+    rho = np.asarray(rho, dtype=float)
+    Q, M_tot, K = Wbar.shape
+    L, M = cfg.L, cfg.M
+
+    if rho.shape == (K,):
+        # Centralized: per-user total power, then one global scaling so the
+        # busiest AP sits exactly at rho_max (preserves the joint directions).
+        energy = (np.abs(Wbar) ** 2).sum(axis=(0, 1))     # (K,) sum_q ||wbar_k||^2
+        W = Wbar * _power_scale(rho, energy)[None, None, :]
+        peak = ap_powers(cfg, W).max()                    # busiest AP power [W]
+        if peak > 0:
+            W = W * np.sqrt(cfg.rho_max / peak)
+        return W
+
+    if rho.shape == (L, K):
+        # Distributed: each AP normalizes its own block to radiate rho_kl, so
+        # sum_k rho_kl = rho_max is met per AP with only local information.
+        W = np.empty_like(Wbar)
+        for l in range(L):
+            blk = slice(l * M, (l + 1) * M)
+            Wbar_l = Wbar[:, blk, :]                       # (Q, M, K)
+            energy = (np.abs(Wbar_l) ** 2).sum(axis=(0, 1))  # (K,) sum_q ||wbar_kl||^2
+            W[:, blk, :] = Wbar_l * _power_scale(rho[l], energy)[None, None, :]
+        return W
+
+    raise ValueError(
+        f"rho must have shape (K,)=({K},) or (L, K)=({L}, {K}), got {rho.shape}"
+    )
+
+
+def _power_scale(power: np.ndarray, energy: np.ndarray) -> np.ndarray:
+    """Per-column scale ``sqrt(power / energy)``, guarding zero-energy directions.
+
+    Columns with zero direction energy get a zero scale (they radiate nothing)
+    instead of producing ``inf``/``nan``.
+    """
+    scale = np.zeros_like(energy, dtype=float)
+    nz = energy > 0
+    scale[nz] = np.sqrt(power[nz] / energy[nz])
+    return scale
 
 
 # ======================================================================

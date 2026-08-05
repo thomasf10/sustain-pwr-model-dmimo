@@ -10,3 +10,4 @@
 
 numpy>=1.21
 sionna>=2.0        # 38.901 UMi channel model (brings in torch, sionna-rt)
+tqdm>=4.0         # progress bar over the Monte Carlo channel realizations

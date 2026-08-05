@@ -11,7 +11,7 @@ mirror the manuscript:
     Q        OFDM data subcarriers
     rho_max  maximum DL transmit power per AP        [W]
     sigma^2  receiver noise power (derived from B and the noise figure)
-    kappa    fractional power-control exponent  (eq. fractional-power)
+    v        fractional power-control exponent  (eq. fractional-power)
     lambda   RZF loading term                   (eq. zf-precoder / RZF)
 
 Parameters are grouped into topology, RF band, noise, power/precoding,
@@ -81,6 +81,19 @@ class OperationMode(str, Enum):
     DISTRIBUTED = "distributed"  # each AP designs its directions from local CSI
 
 
+class PowerControlScheme(str, Enum):
+    """Downlink power-allocation heuristic (Section: Power Control).
+
+    ``EQUAL`` and ``FRACTIONAL`` produce a per-user coefficient and are only
+    meaningful for centralized operation; ``FRACTIONAL`` is also the (only)
+    local rule, where it produces a per-AP-per-user coefficient. ``EQUAL`` is
+    the ``v = 0`` special case of ``FRACTIONAL``.
+    """
+
+    EQUAL = "equal"            # equal per-user power p_k = P_tot / K (centralized)
+    FRACTIONAL = "fractional"  # large-scale-fading fractional allocation (beta^v)
+
+
 class ChannelModel(str, Enum):
     """Backend used to draw channel realizations.
 
@@ -106,7 +119,7 @@ class DMIMOConfig:
     """
 
     # --- Topology ---------------------------------------------------------
-    L: int = 10                # Number of APs
+    L: int = 40                 # Number of APs (~30 m spacing over the 200 m area)
     M: int = 4                  # Antennas per AP
     K: int = 20                 # Single-antenna users
     Q: int = 64                 # OFDM data subcarriers evaluated
@@ -120,10 +133,11 @@ class DMIMOConfig:
     noise_figure_dB: float = 8.0  # Receiver noise figure [dB]
 
     # --- Power and precoding ----------------------------------------------
-    rho_max: float = 1.0        # Max DL transmit power per AP [W]
+    rho_max: float = 1.0        # Max DL transmit power per AP (30 dBm; outdoor micro-AP) [W]
     precoding: PrecodingScheme = PrecodingScheme.ZF
     operation: OperationMode = OperationMode.CENTRALIZED
-    kappa: float = 0.5          # Fractional power-control exponent
+    power_alloc: PowerControlScheme = PowerControlScheme.FRACTIONAL
+    v: float = 0.5              # Fractional power-control exponent
     rzf_reg: Optional[float] = None  # RZF loading lambda; None -> sigma^2 (see property)
 
     # --- Channel model backend --------------------------------------------
@@ -133,7 +147,7 @@ class DMIMOConfig:
     antenna_pattern: str = "omni"  # AP element pattern ("omni" or "38.901")
 
     # --- Propagation / deployment -----------------------------------------
-    area_size: float = 1000.0   # Square coverage-area side [m] (wrap-around)
+    area_size: float = 200.0    # Square coverage-area side [m] (wrap-around); dense FR3 hotspot
     ap_height: float = 10.0     # AP height [m]
     ue_height: float = 1.5      # UE height [m]
     # The following four parameters drive the analytical RAYLEIGH channel only;
@@ -156,6 +170,7 @@ class DMIMOConfig:
         # Accept plain strings for the enum fields (e.g. from a config file).
         self.precoding = PrecodingScheme(self.precoding)
         self.operation = OperationMode(self.operation)
+        self.power_alloc = PowerControlScheme(self.power_alloc)
         self.channel_model = ChannelModel(self.channel_model)
 
         for name in ("L", "M", "K", "Q", "tau_c", "tau_p", "n_realizations"):
@@ -181,21 +196,27 @@ class DMIMOConfig:
                 "channel estimates and the SINR are subject to pilot contamination.",
                 stacklevel=2,
             )
-        # MR/L-MMSE/LP-MMSE are local schemes; ZF/RZF/MMSE/P-* are centralized.
+        # MR/L-MMSE/L-RZF/LP-MMSE are local schemes; ZF/RZF/MMSE/P-* are centralized.
         local = {PrecodingScheme.MR, PrecodingScheme.L_MMSE, PrecodingScheme.L_RZF,
                  PrecodingScheme.LP_MMSE}
         is_local = self.precoding in local
         if is_local and self.operation is OperationMode.CENTRALIZED:
-            warnings.warn(
+            raise ValueError(
                 f"{self.precoding.value} is a distributed (local) scheme but "
-                "operation is CENTRALIZED; check the intended configuration.",
-                stacklevel=2,
+                "operation is CENTRALIZED; use operation=DISTRIBUTED or a centralized scheme."
             )
         if not is_local and self.operation is OperationMode.DISTRIBUTED:
-            warnings.warn(
+            raise ValueError(
                 f"{self.precoding.value} is a centralized scheme but "
-                "operation is DISTRIBUTED; check the intended configuration.",
-                stacklevel=2,
+                "operation is DISTRIBUTED; use operation=CENTRALIZED or a local scheme."
+            )
+        # Equal power is a centralized-only rule; distributed operation must use
+        # the per-AP fractional allocation (see mimo_helpers.power_control).
+        if (self.power_alloc is PowerControlScheme.EQUAL
+                and self.operation is OperationMode.DISTRIBUTED):
+            raise ValueError(
+                "power_alloc=EQUAL is a centralized-only heuristic but operation is "
+                "DISTRIBUTED; use power_alloc=FRACTIONAL (the only local rule)."
             )
 
     # --- Derived: array and geometry --------------------------------------
@@ -284,10 +305,11 @@ class DMIMOConfig:
             f"  channel model         : {self.channel_model.value}"
             f"{' (NLOS)' if self.force_nlos else ''}\n"
             f"  precoding / operation : {self.precoding.value} / {self.operation.value}\n"
-            f"  power-control kappa   : {self.kappa}\n"
+            f"  power alloc / v       : {self.power_alloc.value} / {self.v}\n"
             f"  coherence tau_c/tau_p : {self.tau_c}/{self.tau_p} "
             f"(DL prelog {self.dl_prelog:.3f})\n"
-            f"  Monte Carlo           : {self.n_realizations} realizations, seed {self.seed}"
+            f"  channel realizations  : {self.n_realizations}\n"
+            f"  RNG seed              : {self.seed}"
         )
 
 

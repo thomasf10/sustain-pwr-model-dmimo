@@ -90,22 +90,35 @@ achievable rates the power model consumes.
 
 - `config_dmimo.py` — `DMIMOConfig`, one dataclass gathering every system-model
   parameter (topology `L`/`M`/`K`/`Q`, RF band, noise derived from bandwidth and
-  noise figure, precoding and power-control settings, path-loss model, coherence
-  bookkeeping, Monte Carlo controls), with derived quantities exposed as
-  read-only properties so they cannot drift out of sync.
+  noise figure, precoding scheme and operation mode, power-allocation heuristic
+  and its fractional exponent `v`, path-loss model, coherence bookkeeping, Monte
+  Carlo controls), with derived quantities exposed as read-only properties so
+  they cannot drift out of sync. The enum fields are cross-checked, so a
+  distributed operation mode is paired only with a local precoder and the local
+  power-control rule.
+- `mimo_helpers.py` — the MIMO building blocks and array-shape conventions: the
+  channel-model dispatch, transmit precoding (MR/ZF/RZF/MMSE and local
+  L-RZF/L-MMSE), downlink power control (equal and fractional allocation) with
+  precoder normalization to the per-AP power budget, and the signal-processing
+  back end (effective channel, SINR, spectral efficiency, per-AP power).
+- `sionna_channel.py` — the default channel backend, wrapping Sionna's 3GPP
+  TR 38.901 UMi model to produce the collective downlink channel and the
+  large-scale fading `beta`.
 - `dl_rate.py` — orchestrates one downlink Monte Carlo experiment (positions →
-  large-scale fading → channels → CSI → precoding → power control → SINR →
+  channels `(H, beta)` → CSI → precoding → power control → normalization → SINR →
   spectral efficiency) and returns ergodic per-user SEs and per-AP powers.
-- `mimo_helpers.py` — the MIMO signal-processing building blocks and array-shape
-  conventions.
-- TODO: extend when code changes/is completed
+- `sanity_checks.py` — a pass/fail harness over the config invariants, the exact
+  precoding algebra, the power-control formulas and per-AP budget, and one Sionna
+  end-to-end run; run `python sanity_checks.py` from the folder.
 
-**Status:** work in progress. The signal-processing back end
-(effective-channel, SINR, spectral-efficiency, per-AP power) is implemented,
-while the physics stubs in `mimo_helpers.py` (channel model, transmit precoding,
-power control) currently raise `NotImplementedError` and document their expected
-inputs and output shapes. `ul_rate.py` (uplink) is a placeholder to be filled
-in.
+**Status:** work in progress, but the downlink chain runs end to end on the
+Sionna 38.901 UMi channel. The channel model, transmit precoding, power control,
+and the signal-processing back end are implemented, and `sanity_checks.py`
+passes. What remains stubbed is the analytical correlated-Rayleigh backend
+(`spatial_correlation`/`generate_channels`), the scalable partial precoders
+(P-MMSE/P-RZF/LP-MMSE), and channel estimation beyond perfect CSI (pilot-based
+MMSE with contamination); `estimate_channels` currently returns the true
+channel. `ul_rate.py` (uplink) is an empty placeholder to be filled in.
 
 ### `D_MIMO_FR3_power_model/`
 

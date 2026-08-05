@@ -8,10 +8,12 @@ building blocks still behave. It checks:
   (against hand computations on controlled inputs);
 * precoding: exact algebraic invariants of MR/ZF/RZF/MMSE and the local
   L-RZF/L-MMSE schemes, plus that unimplemented schemes raise;
+* power control: centralized (K,) and distributed (L,K) allocations and that the
+  per-AP power budget holds after normalization;
 * channel model: Sionna UMi shapes, beta consistency, and reproducibility
   (skipped with a note if Sionna is not installed);
-* end-to-end: one realization run through precoding -> SINR -> SE with a
-  placeholder equal-power normalization, checking finite positive SE.
+* end-to-end: one realization run through the power-control pipeline
+  precoding -> normalize -> SINR -> SE, checking finite positive SE.
 
 Usage (from this directory, with the project venv):
 
@@ -151,9 +153,11 @@ def check_precoding(chk: Checks) -> None:
     H = synthetic_channel(cfg)
     Hh = H  # perfect CSI
 
+    local = {"MR", "L-RZF", "L-MMSE", "LP-MMSE"}  # distributed (per-AP) schemes
+
     def directions(scheme, **over):
         c = DMIMOConfig(L=6, M=4, K=4, Q=8, precoding=scheme,
-                        operation="distributed" if scheme.startswith("L") else "centralized",
+                        operation="distributed" if scheme in local else "centralized",
                         **over)
         return mh.precoding_directions(c, Hh)
 
@@ -202,6 +206,116 @@ def check_precoding(chk: Checks) -> None:
             chk(f"{scheme} raises NotImplementedError", True)
 
 
+def check_power_control(chk: Checks) -> None:
+    chk.section("Power control + precoder normalization")
+    rng = np.random.default_rng(3)
+    tol = 1 + 1e-9
+
+    def make_beta(cfg: DMIMOConfig) -> np.ndarray:
+        """Strictly-positive large-scale fading ``(L, K)`` spread over ~40 dB."""
+        return 10.0 ** rng.uniform(-11.0, -7.0, size=(cfg.L, cfg.K))
+
+    # Centralized: rho is per-user (K,), sums to L*rho_max, and after the global
+    # scaling every AP is within budget with the busiest one exactly at rho_max.
+    for alloc in ("equal", "fractional"):
+        cfg = DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="ZF", operation="centralized",
+                          power_alloc=alloc, channel_model="rayleigh")
+        H = synthetic_channel(cfg)
+        beta = make_beta(cfg)
+        Wbar = mh.precoding_directions(cfg, H)
+        rho = mh.power_control(cfg, beta, Wbar)
+        chk(f"centralized {alloc}: rho shape (K,)", rho.shape == (cfg.K,))
+        chk(f"centralized {alloc}: sum rho = L*rho_max",
+            np.isclose(rho.sum(), cfg.L * cfg.rho_max))
+        W = mh.normalize_precoder(cfg, Wbar, rho)
+        Pl = mh.ap_powers(cfg, W)
+        chk(f"centralized {alloc}: per-AP budget met",
+            np.all(Pl <= cfg.rho_max * tol), f"max {Pl.max():.4f} W <= {cfg.rho_max}")
+        chk(f"centralized {alloc}: busiest AP hits rho_max", np.isclose(Pl.max(), cfg.rho_max))
+
+    # Distributed: rho is per-AP-per-user (L,K); the local fractional rule spends
+    # each AP's full budget, so per-AP powers equal rho_max after normalization.
+    cfg = DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="L-RZF", operation="distributed",
+                      power_alloc="fractional", channel_model="rayleigh")
+    H = synthetic_channel(cfg)
+    beta = make_beta(cfg)
+    Wbar = mh.precoding_directions(cfg, H)
+    rho = mh.power_control(cfg, beta, Wbar)
+    chk("distributed: rho shape (L,K)", rho.shape == (cfg.L, cfg.K))
+    chk("distributed: sum_k rho_kl = rho_max per AP", np.allclose(rho.sum(axis=1), cfg.rho_max))
+    W = mh.normalize_precoder(cfg, Wbar, rho)
+    Pl = mh.ap_powers(cfg, W)
+    chk("distributed: per-AP budget met with equality", np.allclose(Pl, cfg.rho_max),
+        f"per-AP {Pl.min():.4f}..{Pl.max():.4f} W")
+
+    # v = 0 fractional collapses to equal per-user power.
+    ce = DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="ZF", operation="centralized",
+                     power_alloc="fractional", v=0.0, channel_model="rayleigh")
+    rho0 = mh.power_control(ce, make_beta(ce), None)
+    chk("v=0 fractional == equal power", np.allclose(rho0, ce.L * ce.rho_max / ce.K))
+
+    # Equal power is centralized-only: EQUAL + distributed is rejected at build.
+    try:
+        DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="L-RZF", operation="distributed",
+                    power_alloc="equal", channel_model="rayleigh")
+        chk("EQUAL + distributed rejected", False, "did not raise")
+    except ValueError:
+        chk("EQUAL + distributed rejected", True)
+
+    # Fractional rule is exactly rho_k proportional to beta_k^v (centralized) and
+    # rho_kl proportional to beta_kl^v per AP (distributed), against hand algebra.
+    beta_fix = np.array([[1e-9, 4e-9, 2e-9],
+                         [3e-9, 1e-9, 5e-9],
+                         [2e-9, 2e-9, 1e-9]])   # (L=3, K=3)
+    cf = DMIMOConfig(L=3, M=2, K=3, Q=4, precoding="ZF", operation="centralized",
+                     power_alloc="fractional", v=0.6, channel_model="rayleigh")
+    beta_k = beta_fix.sum(axis=0)
+    ref_c = (cf.L * cf.rho_max) * beta_k ** cf.v / (beta_k ** cf.v).sum()
+    chk("centralized fractional = P_tot*beta_k^v / sum_i beta_i^v",
+        np.allclose(mh.power_control(cf, beta_fix, None), ref_c))
+    df = DMIMOConfig(L=3, M=2, K=3, Q=4, precoding="L-RZF", operation="distributed",
+                     power_alloc="fractional", v=0.6, channel_model="rayleigh")
+    ref_l = df.rho_max * beta_fix ** df.v / (beta_fix ** df.v).sum(axis=1, keepdims=True)
+    chk("local fractional = rho_max*beta_kl^v / sum_i beta_il^v",
+        np.allclose(mh.power_control(df, beta_fix, None), ref_l))
+
+    # Sign of v: v>0 favours the stronger user, v<0 the weaker, v=0 is equal.
+    beta_mono = np.array([[9e-9, 1e-9]])        # (L=1, K=2): user 0 strong
+    def frac_rho(v):
+        c = DMIMOConfig(L=1, M=2, K=2, Q=4, precoding="ZF", operation="centralized",
+                        power_alloc="fractional", v=v, channel_model="rayleigh")
+        return mh.power_control(c, beta_mono, None)
+    chk("v>0 favours the stronger user", frac_rho(1.0)[0] > frac_rho(1.0)[1])
+    chk("v<0 favours the weaker user", frac_rho(-1.0)[0] < frac_rho(-1.0)[1])
+    chk("v=0 gives equal power", np.isclose(*frac_rho(0.0)))
+
+    # Centralized global scaling preserves the per-user power ratios set by rho.
+    cr = DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="ZF", operation="centralized",
+                     power_alloc="fractional", v=0.7, channel_model="rayleigh")
+    Wbar = mh.precoding_directions(cr, synthetic_channel(cr))
+    rho = mh.power_control(cr, make_beta(cr), Wbar)
+    W = mh.normalize_precoder(cr, Wbar, rho)
+    p_user = (np.abs(W) ** 2).sum(axis=(0, 1))  # (K,) realized per-user power
+    chk("centralized normalization preserves per-user power ratios",
+        np.allclose(p_user / p_user.sum(), rho / rho.sum()))
+
+    # normalize_precoder guards a zero-energy direction (no nan/inf) and rejects
+    # a wrongly-shaped rho.
+    cg = DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="ZF", operation="centralized",
+                     power_alloc="equal", channel_model="rayleigh")
+    Wz = mh.precoding_directions(cg, synthetic_channel(cg))
+    Wz[:, :, 0] = 0.0                            # user 0 has no direction
+    Wn = mh.normalize_precoder(cg, Wz, mh.power_control(cg, make_beta(cg), Wz))
+    chk("normalize guards zero-energy direction (all finite)", np.all(np.isfinite(Wn)))
+    chk("zero-energy user radiates nothing", np.allclose(Wn[:, :, 0], 0.0))
+    chk("budget still met with a dead user", np.all(mh.ap_powers(cg, Wn) <= cg.rho_max * tol))
+    try:
+        mh.normalize_precoder(cg, Wz, np.zeros((cg.L + 1, cg.K)))
+        chk("normalize rejects a bad rho shape", False, "did not raise")
+    except ValueError:
+        chk("normalize rejects a bad rho shape", True)
+
+
 def check_channel_and_e2e(chk: Checks) -> None:
     chk.section("Sionna channel model + end-to-end")
     cfg = DMIMOConfig(L=6, M=4, K=4, Q=8, channel_model="sionna-umi",
@@ -243,12 +357,10 @@ def check_channel_and_e2e(chk: Checks) -> None:
     _, _, H2, _ = realize(cfg)
     chk("reproducible channel for a fixed seed", np.array_equal(H, H2))
 
-    # End-to-end signal chain with a placeholder equal-power per-AP normalization
-    # (power_control / normalize_precoder are still stubs).
+    # End-to-end signal chain through the real power-control pipeline.
     Wbar = mh.precoding_directions(cfg, mh.estimate_channels(cfg, None, H))
-    ap_p = mh.ap_powers(cfg, Wbar)                     # (L,)
-    scale = np.sqrt(cfg.rho_max / ap_p)                # bring each AP to rho_max
-    W = Wbar * np.repeat(scale, cfg.M)[None, :, None]
+    rho = mh.power_control(cfg, beta, Wbar)
+    W = mh.normalize_precoder(cfg, Wbar, rho)
     budget_ok = np.all(mh.ap_powers(cfg, W) <= cfg.rho_max * (1 + 1e-9))
     chk("per-AP power budget met after normalization", budget_ok)
 
@@ -258,12 +370,34 @@ def check_channel_and_e2e(chk: Checks) -> None:
         np.all(np.isfinite(se)) and np.all(se > 0),
         f"sum SE {se.sum():.2f} bit/s/Hz")
 
+    # Driver: simulate_downlink averages the pipeline over realizations and
+    # reports the ergodic SE and mean per-AP power.
+    from dl_rate import simulate_downlink
+
+    cfg_run = DMIMOConfig(L=6, M=4, K=4, Q=8, channel_model="sionna-umi",
+                          precoding="ZF", operation="centralized", n_realizations=3)
+    res = simulate_downlink(cfg_run)
+    chk("simulate_downlink SE shape (K,)", res.se_per_user.shape == (cfg_run.K,))
+    chk("simulate_downlink SE finite and positive",
+        np.all(np.isfinite(res.se_per_user)) and np.all(res.se_per_user > 0),
+        f"sum SE {res.sum_se:.2f} bit/s/Hz")
+    chk("simulate_downlink mean AP power within budget",
+        np.all(res.ap_power <= cfg_run.rho_max * (1 + 1e-9)),
+        f"max {res.ap_power.max():.4f} W")
+    chk("sum_rate = sum_se * B", np.isclose(res.sum_rate, res.sum_se * cfg_run.B))
+    chk("se_samples shape (n, K)",
+        res.se_samples.shape == (cfg_run.n_realizations, cfg_run.K))
+    chk("ergodic SE = mean of se_samples",
+        np.allclose(res.se_per_user, res.se_samples.mean(axis=0)))
+    chk("se_5pct <= se_median", res.se_5pct <= res.se_median)
+
 
 def main() -> int:
     chk = Checks()
     check_config(chk)
     check_signal_processing(chk)
     check_precoding(chk)
+    check_power_control(chk)
     check_channel_and_e2e(chk)
     return chk.summary()
 
