@@ -27,6 +27,22 @@ E.~Peschiera, S.~Yun, Y.~Lee, L.~V. der Perre, and F.~Rottenberg, ``A
   \emph{ICASSP 2026 - 2026 IEEE International Conference on Acoustics, Speech
   and Signal Processing (ICASSP)}, 2026, pp. 21\,476--21\,480.
 
+\bibitem{tr38901}
+\BIBentryALTinterwordspacing
+{3GPP}, ``{Study on channel model for frequencies from 0.5 to 100 GHz},'' 3rd
+  Generation Partnership Project (3GPP), Technical Report TR 38.901, version
+  16.1.0, Dec. 2020. [Online]. Available:
+  \url{https://www.3gpp.org/DynaReport/38901.htm}
+\BIBentrySTDinterwordspacing
+
+\bibitem{hoydis2022sionna}
+\BIBentryALTinterwordspacing
+J.~Hoydis, S.~Cammerer, F.~{Ait Aoudia}, A.~Vem, N.~Binder, G.~Marcus, and
+  A.~Keller, ``{Sionna: An Open-Source Library for Next-Generation Physical
+  Layer Research},'' \emph{arXiv preprint}, no. arXiv:2203.11854, 2022.
+  [Online]. Available: \url{https://arxiv.org/abs/2203.11854}
+\BIBentrySTDinterwordspacing
+
 \bibitem{demir2021foundations}
 {\"O}.~T. Demir, E.~Bj{\"o}rnson, and L.~Sanguinetti, ``{Foundations of
   User-Centric Cell-Free Massive MIMO},'' \emph{Foundations and Trends in

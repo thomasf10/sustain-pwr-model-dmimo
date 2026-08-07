@@ -142,7 +142,7 @@ class DMIMOConfig:
 
     # --- Channel model backend --------------------------------------------
     channel_model: ChannelModel = ChannelModel.SIONNA_UMI
-    force_nlos: bool = True      # Force all links NLOS (keeps the channel zero-mean)
+    force_nlos: bool = False     # True: force all links NLOS; False: 38.901 distance-dependent LOS probability (LOS paths possible)
     o2i_model: str = "low"      # 38.901 outdoor-to-indoor model; UEs are outdoor here
     antenna_pattern: str = "omni"  # AP element pattern ("omni" or "38.901")
 
@@ -303,7 +303,7 @@ class DMIMOConfig:
             f"  max power/AP rho_max  : {watt_to_dbm(self.rho_max):.1f} dBm "
             f"({self.rho_max:.2f} W)\n"
             f"  channel model         : {self.channel_model.value}"
-            f"{' (NLOS)' if self.force_nlos else ''}\n"
+            f"{' (forced NLOS)' if self.force_nlos else ' (38.901 LOS prob.)'}\n"
             f"  precoding / operation : {self.precoding.value} / {self.operation.value}\n"
             f"  power alloc / v       : {self.power_alloc.value} / {self.v}\n"
             f"  coherence tau_c/tau_p : {self.tau_c}/{self.tau_p} "

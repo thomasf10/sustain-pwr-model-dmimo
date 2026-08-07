@@ -9,18 +9,20 @@ AP/UE topology for a fresh drop and returns the collective downlink channel.
 
 The APs are the 38.901 "base stations" (each an ``M``-element half-wavelength
 ULA of omnidirectional elements) and the single-antenna UEs are the "user
-terminals". All links are forced to NLOS (``los=False``) so the channel stays
-zero-mean, consistent with the correlated-Rayleigh assumptions the analytical
-system model and its precoding/SINR derivations rest on; the path loss, shadow
-fading, and spatial correlation still follow 38.901 UMi.
+terminals". By default (``cfg.force_nlos=False``) each link's LOS/NLOS state is
+drawn from the 38.901 distance-dependent LOS probability, so LOS paths are
+possible and the resulting channel is Ricean (nonzero mean) on the LOS links;
+setting ``cfg.force_nlos=True`` forces every link to NLOS (``los=False``), giving
+a zero-mean channel. In both cases the path loss, shadow fading, and spatial
+correlation follow 38.901 UMi.
 
-Unlike the analytical model, Sionna does not expose an explicit correlation
-matrix ``R_kl``. The large-scale fading ``beta[l, k]`` returned here is therefore
-estimated from the realization as the average ``|h_kl|^2`` over the ``M``
-antennas and ``Q`` subcarriers, which matches the definition
-``beta_kl = (1/N) Tr(R_kl)`` (the average per-antenna channel gain). Distributed
-precoders that need ``R_kl`` explicitly (L-MMSE, LP-MMSE) would have to estimate
-it by Monte Carlo averaging of ``h h^H``.
+Sionna does not expose an explicit second-order statistic. The large-scale
+fading ``beta[l, k]`` returned here is therefore estimated from the realization
+as the average ``|h_kl|^2`` over the ``M`` antennas and ``Q`` subcarriers. This
+is the average per-antenna channel gain ``beta_kl = (1/M) E[||h_kl||^2]``, which
+absorbs both the scatter power and, when a link is in LOS, the deterministic LOS
+component. Distributed precoders that need the correlation matrix ``R_kl``
+explicitly (L-MMSE, LP-MMSE) would have to estimate it by Monte Carlo averaging.
 
 The backend is heavy (PyTorch plus the Dr.Jit/Mitsuba ``sionna-rt`` stack), so
 this module is imported lazily by :func:`mimo_helpers.build_channel` only when

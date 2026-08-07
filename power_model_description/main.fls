@@ -1,6 +1,6 @@
-PWD c:\Users\Thomas\Documents\sustain-pwr-model-dmimo
+PWD c:\Users\Thomas\Documents\sustain-pwr-model-dmimo\power_model_description
 INPUT C:\Users\Thomas\AppData\Local\MiKTeX\miktex\data\le\pdftex\pdflatex.fmt
-INPUT c:\Users\Thomas\Documents\sustain-pwr-model-dmimo\main.tex
+INPUT c:\Users\Thomas\Documents\sustain-pwr-model-dmimo\power_model_description\main.tex
 OUTPUT main.log
 INPUT .\IEEEtran.cls
 INPUT IEEEtran.cls
@@ -548,6 +548,18 @@ INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmr8r
 INPUT .\main.bbl
 INPUT .\main.bbl
 INPUT main.bbl
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmr8.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmr6.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmmi8.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmmi6.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmsy8.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmsy6.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\cmextra\cmex8.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\cmextra\cmex7.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam7.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
+INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm7.tfm
 INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\ptmri7t.vf
 INPUT C:\Users\Thomas\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmri8r.tfm
 INPUT main.aux
