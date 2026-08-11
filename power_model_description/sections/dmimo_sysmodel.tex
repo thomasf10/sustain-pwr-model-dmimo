@@ -1,4 +1,5 @@
 \section{Distributed Massive MIMO System Model}
+\label{sec:dmimo_sysmodel}
 
 \subsection{Downlink System Model}
 
@@ -128,12 +129,13 @@ control coefficient,
 \begin{equation}
 \label{eq:precoder-decomposition}
 \vect{w}_{k}[q] = \sqrt{\rho_{k}}\,
-\frac{\bar{\vect{w}}_{k}[q]}{\sqrt{\expt{\norm{\bar{\vect{w}}_{k}[q]}^{2}}}},
+\frac{\bar{\vect{w}}_{k}[q]}
+{\sqrt{\sum_{q'=1}^{Q}\expt{\norm{\bar{\vect{w}}_{k}[q']}^{2}}}},
 \end{equation}
 where $\bar{\vect{w}}_{k}[q]\inC{LM}$ is an arbitrarily scaled vector that fixes
 the spatial direction of the transmission to user $k$ and $\rho_{k}\geq 0$ is the
-downlink power allocated to that user, so that
-$\expt{\norm{\vect{w}_{k}[q]}^{2}}=\rho_{k}$. This separation isolates two design
+downlink power allocated to that user across the OFDM block, so that
+$\sum_{q=1}^{Q}\expt{\norm{\vect{w}_{k}[q]}^{2}}=\rho_{k}$. This separation isolates two design
 tasks, the choice of the precoding directions $\{\bar{\vect{w}}_{k}[q]\}$ and the
 power allocation that ties them to the per-AP budget in
 \eqref{eq:power-constraint}. How both are computed depends on the level of
@@ -145,6 +147,15 @@ its powers from local information alone. In both cases the allocation depends
 mainly on the large-scale fading of \eqref{eq:beta-estimate} and can be held
 fixed over many coherence blocks, whereas the directions are recomputed every
 block.
+
+Throughout this work we assume \emph{perfect} \gls{csi}: every precoder is built
+from the true channels, $\hat{\vect{h}}_{k}[q]=\vect{h}_{k}[q]$, so no channel
+estimation is performed and there is no pilot contamination. The uplink-pilot and
+TDD-reciprocity mechanism described below is therefore the practical way this
+\gls{csi} would be acquired, not a source of estimation error in the present
+model; modelling pilot-based estimation and its error covariance is left to
+future work. The pilot overhead is still charged to the rate through the prelog
+factor $(1-\tau_{p}/\tau_{c})$ of \Cref{sec:rate}.
 
 
 
@@ -225,8 +236,8 @@ its own precoding directions from its locally estimated channels
 $\hat{\vect{h}}_{kl}[q]$, without sharing instantaneous \gls{csi}. An AP can then
 suppress only the interference it itself generates, using the $M$ spatial degrees
 of freedom of its own array, so the coherent cross-AP cancellation of the
-centralized case is lost. The simplest choice is maximum-ratio transmission
-(\gls{mr}), which points each beam along the local channel,
+centralized case is lost. The simplest choice is \gls{mr} transmission, which
+points each beam along the local channel,
 \begin{equation}
 \label{eq:mr-precoder}
 \bar{\vect{w}}_{kl}[q] = \vect{h}_{kl}[q],
@@ -253,11 +264,14 @@ $\lambda=\sigma^{2}$. As in the centralized case, under perfect \gls{csi} local
 antenna-domain form is used because each AP's array is small.
 
 Because each AP designs and normalizes its own block independently, the power is
-parametrized per user per AP: AP $l$ normalizes its power to respect $\rho_{kl}\geq 0$ for user $k$ this is achieved as
-\begin{align}
-    \vect{w}_{kl}[q]=\sqrt{\rho_{kl}}\,\bar{\vect{w}}_{kl}[q]/\sqrt{\expt{\norm{\bar{\vect{w}}_{kl}[q]}^{2}}}.
-\end{align}
-Fractional power control is used, each AP splits its own budget
+parametrized per user per AP: AP $l$ attaches a coefficient $\rho_{kl}\geq 0$ to
+its beam for user $k$ and scales the block to radiate it across the OFDM block,
+\begin{equation}
+\vect{w}_{kl}[q]=\sqrt{\rho_{kl}}\,
+\frac{\bar{\vect{w}}_{kl}[q]}
+{\sqrt{\sum_{q'=1}^{Q}\expt{\norm{\bar{\vect{w}}_{kl}[q']}^{2}}}}.
+\end{equation}
+Only fractional power control is used: each AP splits its own budget
 $\rho_{\max}$ among its users according to their local large-scale gains,
 \begin{equation}
 \label{eq:fractional-power}

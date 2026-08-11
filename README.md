@@ -110,15 +110,32 @@ achievable rates the power model consumes.
 - `sanity_checks.py` — a pass/fail harness over the config invariants, the exact
   precoding algebra, the power-control formulas and per-AP budget, and one Sionna
   end-to-end run; run `python sanity_checks.py` from the folder.
+- `config_cellfree_book.py`, `cellfree_book_channel.py`, `test_cellfree_book.py` —
+  a standalone benchmark of the whole pipeline against the published downlink
+  results of the cell-free monograph (Demir, Björnson and Sanguinetti, 2021,
+  vendored in `context_papers/cell_free_book/`). The first file encodes the
+  monograph's running example (Table 5.1) as a `DMIMOConfig`, the second
+  implements the monograph's own correlated-Rayleigh channel (wrap-around
+  geometry, correlated shadowing, Gaussian local scattering), and the third
+  reruns Figures 6.3 and 6.5 and compares. `--sionna` additionally runs the same
+  configuration on both channel backends over identical AP/UE layouts, which
+  isolates what swapping the monograph's propagation model for 3GPP TR 38.901 UMi
+  is worth. Run `python test_cellfree_book.py`.
 
 **Status:** work in progress, but the downlink chain runs end to end on the
 Sionna 38.901 UMi channel. The channel model, transmit precoding, power control,
-and the signal-processing back end are implemented, and `sanity_checks.py`
-passes. What remains stubbed is the analytical correlated-Rayleigh backend
-(`spatial_correlation`/`generate_channels`), the scalable partial precoders
-(P-MMSE/P-RZF/LP-MMSE), and channel estimation beyond perfect CSI (pilot-based
-MMSE with contamination); `estimate_channels` currently returns the true
-channel. `ul_rate.py` (uplink) is an empty placeholder to be filled in.
+and the signal-processing back end are implemented, and both `sanity_checks.py`
+and `test_cellfree_book.py` pass. Against the monograph's Figures 6.3 and 6.5 the
+simulated per-user SE reproduces every qualitative conclusion and sits a factor
+1.7 (centralized) and 1.1-1.5 (distributed) above the published curves, which the
+folder `README.md` attributes item by item, chiefly to the use of perfect CSI in
+place of pilot-based estimation with contamination.
+What remains stubbed is the analytical correlated-Rayleigh backend inside
+`mimo_helpers` (`spatial_correlation`/`generate_channels`), the scalable partial
+precoders (P-MMSE/P-RZF/LP-MMSE), and channel estimation beyond perfect CSI
+(pilot-based MMSE with contamination); `estimate_channels` currently returns the
+true channel. `ul_rate.py` (uplink) is an empty placeholder to be filled in. See
+the folder `README.md` for the benchmark results and the full difference list.
 
 ### `D_MIMO_FR3_power_model/`
 

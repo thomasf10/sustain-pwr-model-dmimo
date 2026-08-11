@@ -219,7 +219,7 @@ and baseband (BB) filter; in the UL the channel decoder, MIMO combiner, FFT,
 and BB filter. Each subcomponent consumption is a static (signal-independent)
 term plus a dynamic term equal to its complex giga-operations-per-second
 (GOPS) $\Xi$ divided by the computational efficiency $\eta$ (in GOPS/W) of the
-chosen FPGA/ASIC implementation:
+chosen FPGA/ASIC implementation: \todo{where is FFT?, no channel estimation cost?}
 \begin{align}
 \label{eq:enc}
 P_{\mathrm{enc}} &= P_{\mathrm{enc,s}}
