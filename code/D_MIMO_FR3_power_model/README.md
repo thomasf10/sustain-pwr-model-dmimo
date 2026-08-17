@@ -35,11 +35,12 @@ reduces them *exactly* to the per-AP equations of the manuscript:
 
 | Block | Source |
 |---|---|
-| Analog (eq. `ana_dl_ap`, `ana_ul_ap`) | `fr3_power.power_model.analog`, unchanged, plus `P_sync` |
+| Analog (eq. `ana_dl_ap`, `ana_ul_ap`) | `fr3_power.power_model.analog`, unchanged |
 | Power amplifier (eq. `pa_avg_ap`) | `fr3_power.power_model.pa`, unchanged, plus the sizing convention |
 | Frame averaging (eq. `frameavg_ap`) | `fr3_power.frame_average.frame_average`, unchanged |
 | Subcomponents (converters, mixers, LNA, encoder, IFFT, DPD, filters) | `fr3_power.components`, unchanged |
 | Digital (eq. `dig_ap`) | re-assembled from the same components |
+| Synchronization (eq. `pap`) | new: `network.ap_sync`, a per-AP constant with no co-located counterpart |
 
 The digital block is the only one that cannot be reused wholesale, for two
 structural reasons: the encoder and decoder move to the CPU under every split,

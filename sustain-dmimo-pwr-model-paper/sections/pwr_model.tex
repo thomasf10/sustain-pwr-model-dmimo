@@ -1,0 +1,509 @@
+\section{Power Model Description}
+\label{sec:pwr_model}
+
+We first describe the full power consumption of a distributed network (\Cref{ssec:pnet}), then we focus on the two contributions that are specific for \gls{dmimo}, i.e., the fronthaul and the synchronization of
+physically separate nodes (\Cref{ssec:fh}). Finally we describe the parametric model of the \gls{ap} consumption, which is based on~\cite{peschiera2026fr3} (\Cref{ssec:ap}).
+
+\todo{will probably be redundant if we have the sys model}
+Throughout, $l=1,\dots,L$ indexes the \glspl{ap}, $m=1,\dots,M$ the antennas of
+one \gls{ap}, $k=1,\dots,K$ the single-antenna users, $q$ the subcarriers, and
+$i\in\{\mathrm{DL},\mathrm{UL}\}$ the link direction. The \glspl{ap} are fully
+digital, so each carries $M$ \gls{rf} chains, and the network holds $LM$
+antennas in total. The co-located reference is one site of $M_{\mathrm{ant}}=LM$
+antennas. Every \gls{ap} is assumed active and serves every user, and both
+directions are evaluated at full physical resource load,
+$\bar x_{\mathrm{DL}}=\bar x_{\mathrm{UL}}=1$, so all \glspl{ap} share one
+network-wide operating load. \todo{align these symbols with
+\Cref{sec:sysmodel} once the system model section is written; $\rho_{\max}$,
+$P_{T,l}$, $R_{\mathrm{DL}}$, $R_{\mathrm{UL}}$ and the coherence block
+$\tau_c=\tau_p+\tau_u+\tau_d$ are taken from there.}
+
+\subsection{Network Power Consumption}
+\label{ssec:pnet}
+
+The network consumption collects the $L$ \glspl{ap}, the $L$ fronthaul links
+that tie them to the \gls{cpu}, and the \gls{cpu} itself,
+\begin{equation}
+\label{eq:pnet}
+P_{\mathrm{net}} = \sum_{l=1}^{L}
+\left(P_{\mathrm{AP},l} + \frac{\overline{P_{\mathrm{FH},l}}}{\eta_{\mathrm{FH,sc}}}\right)
++ \frac{\overline{P_{\mathrm{CPU}}}}{\eta_{\mathrm{CPU,sc}}},
+\end{equation}
+where an overbar denotes a frame-averaged quantity and
+$\eta_{\mathrm{FH,sc}},\eta_{\mathrm{CPU,sc}}\in(0,1]$ are the
+supply-and-cooling efficiencies of the fronthaul transceivers and of the central
+unit. The latter acts as an inverse power-usage effectiveness: the \gls{cpu}
+sits in a cooled room rather than in an outdoor \gls{ap} enclosure, so it should
+not be assigned the values fitted for a macro \gls{bs}. Each active \gls{ap}
+retains the three-block structure of the co-located model from~\cite{peschiera2026fr3}
+and adds the synchronization of \Cref{sssec:sync},
+\begin{equation}
+\label{eq:pap}
+P_{\mathrm{AP},l} =
+\frac{\overline{P_{\mathrm{dig},l}}}{\eta_{\mathrm{dig,sc}}}
++ \frac{\overline{P_{\mathrm{ana},l}}}{\eta_{\mathrm{ana,sc}}}
++ \frac{\overline{P_{\mathrm{PA},l}}}{\eta_{\mathrm{PA,sc}}}
++ \frac{P_{\mathrm{sync}}}{\eta_{\mathrm{sync,sc}}} ,
+\end{equation}
+with the digital, analog and amplifier blocks detailed in \Cref{ssec:ap}. The
+co-located baseline is recovered by setting $L=1$, $M=M_{\mathrm{ant}}$ and
+dropping the synchronization, fronthaul and \gls{cpu} terms. 
+
+\subsubsection{Functional split}
+\label{sssec:split}
+A single co-located site runs every digital operation in one place. A distributed network
+does not, and where each operation runs sets both the digital consumption and
+the fronthaul load. We consider the three splits of \Cref{tab:split}. Split S1
+forwards precoded samples: the \gls{cpu} encodes, computes the centralized
+precoder and applies it, so \gls{ap} $l$ receives the $M$ streams of
+frequency-domain samples. Split S2 forwards precoder coefficients and
+data: the \gls{cpu} encodes and computes the precoder, but \gls{ap} $l$ applies
+it locally. Split S3 is fully local operation: the \gls{cpu} only encodes, and
+each \gls{ap} computes and applies its own precoder from local \gls{csi}. Splits
+S1 and S2 realize the same centralized precoder and therefore deliver the same
+rate; they differ only in where the work runs and in what crosses the fronthaul.
+S3 delivers a lower rate due to local processing.
+
+\begin{table}[t]
+\centering
+\caption{Node at which each digital operation runs. The uplink combiner follows
+the downlink precoder. Channel estimation is listed for completeness but is not
+priced, since perfect \gls{csi} is assumed.}
+\label{tab:split}
+\ra{1.15}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Operation & S1 & S2 & S3 \\
+\midrule
+Encoding / decoding            & CPU & CPU & CPU \\
+Channel estimation             & CPU & CPU & AP  \\
+Precoder computation           & CPU & CPU & AP  \\
+Precoder application           & CPU & AP  & AP  \\
+OFDM, predistortion, BB filter & AP  & AP  & AP  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{MIMO processing and its placement}
+\todo{the computational complexities will depend on the precoer type so move this to a table and reference it here.}
+Following \cite{peschiera2026fr3}, a digital block consumes a static part plus
+its complex operations per sample $\Xi$ evaluated at the constellation sampling
+rate $f_{s,\mathrm{I}}$ and divided by the computational efficiency $\eta$ of
+the implementation. Two \gls{mimo} operations must be kept apart, because the
+split moves them independently. Applying an already computed precoder to $K$
+users over $N$ chains costs $2KN$ operations per sample. Computing it costs the
+Cholesky terms of \cite{peschiera2026fr3}, amortised over the
+$\upsilon_{\mathrm{coh}}$ samples of a coherence block. Under centralized
+operation the \gls{cpu} inverts the $K\times K$ Gram matrix of the collective
+channel $\mat{H}[q]\inC{LM\times K}$, which is the co-located count with the
+chain number replaced by the total antenna count $LM$, written here as a network
+total,
+\begin{equation}
+\label{eq:gops_cen}
+\Xi_{\mathrm{pre}}^{\mathrm{cen}} =
+\frac{1}{\upsilon_{\mathrm{coh}}}\left(\frac{K^{3}}{3} + 3K^{2}LM + K\,LM\right).
+\end{equation}
+Under local operation \gls{ap} $l$ instead inverts an $M\times M$ matrix, the
+same accounting with the antenna and user dimensions exchanged,
+\begin{equation}
+\label{eq:gops_loc}
+\Xi_{\mathrm{pre}}^{\mathrm{loc}} =
+\frac{1}{\upsilon_{\mathrm{coh}}}\left(\frac{M^{3}}{3} + 3M^{2}K + M K\right).
+\end{equation}
+The splits distribute the two counts over the two nodes as
+\begin{align}
+\label{eq:gops_split}
+\Xi^{\mathrm{CPU}}_{i} &= \iota_{\mathrm{S1}}\,2K\,LM
++ \iota_{\mathrm{S1,S2}}\,\iota_{\mathrm{DL}}\,\Xi_{\mathrm{pre}}^{\mathrm{cen}},\\
+\Xi_{i,l}^{\mathrm{AP}} &= \iota_{\mathrm{S2,S3}}\,2K\,M
++ \iota_{\mathrm{S3}}\,\iota_{\mathrm{DL}}\,\Xi_{\mathrm{pre}}^{\mathrm{loc}},
+\end{align}
+where $\iota_{\bullet}\in\{0,1\}$ equals one for the split or direction named in
+its subscript. The computation is charged to the downlink only, since \gls{tdd}
+reciprocity lets the same matrix serve the uplink combiner, while the
+application is charged in both directions. Every operation appears exactly once
+across \eqref{eq:gops_split}, so under S2 the \gls{ap} is billed only for
+applying the precoder and the \gls{cpu} only for computing it. The corresponding
+power is
+\begin{equation}
+\label{eq:pmimo}
+P_{\mathrm{MIMO}} =
+\begin{cases}
+\bar M P_{s} + \dfrac{f_{s,\mathrm{I}}}{\eta}\,\Xi, & \Xi > 0,\\[2mm]
+0, & \Xi = 0,
+\end{cases}
+\end{equation}
+with $\eta$ the computational efficiency of the precoder in the downlink and of
+the combiner in the uplink, $P_{s}$ the static power of one FPGA and $\bar M$ the number of FPGAs, one
+per group of $32$ chains: $\bar M=\lceil M/32\rceil$ at an \gls{ap} and
+$\bar M=\lceil LM/32\rceil$ at the \gls{cpu}, which processes the collective
+array. Charging no static power when $\Xi=0$ matters for S1, where an \gls{ap}
+has no precoder block at all and billing it for an idle FPGA would overstate
+precisely the split that is meant to be cheap on the \gls{ap} side.
+
+\subsubsection{Central unit}
+Channel encoding and decoding stay at the \gls{cpu} under every split, since
+that is where the payload enters and leaves the network, and are driven by the
+delivered network sum rates $R_{\mathrm{DL}}$ and $R_{\mathrm{UL}}$ through the
+encoder and decoder models $P_{\mathrm{enc}}$, $P_{\mathrm{dec}}$ of
+\cite{peschiera2026fr3}. With $\mathcal{A}_{i}$ the frame-averaging operator
+defined in \eqref{eq:frameavg}, the central unit consumes
+\begin{align}
+\label{eq:cpu}
+\overline{P_{\mathrm{CPU}}} ={}& P_{\mathrm{CPU},0}
++ \mathcal{A}_{\mathrm{DL}}\!\left(P_{\mathrm{enc}}
++ P_{\mathrm{MIMO,DL}}^{\mathrm{CPU}}\right) \nonumber\\
+&+ \mathcal{A}_{\mathrm{UL}}\!\left(P_{\mathrm{dec}}
++ P_{\mathrm{MIMO,UL}}^{\mathrm{CPU}}\right),
+\end{align}
+with $P_{\mathrm{CPU},0}$ the always-on consumption of the central unit.
+
+\subsection{Fronthaul and Synchronization}
+\label{ssec:fh}
+
+\subsubsection{Fronthaul}
+Following the cell-free power model of \cite{ngo2018total}, the link serving
+\gls{ap} $l$ consumes a traffic-independent part covering the optical
+transceivers at both ends and a part proportional to the rate it carries,
+\begin{equation}
+\label{eq:fh_basic}
+P_{\mathrm{FH},l} = P_{\mathrm{FH},0} + \Pi_{\mathrm{FH}}\,R_{\mathrm{FH},l},
+\end{equation}
+with $\Pi_{\mathrm{FH}}$ in W per bit/s. What $R_{\mathrm{FH},l}$ contains is set
+by the split of \Cref{sssec:split}. Let $b_{\mathrm{FH}}$ be the number of bits
+per real sample, so a complex sample costs $2b_{\mathrm{FH}}$ bits. Under S1 the
+link carries $M$ streams of frequency-domain samples at the constellation rate
+in both directions and in both the data and the signalling mode,
+\begin{equation}
+\label{eq:fh_s1}
+R_{\mathrm{FH},l}^{\mathrm{S1}} = 2\,b_{\mathrm{FH}}\,M\,f_{s,\mathrm{I}} .
+\end{equation}
+Under S2 the downlink carries the delivered payload plus the precoding
+coefficients, an $M\times K$ complex matrix per subcarrier refreshed once per
+coherence block,
+\begin{equation}
+\label{eq:fh_s2}
+R_{\mathrm{FH},l}^{\mathrm{S2,DL}} = R_{\mathrm{DL}}
++ \frac{f_{s,\mathrm{I}}}{\upsilon_{\mathrm{coh}}}\,2\,b_{\mathrm{FH}}\,M\,K,
+\end{equation}
+where $R_{\mathrm{DL}}$ appears in full because every \gls{ap} serves every
+user. Under S3 only the payload is sent over the fronthaullinks, $R_{\mathrm{FH},l}^{\mathrm{S3,DL}} =
+R_{\mathrm{DL}}$. In the uplink, linear combining is distributive over the
+\glspl{ap}, $\hat s_{k}=\sum_{l}\vect{v}_{kl}^{H}\vect{y}_{l}$, so an \gls{ap}
+holding its combining coefficients forwards $K$ scalar partial sums instead of
+$M$ sample streams under both S2 and S3,
+\begin{equation}
+\label{eq:fh_ul}
+R_{\mathrm{FH},l}^{\mathrm{S2,UL}} = R_{\mathrm{FH},l}^{\mathrm{S3,UL}}
+= 2\,b_{\mathrm{FH}}\,K\,f_{s,\mathrm{I}} .
+\end{equation}
+The signalling mode separates the centralized splits from the local one.
+Centralized operation needs the \gls{cpu} to see the raw received pilots in order
+to estimate the collective channel, so during the uplink signalling phase the
+link carries $2b_{\mathrm{FH}}Mf_{s,\mathrm{I}}$ under S1 and S2 alike, whereas
+under S3 the pilots are consumed locally and the signalling load vanishes.
+Centralization therefore imposes a sample-level fronthaul during pilot
+transmission independent of the data-phase split.
+
+The link is bidirectional and stays up across the whole frame, so its static term
+is charged once per link with a single duty cycle rather than once per direction.
+With
+\begin{equation}
+\label{eq:fh_duty}
+\theta_{l} = \sum_{i\in\{\mathrm{DL},\mathrm{UL}\}}
+\tau_{i}\left[\tau_{i,\mathrm{sig}} + (1-\tau_{i,\mathrm{sig}})\,\bar x_{i}\right]
+\end{equation}
+the fraction of the frame in which the link is in a working mode, and
+$\delta^{\mu}_{\mathrm{FH}}$ the reduction factor of an idle transceiver,
+\begin{equation}
+\label{eq:fh_avg}
+\overline{P_{\mathrm{FH},l}} =
+\left[\theta_{l} + (1-\theta_{l})\,\delta^{\mu}_{\mathrm{FH}}\right]
+P_{\mathrm{FH},0} + \Pi_{\mathrm{FH}}\,\overline{R}_{\mathrm{FH},l} .
+\end{equation}
+The averaged fronthaul rate reuses \eqref{eq:frameavg} with a zero base level,
+since an idle link carries no traffic,
+\begin{equation}
+\label{eq:fh_rate_avg}
+\overline{R}_{\mathrm{FH},l} = R^{\mathrm{payload}}_{\mathrm{FH},l}
++ \sum_{i\in\{\mathrm{DL},\mathrm{UL}\}}
+\mathcal{A}_{i}\!\left(R^{i}_{\mathrm{FH},l},\,
+R^{i,\mathrm{sig}}_{\mathrm{FH},l},\,0\right),
+\end{equation}
+where $R^{\mathrm{payload}}_{\mathrm{FH},l}$ is the delivered downlink payload of
+the data-sharing splits S2 and S3 and is excluded from the averaging, the
+remaining arguments then being peak rates. The reason is that the map from rate
+to power in \eqref{eq:fh_basic} is linear and $\mathcal{A}_{i}$ with a zero base
+is linear in its arguments, while the rate model already delivers
+$R_{\mathrm{DL}}$ with its prelog applied. Charging the delivered rate directly
+is thus equivalent to frame-averaging the corresponding peak rate, and doing both
+would count the frame structure twice. For the sample-forwarding split S1 the
+situation is the opposite: \eqref{eq:fh_s1} is a hardware constant with no
+dependence on the delivered rate, and the frame structure is then the only
+mechanism that reduces the fronthaul load.
+
+\begin{remark}[Fronthaul ceiling on energy efficiency]
+\label{rem:fh_ceiling}
+Under a data-sharing split the same payload is duplicated to every \gls{ap}, so
+the network fronthaul load is $L\,R_{\mathrm{DL}}$. Keeping only this term in
+\eqref{eq:pnet} bounds the downlink energy efficiency by
+$1/(\Pi_{\mathrm{FH}}L)$, independently of the bandwidth, the transmit power and
+the precoder. With $L=16$ and $\Pi_{\mathrm{FH}}=\SI{0.25}{\watt}$ per Gbit/s the
+network cannot exceed $\SI{250}{\mega\bit\per\joule}$ however well everything
+else is designed, which is why the serving cluster size is the dominant lever on
+cell-free energy efficiency.
+\end{remark}
+
+\subsubsection{Synchronization}
+\label{sssec:sync}
+Coherent joint transmission across physically separate nodes requires the
+\glspl{ap} to share a frequency and phase reference and requires the \gls{tdd}
+chains to be reciprocity-calibrated. Whether the reference is distributed over the fronthaul, over
+a dedicated timing network, or over the air, the \gls{ap} must hold it whether
+or not the frame is carrying data. It is therefore considered as the constant
+$P_{\mathrm{sync}}$ of \eqref{eq:pap}, entirely load-independent and outside the
+frame averaging, with its own supply-and-cooling efficiency
+$\eta_{\mathrm{sync,sc}}$. 
+
+What $P_{\mathrm{sync}}$ covers is the \gls{ap}-side reference hardware only,
+that is the disciplined oscillator and the loop that slaves it to a reference.
+A shared master clock is not a per-\gls{ap} cost and is counted in
+$P_{\mathrm{CPU},0}$ instead. The over-the-air part of reciprocity calibration
+is frame time and \gls{cpu} computation rather than a continuous per-\gls{ap}
+power, and is not modelled.
+\todo{source a value for $P_{\mathrm{sync}}$ and $\eta_{\mathrm{sync,sc}}$. The
+plausible range for the reference hardware spans roughly two orders of magnitude,
+from a temperature-controlled oscillator slaved over the fronthaul to an
+oven-controlled one with its own GNSS receiver, and at $L=32$ that range
+moves $P_{\mathrm{net}}$ by about $\SI{18}{\percent}$. Report it as a
+sensitivity band rather than a point value. Over-the-air calibration also
+consumes frame time, which is not yet charged to $\tau_{i,\mathrm{sig}}$.}
+
+\subsection{Access Point and Co-located Power Consumption}
+\label{ssec:ap}
+
+The three frame-averaged blocks of \eqref{eq:pap} come from the \gls{fr3}
+\gls{bs} model of \cite{peschiera2026fr3}, evaluated once per \gls{ap}. A distributed \gls{ap} carries few antennas, so hybrid
+beamforming has nothing to amortise and the array is fully digital,
+$M_{\mathrm{RF}}=M_{\mathrm{ant}}=M$ with no phase shifters. Substituting this
+into the analog and amplifier assemblies of \cite{peschiera2026fr3} reduces them
+term for term to the per-\gls{ap} expressions below. The digital block cannot be reused directly from~\cite{peschiera2026fr3} because the encoder and decoder move to the \gls{cpu} and the \gls{mimo} processing terms
+depend on the functional split.
+
+\subsubsection{Frame structure and operating-mode averaging}
+\label{sssec:frame}
+A \gls{tdd} frame of duration $T_f$ carries a downlink and an uplink phase with
+duration ratios $\tau_{\mathrm{DL}},\tau_{\mathrm{UL}}\in[0,1]$ and
+$\tau_{\mathrm{UL}}=1-\tau_{\mathrm{DL}}$. Within direction $i$ the time splits
+into reference signalling, for a fraction $\tau_{i}\tau_{i,\mathrm{sig}}$, data
+transmission, for a fraction
+$\bar x_{i}\tau_{i}(1-\tau_{i,\mathrm{sig}})$, micro-sleep, for
+$(1-\bar x_{i})\tau_{i}(1-\tau_{i,\mathrm{sig}})$, and idle, for $(1-\tau_{i})$,
+where $\bar x_{i}\in[0,1]$ is the average physical resource load. The frame
+timing is shared by the whole network: under \gls{tdd} the \glspl{ap} must switch
+direction together. In micro-sleep and idle a component drops to a fraction
+$\delta^{\mu}_{c},\delta^{0}_{c}\in[0,1]$ of a base level $P^{0}$. For a
+component $c$ with working power $P^{\mathrm{a}}$ during data and
+$P^{\mathrm{s}}$ during signalling, the frame-averaged consumption of direction
+$i$ is
+\begin{align}
+\label{eq:frameavg}
+\mathcal{A}_{i}^{c}\!\left(P^{\mathrm a},P^{\mathrm s},P^{0}\right) ={}&
+\bar x_{i}\,\tau_i\,(1-\tau_{i,\mathrm{sig}})\,P^{\mathrm a}
++ \tau_i\,\tau_{i,\mathrm{sig}}\,P^{\mathrm s} \nonumber\\
+&+ (1-\bar x_{i})\,\tau_i\,(1-\tau_{i,\mathrm{sig}})\,\delta^{\mu}_c\,P^{0}
+\nonumber\\
+&+ (1-\tau_i)\,\delta^{0}_c\,P^{0} .
+\end{align}
+For the digital and analog blocks the three levels coincide,
+$P^{\mathrm a}=P^{\mathrm s}=P^{0}=P$, and we write
+$\mathcal{A}_{i}^{c}(P)\triangleq\mathcal{A}_{i}^{c}(P,P,P)$; only the amplifier
+distinguishes them. Collecting the terms proportional to $\bar x_{i}$ separates
+each averaged consumption into a load-dependent and a load-independent part,
+which is what allows the consumption to be attributed to the delivered traffic.
+
+\todo{make this consistent so this can be removed}
+The rate model states the frame as a coherence block of $\tau_{c}$ samples split
+into $\tau_{p}$ pilots, $\tau_{u}$ uplink data and $\tau_{d}$ downlink data,
+whereas the power model works in frame fractions. Charging the pilots to the
+uplink signalling phase pins the mapping,
+\begin{equation}
+\label{eq:frame_map}
+\tau_{\mathrm{DL}} = \frac{\tau_{d}}{\tau_{c}},\quad
+\tau_{\mathrm{DL,sig}} = 0,\quad
+\tau_{\mathrm{UL,sig}} = \frac{\tau_{p}}{\tau_{p}+\tau_{u}},
+\end{equation}
+so that $\tau_{\mathrm{UL}}\tau_{\mathrm{UL,sig}}=\tau_{p}/\tau_{c}$ is the pilot
+share and $\tau_{\mathrm{UL}}(1-\tau_{\mathrm{UL,sig}})=\tau_{u}/\tau_{c}$ the
+uplink data share. The same block length also fixes the precoder amortisation,
+$\upsilon_{\mathrm{coh}}=\tau_{c}$, so that a single number governs both the
+pilot overhead of the rate model and the reuse of the precoder in
+\eqref{eq:gops_cen} and \eqref{eq:gops_loc}.
+
+\subsubsection{Power amplifiers}
+\label{sssec:pa}
+\todo{check from here on out}
+The amplifiers transmit only in the downlink. With output power $p$, the
+instantaneous consumption of one amplifier is
+\begin{equation}
+\label{eq:pa}
+P_{\mathrm{PA}}(p) = \frac{1}{\eta_{\mathrm{PA,max}}}
+\left[\xi\,P_{\max} + (1-\xi)\,P_{\max}^{\,1-\alpha}\,p^{\alpha}\right],
+\end{equation}
+with $P_{\max}$ the maximum output power at a fixed back-off,
+$\eta_{\mathrm{PA,max}}$ the maximum efficiency, $\xi\in[0,1]$ the
+static-to-dynamic ratio and $\alpha\in[0,1]$ the efficiency exponent. Each
+\gls{ap} is an independent transmitter with its own budget $\rho_{\max}$, so the
+single site power of \cite{peschiera2026fr3} becomes the vector of radiated
+powers $P_{T,l}=\sum_{q}\sum_{k}\expt{\norm{\vect{w}_{kl}[q]}^{2}}\leq\rho_{\max}$
+supplied by the rate model, which the two operation modes fill in differently:
+local operation meets the constraint with equality at every \gls{ap}, whereas
+centralized operation rescales all \glspl{ap} by one common factor and brings
+only the busiest of them to its budget. Assuming the \gls{ap} power is shared
+equally across its antennas, $P_{a,l}=P_{T,l}/M$, and
+\begin{equation}
+\label{eq:pa_avg_ap}
+\overline{P_{\mathrm{PA},l}} = M\,
+\mathcal{A}_{\mathrm{DL}}^{\mathrm{PA}}\!\left(
+P_{\mathrm{PA}}(P_{a,l}),\,
+P_{\mathrm{PA}}(\zeta_{\mathrm{sig}}P_{\max}),\,
+P_{\mathrm{PA}}(0)\right),
+\end{equation}
+with $\zeta_{\mathrm{sig}}$ the fraction of $P_{\max}$ used during signalling.
+The equal split is not exact, since the per-antenna powers differ for any
+non-isotropic precoder, but because $\alpha\in[0,1]$ makes
+$P_{\mathrm{PA}}(\cdot)$ concave, Jensen's inequality gives
+$\frac{1}{M}\sum_{m}P_{\mathrm{PA}}(P_{a,lm})\leq P_{\mathrm{PA}}(P_{a,l})$: it
+is a conservative upper bound, tight when the precoder loads an \gls{ap}
+uniformly.
+
+\begin{remark}[Amplifier sizing]
+\label{rem:pa_sizing}
+The relation between $P_{\max}$ and the budget decides how the static term scales
+with the deployment and must be stated. We size each amplifier for its share of
+the budget it is actually given, $P_{\max}=\rho_{\max}/M$ at an \gls{ap} and
+$P_{\max}=P_{\mathrm{TX}}/(LM)$ at the co-located site. Since the comparison
+holds the total transmit power fixed, $\rho_{\max}=P_{\mathrm{TX}}/L$, the two
+deployments then carry amplifiers of identical rating and differ only in how many
+sites they sit on. Substituting \eqref{eq:pa} into \eqref{eq:pa_avg_ap} makes the
+data-mode consumption of an \gls{ap} independent of $M$,
+\begin{equation}
+\label{eq:pa_compact}
+M\,P_{\mathrm{PA}}(P_{a,l}) =
+\frac{\rho_{\max}}{\eta_{\mathrm{PA,max}}}\left[\xi + (1-\xi)\,u_{l}^{\alpha}\right],
+\qquad u_{l} = \frac{P_{T,l}}{\rho_{\max}},
+\end{equation}
+so the network static floor is $L\xi\rho_{\max}/\eta_{\mathrm{PA,max}} =
+\xi P_{\mathrm{TX}}/\eta_{\mathrm{PA,max}}$, the same for both deployments at
+equal total transmit power. The per-\gls{ap} constraint then costs the network
+twice under centralized operation: only a fraction $\bar u<1$ of the budget is
+radiated, while the static floor is paid in full.
+\todo{source $\xi,\alpha,\eta_{\mathrm{PA,max}}$ for AP-class amplifiers; the
+values used are fitted for macro-cell hardware.}
+\end{remark}
+
+\subsubsection{Analog front end}
+The analog block comprises, per \gls{rf} chain, the \glspl{dac} in the downlink
+or \glspl{adc} in the uplink, \gls{rf} filters, mixers and the low-noise
+amplifiers, with the local oscillator shared across the chains of one node.
+Specialising \cite{peschiera2026fr3} to a fully digital array without phase
+shifters,
+\begin{align}
+\label{eq:ana_dl_ap}
+P_{\mathrm{ana,DL},l} &= P_{\mathrm{LO}} + M\left(
+2P_{\mathrm{DAC}} + 2P_{\mathrm{filt,RF}} + 2P_{\mathrm{mix}}\right),\\
+\label{eq:ana_ul_ap}
+P_{\mathrm{ana,UL},l} &= P_{\mathrm{LO}} + M\big(
+2P_{\mathrm{ADC}} + 2P_{\mathrm{filt,RF}} + 2P_{\mathrm{mix}} \nonumber\\
+&\qquad + P_{\mathrm{LNA}}\big),
+\end{align}
+the factor two accounting for the in-phase and quadrature branches, and
+\begin{equation}
+\label{eq:ana_avg_ap}
+\overline{P_{\mathrm{ana},l}} =
+\mathcal{A}_{\mathrm{DL}}^{\mathrm{ana}}\!\left(P_{\mathrm{ana,DL},l}\right)
++ \mathcal{A}_{\mathrm{UL}}^{\mathrm{ana}}\!\left(P_{\mathrm{ana,UL},l}\right)
++ P_{\mathrm{ana,misc}} .
+\end{equation}
+This is the co-located analog block term for term, with no distributed addition:
+the synchronization sits outside it, in \eqref{eq:pap}.
+The local oscillator is the first term to change character: a co-located array
+shares one across all $M_{\mathrm{ant}}$ chains, whereas the network pays
+$L\,P_{\mathrm{LO}}$.
+
+\subsubsection{Digital signal processing}
+Every \gls{ap} performs the \gls{ofdm} modulation and demodulation, the
+predistortion of its own amplifiers and the baseband filtering whatever the
+split, so with the component models $P_{\mathrm{IFFT}}$, $P_{\mathrm{DPD}}$ and
+$P_{\mathrm{filt,BB}}$ of \cite{peschiera2026fr3} evaluated at $M$ chains,
+\begin{align}
+\label{eq:dig_ap}
+P_{\mathrm{dig,DL},l} &= P_{\mathrm{IFFT}} + P_{\mathrm{DPD}}
++ P_{\mathrm{filt,BB}} + P_{\mathrm{MIMO,DL},l},\\
+P_{\mathrm{dig,UL},l} &= P_{\mathrm{IFFT}} + P_{\mathrm{filt,BB}}
++ P_{\mathrm{MIMO,UL},l},
+\end{align}
+with $\overline{P_{\mathrm{dig},l}} =
+\mathcal{A}_{\mathrm{DL}}^{\mathrm{dig}}(P_{\mathrm{dig,DL},l})
++ \mathcal{A}_{\mathrm{UL}}^{\mathrm{dig}}(P_{\mathrm{dig,UL},l})$. The encoder
+and decoder are absent by construction, which is the structural difference from
+the single-site model, and only the \gls{mimo} term of \eqref{eq:pmimo} depends
+on the split.
+
+\begin{remark}[Loss of static-power amortisation]
+\label{rem:fpga}
+The precoder, combiner and baseband filter share a static power $P_{s}$ per
+FPGA, one per group of $32$ chains. A co-located array of $M_{\mathrm{ant}}$
+antennas amortises that power over $32$ chains at a time, whereas a network of
+$L$ \glspl{ap} with $M<32$ antennas each pays it $L$ times. At $L=16$ and $M=4$
+the network runs $16$ FPGAs where a co-located array of the same $64$ antennas
+runs $2$. Chopping a large array into many small ones leaves the per-chain
+digital costs untouched but destroys the sharing of the fixed ones, and this is a
+general feature rather than an artefact of the value $32$.
+\end{remark}
+
+\subsubsection{Co-located baseline}
+The reference deployment is the unmodified model of \cite{peschiera2026fr3}
+evaluated at a single site: one fully digital array of $M_{\mathrm{ant}}=LM$
+antennas radiating the full budget $P_{\mathrm{TX}}$, one shared local
+oscillator, no fronthaul, no central unit and no synchronization power, with the
+complete digital chain (encoder, precoder, \gls{ofdm}, predistortion and
+baseband filter in the downlink; decoder, combiner, \gls{ofdm} and baseband
+filter in the uplink) at that one site. It is evaluated through the same
+parameter set as the distributed network, so the two deployments cannot silently
+differ in a hardware constant.
+
+\subsection{Delivered Rate and Energy Efficiency}
+\label{ssec:ee}
+
+The delivered sum rates $R_{\mathrm{DL}}$ and $R_{\mathrm{UL}}$ come from the
+rate model of \Cref{sec:sysmodel} with the prelogs $\tau_{d}/\tau_{c}$ and
+$\tau_{u}/\tau_{c}$ already applied, and the network energy efficiency is the
+delivered rate per consumed watt,
+\begin{equation}
+\label{eq:ee_net}
+\mathrm{EE}_{\mathrm{net}} =
+\frac{R_{\mathrm{DL}} + R_{\mathrm{UL}}}{P_{\mathrm{net}}}
+\quad [\mathrm{bit/J}],
+\end{equation}
+which reduces to the single-site energy efficiency of \cite{peschiera2026fr3}
+for the co-located baseline. Because a distributed and a co-located deployment
+cover the same area with the same hardware count, the comparison is made at equal
+$LM$ and equal total transmit power.
+
+\todo{The encoder and decoder are driven by the \emph{delivered} rates and their
+consumption is then frame-averaged again in \eqref{eq:cpu}, so the frame
+structure enters twice for those two components. This is inherited from
+\cite{peschiera2026fr3} and is deliberately \emph{not} done for the fronthaul
+payload in \eqref{eq:fh_rate_avg}; decide which convention the paper adopts and
+apply it to both.}
+
+\todo{Effects not yet captured. Fronthaul quantization is modelled only through
+its rate, so S1 is charged for its fronthaul load but not debited for the
+\gls{sinr} loss the $b_{\mathrm{FH}}$ bits per sample cause. Channel estimation
+is unpriced, since perfect \gls{csi} is assumed. \gls{ap} selection is not
+modelled: all $L$ \glspl{ap} are always active, so the deep-sleep term of
+\eqref{eq:pnet} and the serving-cluster reduction of \Cref{rem:fh_ceiling} are
+left out. Finally, the reduction factors, the supply-and-cooling efficiencies and
+the amplifier parameters are inherited from a macro \gls{bs} and are the most
+likely source of systematic error when applied to a small outdoor \gls{ap}.}

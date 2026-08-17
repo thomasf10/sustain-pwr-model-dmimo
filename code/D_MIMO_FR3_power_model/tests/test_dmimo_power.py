@@ -80,6 +80,35 @@ def test_colocated_is_the_L1_special_case():
     assert np.isclose(net.total, col.total)
 
 
+def test_synchronization_is_separable_from_the_analog_block():
+    """P_sync is its own term of eq. pap, not an addend inside the analog block.
+
+    Because it was pulled out, the distributed analog block reduces to the
+    co-located one *unconditionally* rather than only when P_sync = 0, and the
+    whole synchronization cost is a per-AP constant that the network total
+    carries linearly in L. It must not depend on the load, the split, or the
+    frame, and the co-located baseline must not pay it at all.
+    """
+    M_tot = 64
+    for L, P_sync in ((1, 0.5), (16, 0.5), (32, 2.0)):
+        p = base_params(L=L, M=M_tot // L, P_sync=P_sync)
+        ap_power = np.full(L, BUDGET / L)
+
+        net = compute_network(p, ap_power, rho_max=BUDGET / L, R_DL=R_DL, R_UL=R_UL)
+        off = compute_network(replace(p, P_sync=0.0), ap_power,
+                              rho_max=BUDGET / L, R_DL=R_DL, R_UL=R_UL)
+
+        expected = L * P_sync / p.eta_sync_sc
+        assert np.isclose(net.ap_sync.total, expected)
+        assert np.isclose(net.ap_sync.load_dep, 0.0)      # wholly load-independent
+        assert np.isclose(net.ap_analog.total, off.ap_analog.total)
+        assert np.isclose(net.total, off.total + expected)
+
+    # The co-located site does not synchronize with anything.
+    col = compute_colocated(base_params(L=1, M=M_tot, P_sync=0.5), BUDGET, R_DL, R_UL)
+    assert not hasattr(col, "ap_sync")
+
+
 def test_centralized_precoder_count_matches_colocated():
     """eq. gops_cen at L=1, M=M_RF is the co-located precoder count of eq. gops_pre."""
     M_tot = 64

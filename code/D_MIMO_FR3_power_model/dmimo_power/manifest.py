@@ -105,6 +105,7 @@ def _result_record(r) -> dict:
         blocks = {"ap_digital_W": b.ap_digital.total,
                   "ap_analog_W": b.ap_analog.total,
                   "ap_pa_W": b.ap_pa.total,
+                  "ap_sync_W": b.ap_sync.total,
                   "fronthaul_W": b.fronthaul.total,
                   "cpu_W": b.cpu.total,
                   "ap_utilisation_mean": float(b.utilisation.mean()),

@@ -16,8 +16,10 @@ array, ``M_RF = M`` and ``M_PS = 0``. Substituting that into the co-located
 analog and PA assemblies reduces them *exactly* to eq. ana_dl_ap / ana_ul_ap and
 eq. pa_avg_ap, so :func:`ap_analog` and :func:`ap_pa` call
 :func:`fr3_power.power_model.analog` and :func:`fr3_power.power_model.pa`
-unchanged and only add what is genuinely new (the per-AP synchronization power,
-and the PA sizing convention). The digital block cannot be reused wholesale:
+unchanged, the only addition being the PA sizing convention. What is genuinely
+new gets its own term instead of being folded into one of theirs: the per-AP
+synchronization of :func:`ap_sync`, the fronthaul, and the central unit. The
+digital block cannot be reused wholesale:
 the encoder and decoder move to the CPU, and the MIMO-processing term depends on
 where the precoder is computed and applied, which is the functional split. That
 is the one block re-assembled here, from the same :mod:`fr3_power.components`.
@@ -173,16 +175,35 @@ def ap_analog(p: DMIMOPowerParams, op: OperatingPoint) -> LoadSplit:
     """Frame-averaged analog consumption of one AP (eq. ana_avg_ap).
 
     With ``M_RF = M_ant = M`` and no phase shifters, the co-located assembly is
-    already eq. ana_dl_ap / ana_ul_ap term for term, so it is reused as is. Two
-    things then change character in a distributed deployment. The local
-    oscillator is no longer shared by the whole array: every AP needs its own,
-    so the network pays ``L P_LO``. And ``P_sync`` is added, with no co-located
-    counterpart, for the frequency and phase reference and the reciprocity
-    calibration that coherent joint transmission across separate nodes requires.
-    It sits outside the direction averaging because it is paid continuously.
+    already eq. ana_dl_ap / ana_ul_ap term for term, so it is reused unchanged.
+    What changes character in a distributed deployment is the local oscillator:
+    it is no longer shared by the whole array, since every AP needs its own, so
+    the network pays ``L P_LO``.
+
+    Synchronization is *not* part of this block; see :func:`ap_sync`.
     """
-    base = fr3_pm.analog(p, op)
-    return base + LoadSplit(p.P_sync / p.eta_ana_sc, 0.0)
+    return fr3_pm.analog(p, op)
+
+
+def ap_sync(p: DMIMOPowerParams) -> LoadSplit:
+    """Synchronization consumption of one AP (eq. pap, fourth term) [W].
+
+    Coherent joint transmission across physically separate nodes requires a
+    shared frequency and phase reference and reciprocity-calibrated TDD chains,
+    which a co-located array does not pay for at all. It is charged as a
+    constant per AP, wholly load-independent, and it is deliberately *not* run
+    through :func:`fr3_power.frame_average.frame_average`: the reference has to
+    hold whether or not the frame is carrying data, so there is no operating
+    mode in which it drops.
+
+    It is a term of its own rather than an addend inside :func:`ap_analog`
+    because it shares none of that block's structure. Every other analog term
+    scales with ``M_RF`` or is the single shared LO, and every one of them is
+    frame-averaged. Keeping it separate also means it does not silently inherit
+    ``eta_ana_sc``, and it makes the reduction of the distributed analog block
+    to the co-located one exact rather than conditional on ``P_sync = 0``.
+    """
+    return LoadSplit(p.P_sync / p.eta_sync_sc, 0.0)
 
 
 def ap_pa(p: DMIMOPowerParams, op: OperatingPoint, rho_max: float) -> LoadSplit:
@@ -353,6 +374,7 @@ class NetworkBreakdown:
     ap_digital: LoadSplit
     ap_analog: LoadSplit
     ap_pa: LoadSplit
+    ap_sync: LoadSplit
     fronthaul: LoadSplit
     cpu: LoadSplit
     ap_tx_power: np.ndarray   # per-AP radiated power [W], shape (L,)
@@ -361,7 +383,8 @@ class NetworkBreakdown:
     @property
     def ap_total(self) -> float:
         """Consumption of all APs (eq. pap summed over the network) [W]."""
-        return self.ap_digital.total + self.ap_analog.total + self.ap_pa.total
+        return (self.ap_digital.total + self.ap_analog.total
+                + self.ap_pa.total + self.ap_sync.total)
 
     @property
     def total(self) -> float:
@@ -379,6 +402,7 @@ class NetworkBreakdown:
         rows = (("AP digital", self.ap_digital.total),
                 ("AP analog", self.ap_analog.total),
                 ("AP PA", self.ap_pa.total),
+                ("AP sync", self.ap_sync.total),
                 ("fronthaul", self.fronthaul.total),
                 ("CPU", self.cpu.total))
         lines = [f"P_net = {t:.1f} W"]
@@ -420,12 +444,13 @@ def compute_network(p: DMIMOPowerParams, ap_tx_power, rho_max: float,
             f"{rho_max:.4f} W; the rate and power models disagree on the constraint"
         )
 
-    dig = ana = pa_ = LoadSplit(0.0, 0.0)
+    dig = ana = pa_ = syn = LoadSplit(0.0, 0.0)
     for P_T_l in ap_tx_power:
         op = ap_operating_point(p, float(P_T_l), xbar_DL, xbar_UL)
         dig = dig + ap_digital(p, op)
         ana = ana + ap_analog(p, op)
         pa_ = pa_ + ap_pa(p, op, rho_max)
+        syn = syn + ap_sync(p)
 
     # Every AP serves every user, so each link carries the whole downlink
     # payload under a data-sharing split: this duplication is what
@@ -433,7 +458,7 @@ def compute_network(p: DMIMOPowerParams, ap_tx_power, rho_max: float,
     link = fronthaul(p, R_DL, xbar_DL, xbar_UL)
     fh = LoadSplit(link.load_ind * p.L, link.load_dep * p.L)
 
-    return NetworkBreakdown(ap_digital=dig, ap_analog=ana, ap_pa=pa_,
+    return NetworkBreakdown(ap_digital=dig, ap_analog=ana, ap_pa=pa_, ap_sync=syn,
                             fronthaul=fh, cpu=cpu(p, R_DL, R_UL, xbar_DL, xbar_UL),
                             ap_tx_power=ap_tx_power, rho_max=rho_max)
 

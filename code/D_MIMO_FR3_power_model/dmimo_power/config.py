@@ -126,12 +126,25 @@ class DMIMOPowerParams(PowerParams):
     # ceil(L*M / cpu_rf_chains_per_fpga) FPGAs.
     cpu_rf_chains_per_fpga: int = 32
 
-    # --- Per-AP synchronization (eq. ana_avg_ap) ---------------------------
+    # --- Per-AP synchronization (eq. pap) ----------------------------------
     # Coherent joint transmission across separate nodes needs a shared frequency
     # and phase reference and reciprocity-calibrated TDD chains. It costs power
-    # at every AP continuously, which is why it sits outside the direction
-    # averaging. A co-located array does not pay it.
+    # at every AP continuously, which is why it is a constant rather than a
+    # frame-averaged block. A co-located array does not pay it.
+    #
+    # This is the AP-side reference hardware only: the disciplined oscillator and
+    # the PLL slaved to GNSS or to a reference delivered over the fronthaul. The
+    # shared grandmaster clock is not per-AP and belongs in ``P_CPU_0``; the
+    # over-the-air part of reciprocity calibration is frame time and CPU work,
+    # not a continuous per-AP power, and is not modelled (see the gap list in
+    # ``pwr_model.tex``).
+    #
+    # It carries its own supply-and-cooling efficiency rather than borrowing the
+    # analog one: an always-on oscillator module is not the RF front end, and
+    # letting it inherit eta_ana_sc would fix its overhead by an accident of
+    # placement.
     P_sync: float = 0.5         # Per-AP reference distribution + calibration [W]  [UNSOURCED]
+    eta_sync_sc: float = 0.81   # Synchronization supply and cooling        [UNSOURCED]
 
     # --- Power amplifier sizing (Remark rem:pa_sizing) ---------------------
     pa_sizing: PASizing = PASizing.PER_AP_BUDGET
@@ -148,7 +161,7 @@ class DMIMOPowerParams(PowerParams):
         for name in ("L", "M", "K", "b_FH", "cpu_rf_chains_per_fpga"):
             if getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be positive, got {getattr(self, name)}")
-        for name in ("eta_FH_sc", "eta_CPU_sc"):
+        for name in ("eta_FH_sc", "eta_CPU_sc", "eta_sync_sc"):
             if not 0 < getattr(self, name) <= 1:
                 raise ValueError(f"{name} must lie in (0, 1], got {getattr(self, name)}")
 
@@ -264,6 +277,7 @@ UNSOURCED = (
     ("delta_FH_micro", "idle reduction factor of an optical transceiver"),
     ("P_CPU_0", "always-on consumption of the central unit"),
     ("P_sync", "per-AP reference distribution and reciprocity calibration"),
+    ("eta_sync_sc", "supply and cooling of the AP-side reference hardware"),
 )
 
 

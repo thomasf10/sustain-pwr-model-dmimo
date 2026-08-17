@@ -47,6 +47,7 @@ BLOCK_COLOR = {
     "AP digital": "#0072B2",
     "AP analog": "#D55E00",
     "AP PA": "#009E73",
+    "AP sync": "#E69F00",
     "fronthaul": "#56B4E9",
     "CPU": "#CC79A7",
 }
@@ -261,8 +262,8 @@ def _blocks_of(result) -> dict:
     b = result.breakdown
     if hasattr(b, "fronthaul"):        # NetworkBreakdown
         return {"AP digital": b.ap_digital.total, "AP analog": b.ap_analog.total,
-                "AP PA": b.ap_pa.total, "fronthaul": b.fronthaul.total,
-                "CPU": b.cpu.total}
-    # Co-located PowerBreakdown: no fronthaul and no central unit at all.
+                "AP PA": b.ap_pa.total, "AP sync": b.ap_sync.total,
+                "fronthaul": b.fronthaul.total, "CPU": b.cpu.total}
+    # Co-located PowerBreakdown: no synchronization, no fronthaul, no CPU.
     return {"AP digital": b.digital.total, "AP analog": b.analog.total,
-            "AP PA": b.pa.total, "fronthaul": 0.0, "CPU": 0.0}
+            "AP PA": b.pa.total, "AP sync": 0.0, "fronthaul": 0.0, "CPU": 0.0}
