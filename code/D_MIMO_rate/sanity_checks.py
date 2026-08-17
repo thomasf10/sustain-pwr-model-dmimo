@@ -10,10 +10,13 @@ building blocks still behave. It checks:
   L-RZF/L-MMSE schemes, plus that unimplemented schemes raise;
 * power control: centralized (K,) and distributed (L,K) allocations and that the
   per-AP power budget holds after normalization;
+* uplink combining: the algebraic invariants of MR/ZF/RZF/MMSE and the local
+  L-RZF/L-MMSE combiners, the per-user uplink budget, LSFD fusion, and the
+  scale invariances the uplink SINR relies on;
 * channel model: Sionna UMi shapes, beta consistency, and reproducibility
   (skipped with a note if Sionna is not installed);
-* end-to-end: one realization run through the power-control pipeline
-  precoding -> normalize -> SINR -> SE, checking finite positive SE.
+* end-to-end: one realization run through each direction's pipeline, checking
+  finite positive SE.
 
 Usage (from this directory, with the project venv):
 
@@ -30,6 +33,7 @@ import numpy as np
 
 from config_dmimo import (
     ChannelModel,
+    CombiningScheme,
     DMIMOConfig,
     OperationMode,
     PrecodingScheme,
@@ -94,6 +98,37 @@ def check_config(chk: Checks) -> None:
         np.isclose(cfg.dl_prelog, (cfg.tau_c - cfg.tau_p) / cfg.tau_c))
     chk("rzf_regularization defaults to sigma^2",
         np.isclose(cfg.rzf_regularization, cfg.noise_power))
+
+    # Uplink bookkeeping: tau_c splits into pilots, uplink data, downlink data,
+    # and the default tau_u = 0 is the downlink-only frame of the manuscript.
+    chk("default tau_u = 0 leaves the DL prelog untouched",
+        cfg.tau_u == 0 and np.isclose(cfg.dl_prelog, (cfg.tau_c - cfg.tau_p) / cfg.tau_c))
+    chk("default ul_prelog = 0 (uplink carries pilots only)", cfg.ul_prelog == 0.0)
+    cfg_ul = DMIMOConfig(L=6, M=4, K=4, Q=8, tau_c=200, tau_p=20, tau_u=90)
+    chk("tau_d = tau_c - tau_p - tau_u", cfg_ul.tau_d == 90)
+    chk("prelogs sum to (tau_c - tau_p)/tau_c",
+        np.isclose(cfg_ul.ul_prelog + cfg_ul.dl_prelog,
+                   (cfg_ul.tau_c - cfg_ul.tau_p) / cfg_ul.tau_c))
+    chk("ul_rzf_regularization defaults to sigma^2 / p_max",
+        np.isclose(cfg.ul_rzf_regularization, cfg.noise_power / cfg.p_max))
+    chk("combining defaults to the dual of the precoder",
+        cfg.combining is CombiningScheme.ZF
+        and DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="L-RZF",
+                        operation="distributed").combining is CombiningScheme.L_RZF)
+
+    # Configurations the model does not admit.
+    for kwargs, why in (
+        (dict(tau_u=190), "tau_p + tau_u > tau_c"),
+        (dict(combining="MR"), "local combiner with centralized operation"),
+        (dict(fusion="lsfd"), "LSFD fusion with centralized operation"),
+        (dict(p_max=0.0), "non-positive p_max"),
+    ):
+        try:
+            DMIMOConfig(L=6, M=4, K=4, Q=8, **kwargs)
+            raised = False
+        except ValueError:
+            raised = True
+        chk(f"rejects {why}", raised)
 
     # Path loss: equals the reference loss at d0, and increases with distance.
     chk("path_loss_dB(d0) = pathloss_ref_loss_dB",
@@ -392,13 +427,208 @@ def check_channel_and_e2e(chk: Checks) -> None:
     chk("se_5pct <= se_median", res.se_5pct <= res.se_median)
 
 
+def check_uplink(chk: Checks) -> None:
+    chk.section("Uplink combining, power control and SINR")
+    cfg = DMIMOConfig(L=6, M=4, K=4, Q=8, tau_u=90)
+    L, M, K, Q = cfg.L, cfg.M, cfg.K, cfg.Q
+    sigma2 = cfg.noise_power
+    H = synthetic_channel(cfg)
+    E = H.transpose(0, 2, 1)                      # (Q, M_tot, K), columns h_k
+    rng = np.random.default_rng(5)
+    beta = 10.0 ** rng.uniform(-11, -8, size=(L, K))
+
+    # --- Power control: eq. ul-fractional-power ------------------------
+    p = mh.uplink_power_control(cfg, beta)
+    beta_k = beta.sum(axis=0)
+    chk("UL fractional = p_max beta_k^v / max_i beta_i^v",
+        np.allclose(p, cfg.p_max * beta_k ** cfg.v_ul / (beta_k ** cfg.v_ul).max()))
+    # Each user owns its budget, so the constraint holds for either sign of v.
+    chk("per-user budget p_k <= p_max for any v_ul",
+        all(np.all(mh.uplink_power_control(
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, v_ul=v, tau_u=90), beta) <= cfg.p_max + 1e-15)
+            for v in (-1.0, -0.5, 0.0, 0.5, 1.0)))
+    chk("strongest user is at p_max", np.isclose(p.max(), cfg.p_max))
+    chk("EQUAL is full power p_k = p_max",
+        np.allclose(mh.uplink_power_control(
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, ul_power_alloc="equal", tau_u=90), beta),
+            cfg.p_max))
+    chk("v_ul = -1 equalizes the arriving power p_k beta_k",
+        np.allclose(np.diff(mh.uplink_power_control(
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, v_ul=-1.0, tau_u=90), beta) * beta_k), 0))
+
+    # --- Centralized combiners -----------------------------------------
+    V = mh.combining_directions(cfg, H, p)        # ZF by default
+    G = mh.uplink_effective_channel(V, H)
+    chk("uplink_effective_channel = V^H H",
+        np.allclose(G, np.einsum("qmk,qim->qki", np.conj(V), H)))
+    off = (np.abs(G) ** 2).sum(axis=2) - np.abs(np.diagonal(G, axis1=1, axis2=2)) ** 2
+    chk("ZF combiner nulls inter-user interference", off.max() < 1e-20)
+    chk("ZF effective channel is unity", np.allclose(np.diagonal(G, axis1=1, axis2=2), 1.0))
+
+    # MMSE, eq. ul-centralized-rzf: the loading is the diagonal sigma^2 P^{-1}.
+    cfg_mmse = DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="MMSE", tau_u=90)
+    V_mmse = mh.combining_directions(cfg_mmse, H, p)
+    chk("MMSE combiner = H (H^H H + sigma^2 P^-1)^-1",
+        np.allclose(V_mmse, np.stack([E[q] @ np.linalg.inv(np.conj(H[q]) @ E[q]
+                                                           + np.diag(sigma2 / p))
+                                      for q in range(Q)])))
+    # Push-through: that K x K form equals the M_tot x M_tot combiner of
+    # eq. ul-mmse-combiner up to the diagonal factor P, which the scale
+    # invariance of eq. ul-sinr makes irrelevant. Verified on a channel scaled to
+    # the physical regime p*beta ~ sigma^2, because the M_tot x M_tot reference
+    # is otherwise conditioned at ~1e11 (rank K signal plus a sigma^2 floor) and
+    # is then the inaccurate side of the comparison. Avoiding exactly that
+    # conditioning is why the implementation uses the K x K form.
+    H_phys = H * np.sqrt(sigma2 / p.mean())
+    E_phys = H_phys.transpose(0, 2, 1)
+    V_full = np.stack([np.linalg.solve(E_phys[q] @ np.diag(p) @ np.conj(E_phys[q]).T
+                                       + sigma2 * np.eye(cfg.M_tot), E_phys[q])
+                       for q in range(Q)])
+    chk("MMSE = (H P H^H + sigma^2 I)^-1 H P (push-through identity)",
+        np.allclose(mh.combining_directions(cfg_mmse, H_phys, p), V_full * p))
+    chk("RZF = MMSE when every user transmits at p_max",
+        np.allclose(mh.combining_directions(
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="RZF", tau_u=90), H, np.full(K, cfg.p_max)),
+            mh.combining_directions(
+                DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="MMSE", tau_u=90), H, np.full(K, cfg.p_max))))
+
+    # --- Local combiners ------------------------------------------------
+    local = dict(precoding="L-RZF", operation="distributed", tau_u=90)
+    for name in ("L-MMSE", "L-RZF"):
+        c_loc = DMIMOConfig(L=L, M=M, K=K, Q=Q, combining=name, **local)
+        V_loc = mh.combining_directions(c_loc, H, p)
+        load = sigma2 if name == "L-MMSE" else c_loc.ul_rzf_regularization
+        P_l = np.diag(p) if name == "L-MMSE" else np.eye(K)
+        ref_ok = all(
+            np.allclose(V_loc[q][l * M:(l + 1) * M, :],
+                        np.linalg.solve(E[q][l * M:(l + 1) * M, :] @ P_l
+                                        @ np.conj(E[q][l * M:(l + 1) * M, :]).T
+                                        + load * np.eye(M), E[q][l * M:(l + 1) * M, :]))
+            for l in range(L) for q in range(Q))
+        chk(f"{name} matches its per-AP form (eq. ul-local-rzf)", ref_ok)
+        # A local combiner may not depend on any other AP's CSI.
+        H_far = H.copy()
+        H_far[:, :, M:] *= 3.0
+        chk(f"{name} block 0 uses local CSI only",
+            np.allclose(mh.combining_directions(c_loc, H_far, p)[:, :M, :], V_loc[:, :M, :]))
+
+    c_mr = DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="MR", **local)
+    chk("MR combiner is v_kl = h_kl", np.allclose(mh.combining_directions(c_mr, H, p), E))
+
+    # --- SINR -----------------------------------------------------------
+    v_norm2 = mh.combiner_norms(V)
+    sinr = mh.uplink_sinr(G, v_norm2, p, sigma2)
+    ref = np.array([[p[k] * abs(np.vdot(V[q][:, k], H[q][k])) ** 2
+                     / (sum(p[i] * abs(np.vdot(V[q][:, k], H[q][i])) ** 2
+                            for i in range(K) if i != k)
+                        + sigma2 * np.vdot(V[q][:, k], V[q][:, k]).real)
+                     for k in range(K)] for q in range(Q)])
+    chk("uplink_sinr matches eq. ul-sinr term by term", np.allclose(sinr, ref))
+    chk("ZF uplink SINR reduces to p_k / (sigma^2 ||v_k||^2)",
+        np.allclose(sinr, p[None, :] / (sigma2 * v_norm2)))
+    # The two invariances the implementation relies on: the combiner carries no
+    # power (so it needs no normalization), and the per-subcarrier split
+    # (p/Q, sigma^2/Q) cancels (so the routines use block totals).
+    V_s = V * (rng.uniform(0.5, 3, K) * np.exp(2j * np.pi * rng.random(K)))
+    chk("SINR invariant to the scale of v_k",
+        np.allclose(mh.uplink_sinr(mh.uplink_effective_channel(V_s, H),
+                                   mh.combiner_norms(V_s), p, sigma2), sinr))
+    chk("SINR invariant to a common scaling of (p, sigma^2)",
+        np.allclose(mh.uplink_sinr(G, v_norm2, p / Q, sigma2 / Q), sinr))
+
+    # UatF: the mean effective channel is the useful gain, its fluctuation is not.
+    uatf = mh.uplink_sinr_uatf(G, v_norm2, p, sigma2)
+    g_kk = np.diagonal(G, axis1=1, axis2=2)
+    desired = p * np.abs(g_kk.mean(axis=0)) ** 2
+    uatf_ref = desired / ((np.abs(G) ** 2).mean(axis=0) @ p - desired
+                          + sigma2 * v_norm2.mean(axis=0))
+    chk("uplink_sinr_uatf matches its definition", np.allclose(uatf[0], uatf_ref))
+    chk("UatF keeps the (1, K) shape spectral_efficiency expects", uatf.shape == (1, K))
+
+    # --- Fusion ---------------------------------------------------------
+    chk("centralized operation has no fusion stage (weights are one)",
+        np.allclose(mh.fusion_weights(cfg, V, H, p), 1.0))
+    c_lsfd = DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="L-MMSE", fusion="lsfd",
+                         ul_se_bound="uatf", **local)
+    V_loc = mh.combining_directions(c_lsfd, H, p)
+    a = mh.fusion_weights(c_lsfd, V_loc, H, p)
+    chk("LSFD weights have shape (L, K) and are finite",
+        a.shape == (L, K) and np.all(np.isfinite(a)))
+    V_a = mh.apply_fusion_weights(c_lsfd, V_loc, a)
+    chk("apply_fusion_weights scales block (l, k) by a_lk",
+        all(np.allclose(V_a[:, l * M:(l + 1) * M, k], V_loc[:, l * M:(l + 1) * M, k] * a[l, k])
+            for l in range(L) for k in range(K)))
+    # LSFD maximizes exactly the UatF SINR, so it cannot lose to equal weighting.
+    V_eq = mh.apply_fusion_weights(c_lsfd, V_loc, np.ones((L, K)))
+    uatf_of = lambda Vx: mh.uplink_sinr_uatf(mh.uplink_effective_channel(Vx, H),
+                                             mh.combiner_norms(Vx), p, sigma2)
+    chk("LSFD is at least as good as equal weighting on the UatF SINR",
+        np.all(uatf_of(V_a) >= uatf_of(V_eq) - 1e-12))
+
+    # --- Delivered SE ---------------------------------------------------
+    se = mh.uplink_spectral_efficiency(cfg, G, v_norm2, p)
+    chk("UL SE = ul_prelog * mean_q log2(1 + SINR)",
+        np.allclose(se, cfg.ul_prelog * np.log2(1 + sinr).mean(axis=0)))
+    chk("tau_u = 0 delivers zero uplink SE",
+        np.allclose(mh.uplink_spectral_efficiency(
+            DMIMOConfig(L=L, M=M, K=K, Q=Q), G, v_norm2, p), 0.0))
+    chk("UatF SE path returns one value per user",
+        mh.uplink_spectral_efficiency(
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, ul_se_bound="uatf", tau_u=90),
+            G, v_norm2, p).shape == (K,))
+
+
+def check_uplink_e2e(chk: Checks) -> None:
+    chk.section("Uplink end-to-end")
+    from ul_rate import simulate_uplink
+
+    cfg = DMIMOConfig(L=6, M=4, K=4, Q=8, channel_model="sionna-umi",
+                      tau_u=90, n_realizations=3)
+    try:
+        res = simulate_uplink(cfg)
+    except ModuleNotFoundError as exc:
+        chk("Sionna available", False, f"skipped: {exc.name} not installed")
+        return
+
+    chk("simulate_uplink SE shape (K,)", res.se_per_user.shape == (cfg.K,))
+    chk("simulate_uplink SE finite and positive",
+        np.all(np.isfinite(res.se_per_user)) and np.all(res.se_per_user > 0),
+        f"sum SE {res.sum_se:.2f} bit/s/Hz")
+    chk("simulate_uplink mean UE power within budget",
+        np.all(res.ue_power <= cfg.p_max * (1 + 1e-9)),
+        f"max {res.ue_power.max()*1e3:.1f} mW")
+    chk("sum_rate = sum_se * B", np.isclose(res.sum_rate, res.sum_se * cfg.B))
+    chk("se_samples shape (n, K)", res.se_samples.shape == (cfg.n_realizations, cfg.K))
+    chk("ergodic SE = mean of se_samples",
+        np.allclose(res.se_per_user, res.se_samples.mean(axis=0)))
+    chk("se_5pct <= se_median", res.se_5pct <= res.se_median)
+
+    # Cooperation ordering: centralized > local L-MMSE > MR, the uplink
+    # counterpart of Section 6.6 of the monograph. It is checked on a network
+    # that is interference-limited rather than noise-limited, since only there is
+    # local interference suppression worth its degrees of freedom: at M = K a
+    # local combiner spends every DoF on nulling and keeps no array gain, so on a
+    # small noise-limited drop MR legitimately beats L-MMSE.
+    def sum_se(**kw):
+        return simulate_uplink(DMIMOConfig(L=10, M=4, K=6, Q=8, channel_model="sionna-umi",
+                                           tau_u=90, n_realizations=5, **kw)).sum_se
+    local = dict(precoding="L-RZF", operation="distributed")
+    se_cen = sum_se()
+    se_loc = sum_se(combining="L-MMSE", **local)
+    se_mr = sum_se(combining="MR", **local)
+    chk("centralized ZF >= local L-MMSE >= MR",
+        se_cen >= se_loc >= se_mr, f"{se_cen:.2f} >= {se_loc:.2f} >= {se_mr:.2f}")
+
+
 def main() -> int:
     chk = Checks()
     check_config(chk)
     check_signal_processing(chk)
     check_precoding(chk)
     check_power_control(chk)
+    check_uplink(chk)
     check_channel_and_e2e(chk)
+    check_uplink_e2e(chk)
     return chk.summary()
 
 

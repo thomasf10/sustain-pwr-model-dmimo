@@ -2,13 +2,14 @@
 
 The functions here are split into two kinds:
 
-* **Stubs you implement** -- the channel model, the transmit precoding, and the
-  power control. These raise :class:`NotImplementedError` and document the
-  expected inputs, outputs, and array shapes so the surrounding pipeline stays
-  fixed while you fill in the physics.
-* **Implemented signal-processing** -- the effective-channel, SINR, spectral
-  efficiency, and per-AP power computations of the downlink system model. These
-  are generic given the channels and precoders and are ready to use.
+* **Stubs you implement** -- the analytical Rayleigh channel model. These raise
+  :class:`NotImplementedError` and document the expected inputs, outputs, and
+  array shapes so the surrounding pipeline stays fixed while you fill in the
+  physics.
+* **Implemented signal-processing** -- the precoding, combining, power control,
+  effective-channel, SINR, spectral efficiency, and per-AP power computations of
+  the downlink and uplink system models. These are generic given the channels
+  and are ready to use.
 
 Array-shape conventions (complex128 unless noted), with ``M_tot = L * M`` the
 total number of distributed antennas:
@@ -16,12 +17,31 @@ total number of distributed antennas:
     H     channels                (Q, K, M_tot)   H[q, k, :] = h_k[q]
     Wbar  precoding directions    (Q, M_tot, K)   Wbar[q, :, k] = wbar_k[q]
     W     normalized precoders    (Q, M_tot, K)   W[q, :, k] = w_k[q]
-    G     effective channels      (Q, K, K)       G[q, k, i] = h_k[q]^H w_i[q]
+    V     receive combiners       (Q, M_tot, K)   V[q, :, k] = v_k[q]
+    G     DL effective channels   (Q, K, K)       G[q, k, i] = h_k[q]^H w_i[q]
+    G_ul  UL effective channels   (Q, K, K)       G[q, k, i] = v_k[q]^H h_i[q]
     beta  large-scale fading      (L, K)          beta[l, k]
-    rho   power coefficients      (K,) or (L, K)
+    rho   DL power coefficients   (K,) or (L, K)
+    p     UL transmit powers      (K,)
+    a     LSFD fusion weights     (L, K)          a[l, k] = a_kl
 
 Columns of ``H`` store the collective channel vector ``h_k[q]`` (not conjugated);
-the Hermitian in ``h_k^H w_i`` is applied inside :func:`effective_channel`.
+the Hermitian in ``h_k^H w_i`` and ``v_k^H h_i`` is applied inside
+:func:`effective_channel` / :func:`uplink_effective_channel`.
+
+By TDD reciprocity the same ``H`` serves both directions: the downlink applies
+the array response as ``h_k[q]^H``, so ``h_k[q]`` itself is the channel that
+carries user ``k``'s uplink signal to the ``LM`` distributed antennas.
+
+**Powers and the subcarrier dimension.** Downlink powers (``rho_max``,
+``rho_k``) are totals over the OFDM block, so :func:`normalize_precoder`
+normalizes ``sum_q ||w_k[q]||^2 = rho_k``. Uplink powers are handled the same
+way, but there the per-subcarrier split ``p_k[q] = p_k / Q`` cancels against the
+per-subcarrier noise ``sigma^2 / Q`` in every ratio the uplink forms (the SINR
+of eq. ul-sinr and the loading of eq. ul-centralized-rzf are both invariant to
+a common factor on ``(p, sigma^2)``). The uplink routines below therefore work
+directly with the block totals ``p`` and ``cfg.noise_power`` and never divide by
+``Q``.
 """
 
 from __future__ import annotations
@@ -30,10 +50,13 @@ import numpy as np
 
 from config_dmimo import (
     ChannelModel,
+    CombiningScheme,
     DMIMOConfig,
+    FusionRule,
     OperationMode,
     PowerControlScheme,
     PrecodingScheme,
+    SEBound,
 )
 
 # ======================================================================
@@ -238,8 +261,9 @@ def plot_network(cfg: DMIMOConfig, ap_pos, ue_pos, cpu_pos=None, ax=None,
     return ax
 
 
-def plot_se_cdf(se_samples, ax=None, label=None, show: bool = True, save_path=None):
-    """Empirical CDF of the per-user downlink spectral efficiency.
+def plot_se_cdf(se_samples, ax=None, label=None, show: bool = True, save_path=None,
+                title: str = "Downlink per-user SE distribution"):
+    """Empirical CDF of the per-user spectral efficiency.
 
     Each sample is one user's SE in one channel realization; pooling them over
     users and realizations gives the standard cell-free SE distribution over
@@ -257,6 +281,7 @@ def plot_se_cdf(se_samples, ax=None, label=None, show: bool = True, save_path=No
         label: Optional curve label (shown in a legend when given).
         show: If true, call ``plt.show()`` before returning.
         save_path: If given, save the figure to this path (dpi 150).
+        title: Axes title; override it for the uplink or for a comparison plot.
 
     Returns:
         The Matplotlib ``Axes`` the CDF was drawn on.
@@ -285,7 +310,7 @@ def plot_se_cdf(se_samples, ax=None, label=None, show: bool = True, save_path=No
     ax.set_ylim(0, 1)
     ax.set_xlabel("per-user spectral efficiency [bit/s/Hz]")
     ax.set_ylabel("CDF")
-    ax.set_title("Downlink per-user SE distribution")
+    ax.set_title(title)
     ax.grid(True, ls=":", alpha=0.4)
     if label is not None:
         ax.legend(loc="lower right")
@@ -496,7 +521,7 @@ def _local_regularized_zf(cfg: DMIMOConfig, H_hat: np.ndarray, E: np.ndarray,
 
 
 # ======================================================================
-# Power control  --  IMPLEMENT YOURSELF
+# Downlink power control
 # ======================================================================
 
 
@@ -662,7 +687,7 @@ def _power_scale(power: np.ndarray, energy: np.ndarray) -> np.ndarray:
 
 
 # ======================================================================
-# Signal processing  --  IMPLEMENTED (downlink system model)
+# Downlink signal processing
 # ======================================================================
 
 
@@ -729,3 +754,434 @@ def ap_powers(cfg: DMIMOConfig, W: np.ndarray) -> np.ndarray:
     """
     per_antenna = (np.abs(W) ** 2).sum(axis=(0, 2))       # (M_tot,)
     return per_antenna.reshape(cfg.L, cfg.M).sum(axis=1)  # (L,)
+
+
+# ======================================================================
+# Uplink power control
+# ======================================================================
+#
+# The uplink is not the mirror image of the downlink here. Each user is its own
+# transmitter with its own budget p_max (eq. ul-power-constraint), so there is no
+# shared budget to divide and no counterpart of the common rescaling that
+# normalize_precoder applies. The powers are therefore final as they leave
+# uplink_power_control, and the combiners that follow are scale-invariant.
+
+
+def uplink_power_control(cfg: DMIMOConfig, beta: np.ndarray) -> np.ndarray:
+    """Uplink transmit powers p_k from the large-scale fading (eq. ul-fractional-power).
+
+    Two rules, selected by ``cfg.ul_power_alloc``:
+
+    * ``EQUAL`` is full power, ``p_k = p_max`` for every user. It is the natural
+      reference and the worst case for fairness, since a user close to an AP then
+      swamps a distant one on the same resources.
+    * ``FRACTIONAL`` weights users by their aggregate large-scale gain
+      ``beta_k = sum_l beta_kl``, ``p_k = p_max * beta_k^v / max_i beta_i^v``.
+
+    The normalization by a *maximum* rather than a sum is what differs from the
+    downlink rule :func:`_centralized_power_control`: there a shared budget had
+    to be divided among the users, whereas here the denominator only keeps the
+    strongest user inside its own budget. This gives ``p_k <= p_max`` for either
+    sign of the exponent ``cfg.v_ul``, since the maximum is attained by the
+    strongest user when ``v > 0`` and by the weakest when ``v < 0``. ``v = 0``
+    recovers full power and ``v = -1`` inverts the channel statistically, so that
+    every user arrives at the network with the same average total gain
+    ``p_k beta_k``.
+
+    Args:
+        cfg: System configuration (``ul_power_alloc``, ``v_ul``, ``p_max``).
+        beta: Large-scale fading ``(L, K)`` [linear] from
+            :func:`channel_realization`.
+
+    Returns:
+        Array ``(K,)`` of per-user transmit powers [W], each at most ``p_max``.
+    """
+    beta = np.asarray(beta, dtype=float)
+    if beta.shape != (cfg.L, cfg.K):
+        raise ValueError(
+            f"beta must have shape (L, K)=({cfg.L}, {cfg.K}), got {beta.shape}"
+        )
+
+    if cfg.ul_power_alloc is PowerControlScheme.EQUAL:
+        return np.full(cfg.K, cfg.p_max)
+    if cfg.ul_power_alloc is PowerControlScheme.FRACTIONAL:
+        beta_k = beta.sum(axis=0)                 # (K,) aggregate gain per user
+        weights = beta_k ** cfg.v_ul              # (K,)
+        return cfg.p_max * weights / weights.max()
+    raise NotImplementedError(
+        f"uplink power control: rule {cfg.ul_power_alloc.value}"
+    )
+
+
+# ======================================================================
+# Uplink receive combining
+# ======================================================================
+#
+# The centralized combiners (ZF, RZF, MMSE) act on the collective y[q] over all
+# M_tot antennas; the local ones (MR, L-RZF, L-MMSE) build each AP's block from
+# its own CSI, and the CPU then fuses the L resulting scalars (see
+# fusion_weights). Because eq. ul-sinr is invariant to a per-user rescaling of
+# v_k, the combiners returned here need no normalization stage.
+
+
+def combining_directions(cfg: DMIMOConfig, H_hat: np.ndarray,
+                         p: np.ndarray) -> np.ndarray:
+    """Receive combining vectors v_k[q] for the configured scheme.
+
+    Writing ``E = H_hat[q].T`` for the ``(M_tot, K)`` matrix whose columns are
+    the user estimates ``h_k[q]`` and ``E^H E`` for their ``(K, K)`` Gram matrix,
+    the centralized combiners are
+
+    * ``ZF``   : ``V = E (E^H E)^{-1}``                    (eq. ul-zf-combiner)
+    * ``RZF``  : ``V = E (E^H E + lambda I_K)^{-1}``       heuristic loading
+    * ``MMSE`` : ``V = E (E^H E + sigma^2 P^{-1})^{-1}``   (eq. ul-centralized-rzf)
+
+    and the local ones are ``MR`` (``v_kl = h_kl``, eq. ul-mr-combiner) and the
+    per-AP regularized family of :func:`_local_regularized_combining`.
+
+    The uplink MMSE loading is a *diagonal matrix* ``sigma^2 P^{-1}``, not a
+    scalar: this is the push-through form of the ``M_tot x M_tot`` combiner
+    ``(H P H^H + sigma^2 I)^{-1} h_k`` of eq. ul-mmse-combiner with the diagonal
+    factor dropped, which the scale invariance of eq. ul-sinr makes irrelevant.
+    That physically determined loading is the one difference from the downlink
+    regularized family, where ``lambda`` is a free heuristic; for equal powers
+    ``p_k = p`` the two coincide at ``lambda = sigma^2 / p``, which is the sense
+    in which the downlink RZF precoder is the dual of MMSE combining. ``RZF``
+    keeps the scalar heuristic ``cfg.ul_rzf_regularization`` (default
+    ``sigma^2 / p_max``) and so coincides with ``MMSE`` when every user
+    transmits at full power. ``ZF`` is the ``sigma^2 / p -> 0`` high-SNR limit
+    and needs ``K <= M_tot`` for the Gram matrix to be invertible.
+
+    Args:
+        cfg: System configuration.
+        H_hat: Channel estimates ``(Q, K, M_tot)``.
+        p: Uplink transmit powers ``(K,)`` [W] from
+            :func:`uplink_power_control`. Used by the MMSE and L-MMSE loadings;
+            ignored by MR, ZF, RZF, and L-RZF, whose directions do not depend on
+            the power allocation.
+
+    Returns:
+        Combiners ``V`` shaped ``(Q, M_tot, K)``, arbitrarily scaled per user.
+    """
+    scheme = cfg.combining
+    p = np.asarray(p, dtype=float)
+    if p.shape != (cfg.K,):
+        raise ValueError(f"p must have shape (K,)=({cfg.K},), got {p.shape}")
+    if np.any(p <= 0):
+        raise ValueError("uplink powers must be strictly positive to load the combiner")
+
+    # E[q] has columns h_k[q]; this is already the (Q, M_tot, K) combiner layout.
+    E = H_hat.transpose(0, 2, 1)                     # (Q, M_tot, K)
+
+    if scheme is CombiningScheme.MR:
+        return E.copy()
+
+    # Local (per-AP) family: each AP designs from its own M-antenna block.
+    if scheme is CombiningScheme.L_MMSE:
+        return _local_regularized_combining(cfg, H_hat, E, cfg.noise_power, p)
+    if scheme is CombiningScheme.L_RZF:
+        return _local_regularized_combining(cfg, H_hat, E,
+                                            cfg.ul_rzf_regularization, None)
+
+    # Centralized family: V = E (E^H E + diag(load))^{-1}, the members differing
+    # only in the diagonal loading of the Gram matrix.
+    if scheme is CombiningScheme.ZF:
+        load = np.zeros(cfg.K)                            # high-SNR limit
+    elif scheme is CombiningScheme.RZF:
+        load = np.full(cfg.K, cfg.ul_rzf_regularization)  # heuristic sigma^2 / p_max
+    elif scheme is CombiningScheme.MMSE:
+        load = cfg.noise_power / p                        # sigma^2 P^{-1}
+    else:
+        raise NotImplementedError(f"combining: directions for {scheme.value}")
+
+    gram = np.conj(H_hat) @ E                        # (Q, K, K), [k,i] = h_k^H h_i
+    if np.any(load):
+        gram = gram + np.diag(load)
+
+    # V = E @ inv(gram). Solved stably as (inv(gram) @ E^H)^H, using that gram is
+    # Hermitian (the loading is real diagonal) and E^H (per subcarrier) is
+    # conj(H_hat).
+    X = np.linalg.solve(gram, np.conj(H_hat))        # (Q, K, M_tot) = inv(gram) @ E^H
+    return np.conj(X).transpose(0, 2, 1)             # (Q, M_tot, K)
+
+
+def _local_regularized_combining(cfg: DMIMOConfig, H_hat: np.ndarray, E: np.ndarray,
+                                 load: float, p) -> np.ndarray:
+    """Local (per-AP) regularized combiners for L-MMSE / L-RZF.
+
+    AP ``l`` combines its own observation using only its own channel block
+    ``E_l = [h_1l ... h_Kl]`` (eq. ul-local-rzf):
+
+    * ``L-MMSE`` : ``V_l = (E_l P E_l^H + sigma^2 I_M)^{-1} E_l``
+    * ``L-RZF``  : ``V_l = (E_l E_l^H + lambda I_M)^{-1} E_l``
+
+    the difference being that L-MMSE uses the physically determined weighting by
+    the transmit powers and the noise-power loading, whereas L-RZF keeps the
+    heuristic scalar loading of the downlink form :func:`_local_regularized_zf`.
+    Both invert an ``M x M`` matrix, because the per-AP array is small, and the
+    loading is what keeps that inverse well conditioned in the usual regime
+    ``M < K`` where a plain local ZF would fail. An AP can suppress only the
+    interference it observes itself, so the coherent cross-AP rejection of the
+    centralized combiner is lost.
+
+    Args:
+        cfg: System configuration.
+        H_hat: Channel estimates ``(Q, K, M_tot)``.
+        E: Combiner-layout estimates ``H_hat.transpose(0, 2, 1)`` ``(Q, M_tot, K)``.
+        load: Diagonal loading (``sigma^2`` for L-MMSE, ``cfg.ul_rzf_reg`` for L-RZF).
+        p: Uplink powers ``(K,)`` to weight the local Gram matrix (L-MMSE), or
+            ``None`` to leave it unweighted (L-RZF).
+
+    Returns:
+        Combiners ``V`` shaped ``(Q, M_tot, K)``.
+    """
+    Q, K, M, L = cfg.Q, cfg.K, cfg.M, cfg.L
+    V = np.empty((Q, cfg.M_tot, K), dtype=np.complex128)
+    loadI = load * np.eye(M)
+    for l in range(L):
+        blk = slice(l * M, (l + 1) * M)
+        E_l = E[:, blk, :]                            # (Q, M, K), columns h_kl
+        H_l = H_hat[:, :, blk]                        # (Q, K, M), rows h_kl
+        # sum_k p_k h_kl h_kl^H + load * I  (p_k = 1 when p is None).
+        weighted = E_l if p is None else E_l * p
+        A_l = weighted @ np.conj(H_l) + loadI         # (Q, M, M)
+        V[:, blk, :] = np.linalg.solve(A_l, E_l)      # (Q, M, K) = inv(A_l) @ E_l
+    return V
+
+
+# ======================================================================
+# Uplink fusion of the per-AP soft estimates
+# ======================================================================
+
+
+def fusion_weights(cfg: DMIMOConfig, V: np.ndarray, H_hat: np.ndarray,
+                   p: np.ndarray) -> np.ndarray:
+    """CPU weights a_kl that fuse the L local soft estimates (eq. ul-lsfd).
+
+    In distributed operation AP ``l`` forwards the scalar
+    ``s_kl = v_kl^H y_l`` and the CPU forms ``s_k = sum_l a_kl^* s_kl``. Because
+    linear combining is distributive over the APs (eq. ul-distributive), this is
+    exactly the collective combiner whose ``l``-th block is ``a_kl v_kl``, so the
+    fusion rule is part of the combiner rather than a separate stage and
+    eq. ul-sinr continues to apply unchanged.
+
+    * ``EQUAL`` returns all-ones: the local estimates are simply added, and the
+      CPU needs nothing beyond the streams themselves.
+    * ``LSFD`` returns the large-scale fading decoding weights of
+      eq. ul-lsfd-weights, which maximize the resulting use-and-then-forget
+      SINR. These are statistical, so they are refreshed once per large-scale
+      fading realization and cost the fronthaul nothing per coherence block.
+
+    Centralized operation combines the raw samples at the CPU and has no fusion
+    stage, so all-ones is returned there too and applying it is a no-op.
+
+    The expectations in eq. ul-lsfd-weights are over the small-scale fading for
+    fixed user positions. One drop holds the positions fixed and gives ``Q``
+    frequency-domain realizations, so they are estimated by averaging over the
+    ``Q`` subcarriers. That estimator is only as good as the subcarriers are
+    numerous and decorrelated across the band; with a small ``Q`` the weights
+    carry sampling noise. [MODEL: LSFD expectations estimated over subcarriers]
+
+    [VERIFY: eq. ul-lsfd-weights carries an open ``\\todo`` in
+    ``sections/dmimo_ul_sysmodel.tex`` asking that it be checked against the LSFD
+    expression of Demir, Bjornson & Sanguinetti (2021) before it is used in the
+    evaluation. This implementation transcribes the manuscript as written; the
+    check has not been done here, which is why ``FusionRule.EQUAL`` is the
+    default.]
+
+    Args:
+        cfg: System configuration (``operation``, ``fusion``).
+        V: Local combiners ``(Q, M_tot, K)`` from :func:`combining_directions`.
+        H_hat: Channel estimates ``(Q, K, M_tot)``; the CPU builds the statistics
+            from the CSI it has, which under perfect CSI is the true channel.
+        p: Uplink transmit powers ``(K,)`` [W].
+
+    Returns:
+        Array ``(L, K)`` of fusion weights (complex for LSFD, real ones otherwise).
+    """
+    if (cfg.operation is OperationMode.CENTRALIZED
+            or cfg.fusion is FusionRule.EQUAL):
+        return np.ones((cfg.L, cfg.K))
+    if cfg.fusion is not FusionRule.LSFD:
+        raise NotImplementedError(f"fusion: rule {cfg.fusion.value}")
+
+    L, M, K, Q = cfg.L, cfg.M, cfg.K, cfg.Q
+    sigma2 = cfg.noise_power
+    p = np.asarray(p, dtype=float)
+
+    # Per-AP effective gains g[q, k, i, l] = v_kl[q]^H h_il[q], and the per-AP
+    # combiner norms d[q, k, l] = ||v_kl[q]||^2.
+    g = np.empty((Q, K, K, L), dtype=np.complex128)
+    d = np.empty((Q, K, L))
+    for l in range(L):
+        blk = slice(l * M, (l + 1) * M)
+        V_l = V[:, blk, :]                                    # (Q, M, K)
+        H_l = H_hat[:, :, blk]                                # (Q, K, M)
+        g[..., l] = np.conj(V_l).transpose(0, 2, 1) @ H_l.transpose(0, 2, 1)
+        d[..., l] = (np.abs(V_l) ** 2).sum(axis=1)            # (Q, K)
+
+    # A_k = sum_i p_i E{g_ki g_ki^H} + sigma^2 E{D_k}, with E{.} estimated over q.
+    # D_k is diagonal because the noise is independent across APs.
+    A = np.einsum("qkil,qkim,i->klm", g, np.conj(g), p, optimize=True) / Q  # (K, L, L)
+    A += sigma2 * (d.mean(axis=0)[:, :, None] * np.eye(L))                 # (K, L, L)
+
+    b = np.sqrt(p)[:, None] * np.diagonal(g, axis1=1, axis2=2).mean(axis=0).T
+    #   diagonal(...) is (Q, L, K) -> mean over q -> (L, K) -> .T is (K, L) = E{g_kk}
+    return np.linalg.solve(A, b[..., None])[..., 0].T                      # (L, K)
+
+
+def apply_fusion_weights(cfg: DMIMOConfig, V: np.ndarray,
+                         a: np.ndarray) -> np.ndarray:
+    """Fold the CPU fusion weights into the collective combiner.
+
+    Replaces the ``l``-th block of ``v_k[q]`` by ``a_kl v_kl[q]``, which by
+    eq. ul-distributive is the collective combiner that realizes the weighted sum
+    ``sum_l a_kl^* v_kl^H y_l``. After this the uplink SINR routines apply to
+    ``V`` without knowing which cooperation level produced it.
+
+    Args:
+        cfg: System configuration (for ``L``, ``M``).
+        V: Local combiners ``(Q, M_tot, K)``.
+        a: Fusion weights ``(L, K)`` from :func:`fusion_weights`.
+
+    Returns:
+        Fused combiners ``(Q, M_tot, K)``.
+    """
+    a = np.asarray(a)
+    if a.shape != (cfg.L, cfg.K):
+        raise ValueError(f"a must have shape (L, K)=({cfg.L}, {cfg.K}), got {a.shape}")
+    return V * np.repeat(a, cfg.M, axis=0)[None, :, :]   # (1, M_tot, K) broadcast
+
+
+# ======================================================================
+# Uplink signal processing
+# ======================================================================
+
+
+def uplink_effective_channel(V: np.ndarray, H: np.ndarray) -> np.ndarray:
+    """Effective-channel matrices G[q, k, i] = v_k[q]^H h_i[q].
+
+    The uplink transpose of :func:`effective_channel`: row ``k`` collects what
+    the combiner for user ``k`` sees of every user's channel, so the diagonal
+    carries the desired gains and the off-diagonal the multi-user interference
+    of eq. ul-estimate.
+
+    Args:
+        V: Combiners ``(Q, M_tot, K)``.
+        H: Channels ``(Q, K, M_tot)`` (the true ones, not the estimates).
+
+    Returns:
+        Array ``(Q, K, K)``.
+    """
+    return np.conj(V).transpose(0, 2, 1) @ H.transpose(0, 2, 1)
+
+
+def combiner_norms(V: np.ndarray) -> np.ndarray:
+    """Squared combiner norms ||v_k[q]||^2, shape ``(Q, K)``.
+
+    This is the factor that scales the noise in eq. ul-sinr: unlike the downlink,
+    where the noise power is fixed at the single-antenna receiver, the uplink
+    noise is collected by the combiner itself, so a combiner cannot be made
+    better simply by being made larger.
+    """
+    return (np.abs(V) ** 2).sum(axis=1)
+
+
+def uplink_sinr(G: np.ndarray, v_norm2: np.ndarray, p: np.ndarray,
+                noise_power: float) -> np.ndarray:
+    """Effective uplink SINR per user and subcarrier (eq. ul-sinr).
+
+    ``SINR_k[q] = p_k |G_kk|^2 / (sum_{i != k} p_i |G_ki|^2 + sigma^2 ||v_k[q]||^2)``.
+
+    This is the instantaneous (genie-aided) expression, valid when the effective
+    channel ``v_k^H h_k`` is known wherever the decoding happens. It is the
+    uplink counterpart of :func:`downlink_sinr` and is therefore the consistent
+    choice when the two directions are compared. Under local operation with
+    statistical fusion weights the CPU does not know that effective channel, and
+    this expression is then optimistic by the amount of residual channel
+    hardening; :func:`uplink_sinr_uatf` is the achievable bound there.
+
+    Both ``p`` and ``noise_power`` are block totals; see the module docstring for
+    why the per-subcarrier factor ``1/Q`` cancels out of this ratio.
+
+    Args:
+        G: Effective-channel matrices ``(Q, K, K)`` from
+            :func:`uplink_effective_channel`.
+        v_norm2: Squared combiner norms ``(Q, K)`` from :func:`combiner_norms`.
+        p: Uplink transmit powers ``(K,)`` [W].
+        noise_power: Receiver noise power sigma^2 [W] at the APs.
+
+    Returns:
+        Array ``(Q, K)`` of linear SINR values.
+    """
+    received = (np.abs(G) ** 2) * np.asarray(p)[None, None, :]  # (Q, K, K), p_i weights i
+    desired = np.diagonal(received, axis1=1, axis2=2)           # (Q, K)
+    interference = received.sum(axis=2) - desired               # (Q, K)
+    return desired / (interference + noise_power * v_norm2)
+
+
+def uplink_sinr_uatf(G: np.ndarray, v_norm2: np.ndarray, p: np.ndarray,
+                     noise_power: float) -> np.ndarray:
+    """Use-and-then-forget uplink SINR, one value per user.
+
+    ``SINR_k = p_k |E{g_kk}|^2 / (sum_i p_i E{|g_ki|^2} - p_k |E{g_kk}|^2
+    + sigma^2 E{||v_k||^2})`` with ``g_ki = v_k^H h_i``.
+
+    Only the *mean* effective channel is treated as useful gain; its fluctuation
+    around that mean stays in the denominator as extra interference, which is
+    what makes this a rigorous achievable rate when the decoder knows the channel
+    statistics but not the realization. That is the situation whenever the fusion
+    weights are statistical (LSFD or equal-weight local operation), where the
+    instantaneous expression of :func:`uplink_sinr` would be optimistic. The gap
+    between the two grows as ``M`` shrinks and the channel hardens less.
+
+    The expectation is over the small-scale fading for fixed user positions and
+    is estimated by averaging over the ``Q`` subcarriers of the drop, the same
+    estimator :func:`fusion_weights` uses. [MODEL: UatF expectations estimated
+    over subcarriers]
+
+    Args:
+        G: Effective-channel matrices ``(Q, K, K)``.
+        v_norm2: Squared combiner norms ``(Q, K)``.
+        p: Uplink transmit powers ``(K,)`` [W].
+        noise_power: Receiver noise power sigma^2 [W] at the APs.
+
+    Returns:
+        Array ``(1, K)`` of linear SINR values. The leading axis is a singleton
+        because the expectation has already consumed the subcarrier dimension;
+        keeping it lets the result feed :func:`spectral_efficiency` unchanged.
+    """
+    p = np.asarray(p, dtype=float)
+    mean_gain = np.diagonal(G, axis1=1, axis2=2).mean(axis=0)   # (K,) E{g_kk}
+    desired = p * np.abs(mean_gain) ** 2                        # (K,)
+    total = (np.abs(G) ** 2).mean(axis=0) @ p                   # (K,) sum_i p_i E{|g_ki|^2}
+    noise = noise_power * v_norm2.mean(axis=0)                  # (K,)
+    # total - desired keeps both the interference and the p_k Var(g_kk) fluctuation.
+    return (desired / (total - desired + noise))[None, :]       # (1, K)
+
+
+def uplink_spectral_efficiency(cfg: DMIMOConfig, G: np.ndarray,
+                               v_norm2: np.ndarray, p: np.ndarray) -> np.ndarray:
+    """Per-user uplink SE [bit/s/Hz] under the configured rate expression.
+
+    Dispatches on ``cfg.ul_se_bound`` between the instantaneous SINR of
+    eq. ul-sinr and the use-and-then-forget bound, then applies the uplink prelog
+    ``cfg.ul_prelog`` of eq. ul-rate-user. The result is a *delivered* SE: do not
+    apply a prelog again downstream.
+
+    Args:
+        cfg: System configuration (``ul_se_bound``, ``noise_power``, ``ul_prelog``).
+        G: Effective-channel matrices ``(Q, K, K)``.
+        v_norm2: Squared combiner norms ``(Q, K)``.
+        p: Uplink transmit powers ``(K,)`` [W].
+
+    Returns:
+        Array ``(K,)`` of per-user spectral efficiencies.
+    """
+    if cfg.ul_se_bound is SEBound.UATF:
+        sinr = uplink_sinr_uatf(G, v_norm2, p, cfg.noise_power)
+    elif cfg.ul_se_bound is SEBound.INSTANTANEOUS:
+        sinr = uplink_sinr(G, v_norm2, p, cfg.noise_power)
+    else:
+        raise NotImplementedError(f"uplink SE: bound {cfg.ul_se_bound.value}")
+    return spectral_efficiency(sinr, cfg.ul_prelog)

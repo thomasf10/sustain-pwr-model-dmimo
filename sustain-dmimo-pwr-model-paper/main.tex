@@ -1,0 +1,194 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+%Template version as of 6/27/2024
+
+
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{mathtools}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage[font=normalsize]{subfig}
+\usepackage{textcomp}
+\usepackage{stfloats}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{makecell}
+\usepackage[switch]{lineno} % easier for the review line numbers
+\usepackage{booktabs}
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{placeins}
+\usepackage{xifthen}
+\usepackage{colortbl}
+\usepackage{bbm}
+\usepackage{array}
+\newcolumntype{H}{>{\setbox0=\hbox\bgroup}c<{\egroup}@{}}
+\newcommand{\prob}[1][]{%requires xifthen package%
+\ifthenelse{\isempty{#1}}%
+      {\ensuremath{P}}%
+    {\ensuremath{P\left\(#1\right\)}}%
+}
+\newcommand{\vect}[1]{\boldsymbol{\mathrm{#1}}}
+\newcommand{\mat}[1]{\boldsymbol{\mathrm{#1}}}
+\newcommand{\tens}[1]{\boldsymbol{\mathsf{{#1}}}}\newcommand{\MSE}{\mathrm{MSE}}
+\newcommand{\moddef}{\mathrm{mod}}
+\newcommand{\vecop}{\text{vec}}
+\newcommand{\CP}{L}
+\newcommand{\hddots}{\hdots}
+\newcommand{\tr}[1]{\mathrm{tr}\left(#1\right)}
+\newcommand{\diag}[1]{\mathrm{diag}\left(#1\right)}
+\newcommand*{\inC}[1]{\in\mathbb{C}^{#1}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
+\newcommand{\expt}[1]{\mathbb{E}\left(#1\right)}
+\newcommand{\cn}[2]{\ensuremath{\mathcal{C}\mathcal{N}\left(#1,#2\right)}}
+\newcommand{\cw}[3]{\ensuremath{\mathcal{C}\mathcal{W}\left(#1,#2,#3\right)}}
+\newcommand{\icw}[3]{\ensuremath{{\mathcal{C}\mathcal{W}}^{-1}\left(#1,#2,#3\right)}}
+\DeclareMathOperator*{\maximize}{maximize}
+\DeclareMathOperator*{\minimize}{minimize}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\todo}[1]{{\color{red} TODO {#1}}}
+\newcommand{\thomas}[1]{{\color{blue}[Thomas: #1]}} 
+\newcommand{\review}[1]{{{#1}}}
+\newcommand{\gilles}[1]{{\color{BurntOrange}[Gilles: #1]}} 
+
+\usepackage{pgfplots}
+\usepackage{nicefrac}
+\usepgfplotslibrary{groupplots,dateplot}
+%\usetikzlibrary{snakes}
+
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage{hyperref}
+\usepackage{acronym}
+\usepackage[capitalize]{cleveref}
+% \usepackage{subfig}
+% \captionsetup[subfloat]{labelfont=small,labelfont=rm}
+\usepackage{subcaption} % put this in your preamble
+
+\usetikzlibrary{patterns}
+\usepgfplotslibrary{polar}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\vertfig}[2][]{%
+  \begin{minipage}{5in}\subfloat[#1]{#2}\end{minipage}}
+\newcommand{\horizfig}[2][]{%
+  \begin{minipage}{3in}\subfloat[#1]{#2}\end{minipage}}
+\usetikzlibrary{shapes}
+\usepackage{pgfplotstable}
+\usepackage{filecontents}
+\usepackage[acronym]{glossaries}
+\input{abbr.tex}
+\glsdisablehyper
+\usepackage{amsthm}
+\newtheoremstyle{mystyle}%                % Name
+  {}%                                     % Space above
+  {}%                                     % Space below
+  {\itshape}%                             % Body font
+  {}%                                     % Indent amount
+  {\bfseries}%                            % Theorem head font
+  {.}%                                    % Punctuation after theorem head
+  { }%                                    % Space after theorem head, ' ', or \newline
+  {}%                                     % Theorem head spec (can be left empty, meaning `normal')
+\theoremstyle{mystyle}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\newtheorem{assumption}{Assumption}
+\usepackage[font=footnotesize]{caption}
+
+% fix for edas error
+%\setlength{\columnsep}{0.12in}  % 0.12 inches
+
+    
+\begin{document}
+
+\title{Notes Power Model D-MIMO\\
+%Distortion-Aware GNN Precoding for Multi-Carrier Large Antenna Systems with Adaptive Precoder Selection
+%Extending Distortion-Aware Graph Neural Network Precoding to Multi-Carrier Systems with Channel-Adaptive Precoder Selection
+%Learning When to Learn: GNN Distortion-Aware Precoding and Adaptive Switching for Nonlinear Multi-Carrier MIMO
+%Learning When to Learn: Distortion-Aware GNN Precoding for Multi-Carrier Large Antenna Systems with Adaptive Precoder Selection
+
+\thanks{thanks
+}
+}
+
+% }
+\author{\IEEEauthorblockN{Thomas Feys
+	}
+	\IEEEauthorblockA{KU Leuven,  Dept. ESAT-WaveCore, Dramco, B-9000 Ghent, Belgium
+	}
+    %\IEEEauthorblockA{E-mail: thomas.feys@kuleuven.be}
+}
+
+% \author{\IEEEauthorblockN{1\textsuperscript{st} Given Name Surname}
+% \IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+% \textit{name of organization (of Aff.)}\\
+% City, Country \\
+% email address or ORCID}
+% \and
+% \IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
+% \IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+% \textit{name of organization (of Aff.)}\\
+% City, Country \\
+% email address or ORCID}
+% \and
+% \IEEEauthorblockN{3\textsuperscript{rd} Given Name Surname}
+% \IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+% \textit{name of organization (of Aff.)}\\
+% City, Country \\
+% email address or ORCID}
+% \and
+% \IEEEauthorblockN{4\textsuperscript{th} Given Name Surname}
+% \IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+% \textit{name of organization (of Aff.)}\\
+% City, Country \\
+% email address or ORCID}
+% \and
+% \IEEEauthorblockN{5\textsuperscript{th} Given Name Surname}
+% \IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+% \textit{name of organization (of Aff.)}\\
+% City, Country \\
+% email address or ORCID}
+% \and
+% \IEEEauthorblockN{6\textsuperscript{th} Given Name Surname}
+% \IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+% \textit{name of organization (of Aff.)}\\
+% City, Country \\
+% email address or ORCID}
+% }
+
+\maketitle
+
+% \begin{abstract}
+
+% \end{abstract}
+
+% \begin{IEEEkeywords}
+% \end{IEEEkeywords}
+
+\glsresetall
+\input{sections/original_pwr_model}
+\input{sections/dmimo_sysmodel}
+\input{sections/dmimo_ul_sysmodel.tex}
+\input{sections/dmimo_pwr_model}
+
+
+%\linespread{0.98}
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,mybib}
+
+\end{document}

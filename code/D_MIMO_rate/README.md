@@ -1,9 +1,10 @@
 # D-MIMO rate model
 
-Downlink spectral-efficiency simulation for the distributed massive MIMO
-(cell-free) system model of `power_model_description/sections/dmimo_sysmodel.tex`.
-This is the machinery that produces the achievable rates the FR3 power model
-consumes.
+Spectral-efficiency simulation for the distributed massive MIMO (cell-free)
+system model, downlink in
+`power_model_description/sections/dmimo_sysmodel.tex` and uplink in
+`power_model_description/sections/dmimo_ul_sysmodel.tex`. This is the machinery
+that produces the achievable rates the FR3 power model consumes.
 
 The system model follows
 
@@ -19,10 +20,10 @@ section numbers quoted below refer to it.
 
 ```
 config_dmimo.py             DMIMOConfig: every system-model parameter, one dataclass
-mimo_helpers.py             channel dispatch, precoding, power control, SINR/SE back end
+mimo_helpers.py             channel dispatch, precoding, combining, power control, SINR/SE
 sionna_channel.py           default backend: 3GPP TR 38.901 UMi via Sionna
 dl_rate.py                  downlink Monte Carlo driver
-ul_rate.py                  uplink driver (placeholder)
+ul_rate.py                  uplink Monte Carlo driver
 sanity_checks.py            pass/fail harness over config, precoding algebra, power control
 
 config_cellfree_book.py     the monograph's running example (Table 5.1) as a DMIMOConfig
@@ -43,11 +44,95 @@ python sanity_checks.py          # unit-level invariants of the building blocks
 python test_cellfree_book.py     # end-to-end benchmark against the monograph
 ```
 
+## The uplink
+
+`ul_rate.simulate_uplink` is the counterpart of `dl_rate.simulate_downlink` for
+the uplink model of `sections/dmimo_ul_sysmodel.tex`. Under TDD reciprocity both
+directions ride on the same channel realization, so the two drivers share the
+configuration, the channel backend, and the drop sequence: run them with the same
+`cfg.seed` and they are paired on geometry.
+
+Three things differ structurally from the downlink, and they are the reason the
+uplink is not simply the downlink with transposed matrices.
+
+**Power control runs before combining.** The MMSE and L-MMSE combiners are loaded
+with the transmit powers, `sigma^2 P^{-1}`, so `p` has to exist before the
+combiners are built. In the downlink the order is the other way round.
+
+**There is no normalization stage.** Each user owns its budget `p_max` instead of
+sharing a network one, so the powers are final as they leave
+`uplink_power_control` and nothing plays the role of `normalize_precoder`. Uplink
+fractional power control accordingly normalizes by the *maximum* aggregate gain,
+`p_k = p_max * beta_k^v / max_i beta_i^v`, which keeps the strongest user inside
+its own budget rather than dividing a shared one; no feasibility question arises,
+for either sign of `v_ul`. Since the SINR is invariant to the scale of `v_k`, the
+combiners need no normalization either.
+
+**The uplink phase has to be given data samples.** The coherence block now splits
+as `tau_c = tau_p + tau_u + tau_d`. The default `tau_u = 0` is the downlink-only
+frame of the manuscript, in which the uplink carries nothing but pilots, so
+`ul_prelog = 0` and every uplink SE is zero by construction (`simulate_uplink`
+warns). That default is deliberate: it leaves `dl_prelog` exactly as it was, so no
+existing downlink result moves. `ul_rate.main()` demonstrates a symmetric split,
+`DMIMOConfig(tau_u=90)` giving 20 pilot + 90 UL + 90 DL samples.
+
+The schemes follow the manuscript. Centralized combining offers `ZF`
+(eq. ul-zf-combiner), `RZF`, and `MMSE` (eq. ul-centralized-rzf), the last with
+the physically determined loading `sigma^2 P^{-1}` rather than a heuristic;
+`RZF` uses the scalar `sigma^2 / p_max` and therefore coincides with `MMSE` when
+every user transmits at full power. Local operation offers `MR`, `L-RZF`, and
+`L-MMSE`, and the CPU fuses the `L` per-AP scalars either by equal weighting or
+by LSFD (eq. ul-lsfd-weights). `combining` defaults to the TDD dual of
+`precoding`, so a downlink-only configuration never has to mention the uplink.
+
+Two caveats are worth carrying into any result read off this code:
+
+- **LSFD is transcribed, not verified.** `sections/dmimo_ul_sysmodel.tex` carries
+  an open `\todo` asking that eq. ul-lsfd-weights be checked against the LSFD
+  expression of the monograph before it is used. `mimo_helpers.fusion_weights`
+  implements the manuscript as written and that check has not been done, which is
+  why `FusionRule.EQUAL` is the default.
+- **The two SE expressions are not interchangeable.** `SEBound.INSTANTANEOUS`
+  evaluates eq. ul-sinr with the realized effective channel, matching what the
+  downlink pipeline does, and is the consistent choice when the directions are
+  compared. It assumes the effective channel is known where the decoding happens,
+  which is false under local operation with statistical fusion weights;
+  `SEBound.UATF` is the achievable bound there, and the gap grows as `M` shrinks.
+  Setting `fusion=LSFD` with the instantaneous bound raises a warning.
+
+The LSFD and UatF expectations are over the small-scale fading for fixed user
+positions, and are estimated by averaging over the `Q` subcarriers of the drop.
+That estimator is only as good as the subcarriers are numerous and decorrelated
+across the band.
+
+### Open issue: uplink and downlink use different noise conventions
+
+**Uplink and downlink SEs from this package are not directly comparable while
+`Q > 1`.** Both system models are written per subcarrier, so a per-subcarrier
+signal power belongs against a per-subcarrier noise power. The uplink satisfies
+this identically: eq. ul-sinr is invariant to a common factor on `(p, sigma^2)`,
+so the per-subcarrier split `p_k[q] = p_k / Q` cancels against `sigma^2 / Q` and
+`uplink_sinr` can work with block totals without ever dividing by `Q`. The
+downlink has no such invariance. `normalize_precoder` sets
+`sum_q ||w_k[q]||^2 = rho_k`, making the *per-subcarrier* radiated power about
+`rho_k / Q`, but `dl_rate` then divides by the full-band `cfg.noise_power`
+(`-174 dBm/Hz + 10 log10(B) + F`). The downlink SINR is therefore low by a factor
+`Q`, which understates the downlink SE. Measured on `L=10, M=4, K=6, Q=16`, the
+downlink sum SE is 18.35 bit/s/Hz as the code stands against 29.09 with
+`cfg.noise_power / Q`; at the default `Q = 64` the gap is wider.
+
+This predates the uplink work and nothing here changes it, because the fix moves
+every published downlink number in this README. The two candidate fixes are
+passing `cfg.noise_power / Q` to `downlink_sinr` or scaling `W` by `sqrt(Q)`;
+they are equivalent. Note that the monograph benchmark is unaffected either way,
+since `config_cellfree_book` is frequency-flat with `Q = 1`.
+
 ## Before feeding these rates to the power model
 
-`DownlinkResult.sum_rate` is a **delivered** rate: `simulate_downlink` already
-applies `cfg.dl_prelog = (tau_c - tau_p) / tau_c` inside
-`mimo_helpers.spectral_efficiency`. Do not apply a prelog again downstream.
+`DownlinkResult.sum_rate` and `UplinkResult.sum_rate` are **delivered** rates:
+the drivers already apply `cfg.dl_prelog = tau_d / tau_c` and
+`cfg.ul_prelog = tau_u / tau_c` inside `mimo_helpers.spectral_efficiency`. Do not
+apply a prelog again downstream.
 
 More importantly, this package and `../FR3_power_model/` describe the same time
 budget in two different vocabularies (`tau_c`/`tau_p` here, `tau_DL`/`tau_DLsig`
