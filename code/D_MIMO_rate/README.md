@@ -43,6 +43,18 @@ python sanity_checks.py          # unit-level invariants of the building blocks
 python test_cellfree_book.py     # end-to-end benchmark against the monograph
 ```
 
+## Before feeding these rates to the power model
+
+`DownlinkResult.sum_rate` is a **delivered** rate: `simulate_downlink` already
+applies `cfg.dl_prelog = (tau_c - tau_p) / tau_c` inside
+`mimo_helpers.spectral_efficiency`. Do not apply a prelog again downstream.
+
+More importantly, this package and `../FR3_power_model/` describe the same time
+budget in two different vocabularies (`tau_c`/`tau_p` here, `tau_DL`/`tau_DLsig`
+there), whose defaults imply downlink prelogs that differ by 29%. Mixing them is
+an inconsistency that neither package detects. The correspondence, and what to
+set, is written up in `../D_MIMO_FR3_power_model/README.md`.
+
 ## Validation against the cell-free monograph
 
 `test_cellfree_book.py` recreates the downlink numerical evaluation of

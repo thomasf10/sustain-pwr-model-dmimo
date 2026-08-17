@@ -219,7 +219,7 @@ and baseband (BB) filter; in the UL the channel decoder, MIMO combiner, FFT,
 and BB filter. Each subcomponent consumption is a static (signal-independent)
 term plus a dynamic term equal to its complex giga-operations-per-second
 (GOPS) $\Xi$ divided by the computational efficiency $\eta$ (in GOPS/W) of the
-chosen FPGA/ASIC implementation: \todo{where is FFT?, no channel estimation cost?}
+chosen FPGA/ASIC implementation: \todo{no channel estimation cost?}
 \begin{align}
 \label{eq:enc}
 P_{\mathrm{enc}} &= P_{\mathrm{enc,s}}
@@ -232,7 +232,7 @@ P_{\mathrm{pre}} &= \bar M_{\mathrm{RF}}P_{s}
  P_{\mathrm{comb}} &= \bar M_{\mathrm{RF}}P_{s}
 + \frac{f_{s,\mathrm{I}}}{\eta_{\mathrm{comb}}}M_{\mathrm{RF}}\,2K,\\
 \label{eq:ifft}
-P_{\mathrm{IFFT}} &= P_{\mathrm{IFFT,s}}
+P_{\mathrm{IFFT}} &= P_{\mathrm{FFT}} = P_{\mathrm{IFFT,s}}
 + \frac{f_{s,\mathrm{II}}}{\eta_{\mathrm{IFFT}}}M_{\mathrm{RF}}\tfrac{3}{2}\log_2 Q_{\mathrm{IFFT}}, & & \\
 \label{eq:dpd}
 P_{\mathrm{DPD}} &= P_{\mathrm{DPD,s}}
@@ -251,7 +251,7 @@ MIMO processing) and the oversampled rate
 $f_{s,\mathrm{II}}=Q_{\mathrm{IFFT}}\Delta f$ (for the OFDM, DPD, and BB
 operations), with $\mu\in[0,1]$ and subcarrier spacing $\Delta f$. For the
 zero-forcing MIMO processor exploiting channel reciprocity, the precoder GOPS
-is
+is \todo{this changes for cell free depending on the precoder used}
 \begin{equation}
 \label{eq:gops_pre}
 \Xi_{\mathrm{pre}} = 2K

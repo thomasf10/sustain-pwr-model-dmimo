@@ -1,8 +1,5 @@
-\section{Distributed Massive MIMO System Model}
-\label{sec:dmimo_sysmodel}
-
-\subsection{Downlink System Model}
-
+\section{Distributed Massive MIMO Downlink System Model}
+\label{sec:dmimo_dl_sysmodel}
 We consider the downlink of a distributed (cell-free) massive \gls{mimo}
 network in which $L$ \glspl{ap}, each equipped with $M$ antennas, jointly serve
 $K$ single-antenna users over the same time-frequency resources. The APs are
@@ -154,8 +151,16 @@ estimation is performed and there is no pilot contamination. The uplink-pilot an
 TDD-reciprocity mechanism described below is therefore the practical way this
 \gls{csi} would be acquired, not a source of estimation error in the present
 model; modelling pilot-based estimation and its error covariance is left to
-future work. The pilot overhead is still charged to the rate through the prelog
-factor $(1-\tau_{p}/\tau_{c})$ of \Cref{sec:rate}.
+future work. The pilot overhead is still charged to the rate, through the frame
+parameters of \Cref{sec:frame}: the pilots occupy the uplink signalling phase, of
+duration $\tau_{\mathrm{UL}}\,\tau_{\mathrm{UL,sig}}$ relative to the frame, and
+the downlink rate \eqref{eq:rate} carries the prelog
+$\tau_{\mathrm{DL}}(1-\tau_{\mathrm{DL,sig}})$. The downlink-only evaluation used
+here, in which the uplink phase carries nothing but pilots and the downlink phase
+nothing but data, is the case $\tau_{\mathrm{UL,sig}}=1$ and
+$\tau_{\mathrm{DL,sig}}=0$, so that the pilots take up a fraction
+$\tau_{\mathrm{UL}}$ of the frame and the downlink prelog is
+$\tau_{\mathrm{DL}}=1-\tau_{\mathrm{UL}}$.
 
 
 
@@ -287,3 +292,6 @@ $v=1/2$ recovering the heuristic of \cite{demir2021foundations}. Beyond
 such statistics-based rules the powers could be optimized for a network utility
 such as max-min fairness or sum rate, but those problems do not scale to very
 large networks, so the heuristics above are the practical default.
+
+\subsection{Complexity of precoders}
+\todo{compute complexity of the precoders so this can be used in the power model}

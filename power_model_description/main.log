@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.5.13)  11 AUG 2026 14:23
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.5.13)  17 AUG 2026 10:51
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1095,12 +1095,12 @@ Underfull \hbox (badness 2080) in paragraph at lines 55--61
 [1{C:/Users/Thomas/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
-] [2]) (sections/dmimo_sysmodel.tex [3] [4]) (sections/dmimo_pwr_model.tex [5] [6]
-Overfull \hbox (1.90982pt too wide) detected at line 256
+] [2]) (sections/dmimo_sysmodel.tex [3] [4]) (sections/dmimo_ul_sysmodel.tex [5] [6] [7]) (sections/dmimo_pwr_model.tex [8]
+Overfull \hbox (1.90982pt too wide) detected at line 227
 []
  []
 
-[7] [8] [9]) (main.bbl)
+[9] [10] [11] [12]) (main.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -1112,7 +1112,7 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[10
+[13
 
 ] (main.aux)
  ***********
@@ -1120,20 +1120,20 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2026-03-20>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 1D0E24C8F1BC93A9D54AA800E7CC8856;4805.
+(rerunfilecheck)             Checksum: 7643A58611C9A1E8E8DB58A67DAF4978;6229.
  ) 
 Here is how much of TeX's memory you used:
- 54248 strings out of 467690
- 1295319 string characters out of 5414482
- 1842767 words of memory out of 5000000
- 82397 multiletter control sequences out of 15000+600000
+ 54351 strings out of 467690
+ 1297247 string characters out of 5414482
+ 1843081 words of memory out of 5000000
+ 82474 multiletter control sequences out of 15000+600000
  665762 words of font info for 118 fonts, out of 8000000 for 9000
  1145 hyphenation exceptions out of 8191
- 99i,15n,108p,2562b,1104s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 99i,20n,108p,2562b,1237s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy5.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam7.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (10 pages, 365338 bytes).
+Output written on main.pdf (13 pages, 405818 bytes).
 PDF statistics:
- 502 PDF objects out of 1000 (max. 8388607)
- 130 named destinations out of 1000 (max. 500000)
- 197 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 621 PDF objects out of 1000 (max. 8388607)
+ 153 named destinations out of 1000 (max. 500000)
+ 245 words of extra memory for PDF output out of 10000 (max. 10000000)
 

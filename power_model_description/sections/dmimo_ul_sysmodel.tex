@@ -1,0 +1,319 @@
+\section{Distributed Massive MIMO Uplink System Model}
+\label{sec:dmimo_ul_sysmodel}
+We now consider the uplink of the same distributed (cell-free) massive \gls{mimo}
+network as in \Cref{sec:dmimo_dl_sysmodel}. The $K$ users now transmit simultaneously on the same
+time-frequency resources, each AP observes a superposition of all of them on its
+$M$ antennas, and the per-AP observations are combined into one soft estimate per
+user. Under \gls{tdd} operation the two directions occupy the same band within
+one coherence block, so the propagation channels are the same $\vect{h}_{kl}[q]$
+as in \eqref{eq:collective-channel} and the large-scale fading coefficients
+$\beta_{kl}$ of \eqref{eq:beta-estimate} are unchanged. The downlink model
+applies the array response as $\vect{h}_{k}[q]^{H}$, so reciprocity makes
+$\vect{h}_{k}[q]$ itself the channel that carries the signal of user $k$ to the
+$LM$ distributed antennas. 
+
+User $k$ transmits $x_{k}[q]=\sqrt{p_{k}[q]}\,s_{k}[q]$ on subcarrier $q$, where
+$s_{k}[q]\in\mathbb{C}$ is its unit-power data symbol,
+$\expt{\abs{s_{k}[q]}^{2}}=1$, mutually independent across users, and
+$p_{k}[q]\geq 0$ is the power it spends on that subcarrier. Each user is its own
+transmitter and is subject to its own budget over the OFDM block,
+\begin{equation}
+\label{eq:ul-power-constraint}
+\sum_{q=1}^{Q} p_{k}[q] = p_{k} \leq p_{\max},
+\qquad k=1,\dots,K,
+\end{equation}
+with $p_{\max}$ the maximum transmit power of a user terminal. Since the power control below acts on the large-scale fading, which is flat over the band, the power is spread uniformly over the
+subcarriers, $p_{k}[q]=p_{k}/Q$.
+
+The signal received by AP $l$ on subcarrier $q$ is
+\begin{equation}
+\label{eq:ul-ap-received}
+\vect{y}_{l}[q] = \sum_{k=1}^{K} \sqrt{p_{k}[q]}\,\vect{h}_{kl}[q]\, s_{k}[q]
++ \vect{n}_{l}[q] \inC{M},
+\end{equation}
+where $\vect{n}_{l}[q]\sim\cn{\vect{0}}{\sigma^{2}\mat{I}_{M}}$ is the receiver
+noise, independent across APs and subcarriers and independent of the channels and
+data. The noise power $\sigma^{2}$ is the same quantity as in
+\eqref{eq:downlink-received}, but it is now referred to the AP receive chain, so
+it is the one set by the noise figure of the LNAs and analog front end of
+\Cref{sec:ana}. Stacking the $L$ observations gives the collective received vector
+\begin{equation}
+\label{eq:ul-collective-received}
+\vect{y}[q] =
+\begin{bmatrix} \vect{y}_{1}[q] \\ \vdots \\ \vect{y}_{L}[q] \end{bmatrix}
+= \mat{H}[q]\,\mat{P}[q]^{1/2}\,\vect{s}[q] + \vect{n}[q] \inC{LM},
+\end{equation}
+with $\mat{H}[q]=[\,\vect{h}_{1}[q]\ \cdots\ \vect{h}_{K}[q]\,]\inC{LM\times K}$
+the collective channel matrix already used in \Cref{sssec:centralized},
+$\vect{s}[q]=[\,s_{1}[q]\ \cdots\ s_{K}[q]\,]^{\intercal}\inC{K}$,
+$\vect{n}[q]\sim\cn{\vect{0}}{\sigma^{2}\mat{I}_{LM}}$, and
+$\mat{P}[q]^{1/2}\inC{K\times K}$ the diagonal matrix with
+$[\mat{P}[q]^{1/2}]_{k,k}=\sqrt{p_{k}[q]}$ and zero off-diagonal entries.
+
+The data symbol of user $k$ is estimated by applying a receive combining vector
+$\vect{v}_{k}[q]\inC{LM}$ to \eqref{eq:ul-collective-received}, which separates
+into the desired term, the multi-user interference, and the noise,
+\begin{align}
+\label{eq:ul-estimate}
+\hat{s}_{k}[q] ={}& \vect{v}_{k}[q]^{H}\vect{y}[q] \nonumber\\
+={}& \underbrace{\sqrt{p_{k}[q]}\,\vect{v}_{k}[q]^{H}\vect{h}_{k}[q]\, s_{k}[q]}
+_{\text{desired signal}} \nonumber\\
+&+ \underbrace{\sum_{\substack{i=1 \\ i\neq k}}^{K}
+\sqrt{p_{i}[q]}\,\vect{v}_{k}[q]^{H}\vect{h}_{i}[q]\, s_{i}[q]}
+_{\text{multi-user interference}}
++ \underbrace{\vphantom{\sum_{i=1}^{K}}\vect{v}_{k}[q]^{H}\vect{n}[q]}
+_{\text{noise}} .
+\end{align}
+Writing $\vect{v}_{k}[q]=[\,\vect{v}_{k1}[q]^{\intercal}\ \cdots\
+\vect{v}_{kL}[q]^{\intercal}\,]^{\intercal}$ in blocks of $M$ entries, with
+$\vect{v}_{kl}[q]\inC{M}$ the part applied to AP $l$, the estimate is the sum of
+per-AP contributions,
+\begin{equation}
+\label{eq:ul-distributive}
+\hat{s}_{k}[q] = \sum_{l=1}^{L} \vect{v}_{kl}[q]^{H}\vect{y}_{l}[q].
+\end{equation}
+Linear combining is therefore distributive over the APs, and this is the property
+the functional splits of \Cref{ssec:split} exploit: an AP that holds its own
+combining coefficients can form its partial sum locally and forward one scalar
+stream per user instead of $M$ sample streams.
+
+Treating the multi-user interference in \eqref{eq:ul-estimate} as noise, and
+using that the noise term has variance
+$\sigma^{2}\norm{\vect{v}_{k}[q]}^{2}$, the effective uplink \gls{sinr} of user
+$k$ on subcarrier $q$ is
+\begin{equation}
+\label{eq:ul-sinr}
+\mathrm{SINR}_{k}^{\mathrm{ul}}[q] =
+\frac{p_{k}[q]\,\abs{\vect{v}_{k}[q]^{H}\vect{h}_{k}[q]}^{2}}
+{\displaystyle\sum_{\substack{i=1 \\ i\neq k}}^{K}
+p_{i}[q]\,\abs{\vect{v}_{k}[q]^{H}\vect{h}_{i}[q]}^{2}
++ \sigma^{2}\norm{\vect{v}_{k}[q]}^{2}} .
+\end{equation}
+With the effective channel known at the decoder, an achievable rate for user $k$ on subcarrier $q$ is
+$\log_{2}\!\big(1+\mathrm{SINR}_{k}^{\mathrm{ul}}[q]\big)$, and inserting these
+per-user, per-subcarrier SINRs into the ergodic rate expression of
+\Cref{sec:rate} \eqref{eq:rate} gives the delivered per-user uplink rate
+\begin{align}
+\label{eq:ul-rate-user}
+R_{\mathrm{UL},k} ={}& \bar x_{\mathrm{UL}}\,\tau_{\mathrm{UL}}\,
+(1-\tau_{\mathrm{UL,sig}})\,\frac{\tilde B}{Q} \nonumber\\
+&\times \expt{\sum_{q=1}^{Q}\log_{2}\!\left(1
++\mathrm{SINR}_{k}^{\mathrm{ul}}[q]\right)},
+\end{align}
+with $R_{\mathrm{UL}}=\sum_{k=1}^{K}R_{\mathrm{UL},k}$ the delivered uplink sum
+rate. It drives the channel-decoder consumption of \Cref{sec:dig} and, through
+\eqref{eq:fh_ul}, the traffic-dependent part of the fronthaul.
+
+
+\subsection{Combiner and Power Control Designs}
+\label{ssec:ul_designs}
+
+As in the downlink, the design splits into the choice of the receive directions
+$\{\vect{v}_{k}[q]\}$, which depends on how much the APs cooperate, and the
+choice of the transmit powers $\{p_{k}\}$, which is a per-user allocation driven
+by the large-scale fading. The two are treated in turn, and the directions are
+recomputed every coherence block whereas the powers can be held fixed over many
+blocks.
+
+Throughout, and consistently with \Cref{ssec:designs}, we assume \emph{perfect}
+\gls{csi}: every combiner is built from the true channels,
+$\hat{\vect{h}}_{k}[q]=\vect{h}_{k}[q]$, so there is no estimation error and no
+pilot contamination. The pilot overhead is nevertheless charged to the rate
+through the frame parameters of \Cref{sec:frame}. In the downlink-only
+evaluation of \Cref{ssec:designs} the uplink phase carried nothing but pilots,
+$\tau_{\mathrm{UL,sig}}=1$, which leaves \eqref{eq:ul-rate-user} at zero. An
+uplink that carries data requires $\tau_{\mathrm{UL,sig}}<1$, and the coherence
+block then has to be split explicitly: with $\tau_{c}$ samples per block of which
+$\tau_{p}$ are pilots, the signalling fraction of the frame is
+$\tau_{\mathrm{UL}}\,\tau_{\mathrm{UL,sig}}=\tau_{p}/\tau_{c}$ and the uplink
+data prelog of \eqref{eq:ul-rate-user} is
+$\tau_{\mathrm{UL}}(1-\tau_{\mathrm{UL,sig}})=\tau_{\mathrm{UL}}-\tau_{p}/\tau_{c}$,
+which requires $\tau_{p}/\tau_{c}\leq\tau_{\mathrm{UL}}$. Mutually orthogonal
+pilots additionally require $\tau_{p}\geq K$; this is what makes the
+no-contamination assumption above self-consistent, and it is the assumption under
+which the perfect-\gls{csi} model is the idealisation of a real pilot phase rather
+than a different system.
+
+
+\subsubsection{Centralized Operation}
+\label{sssec:ul_centralized}
+
+In centralized operation the APs forward their received samples to the \gls{cpu},
+which holds $\vect{y}[q]$ in full and combines over all $LM$ antennas jointly
+\cite{demir2021foundations}. This is the highest level of cooperation, the
+receive counterpart of the joint precoding of \Cref{sssec:centralized}, and it
+corresponds to splits S1 and S2 of \Cref{ssec:split}. Minimizing the mean squared
+error $\expt{\abs{s_{k}[q]-\hat{s}_{k}[q]}^{2}}$ over $\vect{v}_{k}[q]$ for the
+model \eqref{eq:ul-collective-received} gives the \gls{mmse} combiner
+\begin{equation}
+\label{eq:ul-mmse-combiner}
+\vect{v}_{k}[q] = \left(\mat{H}[q]\,\mat{P}[q]\,\mat{H}[q]^{H}
++ \sigma^{2}\mat{I}_{LM}\right)^{-1}\vect{h}_{k}[q],
+\end{equation}
+which requires inverting an $LM\times LM$ matrix. Applying the push-through
+identity $(\mat{A}\mat{B}+\sigma^{2}\mat{I})^{-1}\mat{A}
+=\mat{A}(\mat{B}\mat{A}+\sigma^{2}\mat{I})^{-1}$ with $\mat{A}=\mat{H}[q]\mat{P}[q]$
+and $\mat{B}=\mat{H}[q]^{H}$, and discarding the diagonal factor that the scale
+invariance of \eqref{eq:ul-sinr} makes irrelevant, the same directions are
+obtained from a $K\times K$ inverse,
+\begin{equation}
+\label{eq:ul-centralized-rzf}
+\mat{V}[q] = \mat{H}[q]\left(\mat{H}[q]^{H}\mat{H}[q]
++ \sigma^{2}\mat{P}[q]^{-1}\right)^{-1} \inC{LM\times K},
+\end{equation}
+whose column $k$ is $\vect{v}_{k}[q]$ up to a scalar. This is the uplink form of
+the regularized family \eqref{eq:centralized-rzf}, with the heuristic loading
+$\lambda\mat{I}_{K}$ replaced by the physically determined
+$\sigma^{2}\mat{P}[q]^{-1}$; for equal powers $p_{k}[q]=p$ the two coincide at
+$\lambda=\sigma^{2}/p$, which is the sense in which the downlink \gls{rzf}
+precoder is the dual of \gls{mmse} combining. Letting the loading vanish, which
+is the high-SNR limit $\sigma^{2}/p\to 0$, gives the \gls{zf} combiner
+\begin{equation}
+\label{eq:ul-zf-combiner}
+\mat{V}[q] = \mat{H}[q]\big(\mat{H}[q]^{H}\mat{H}[q]\big)^{-1},
+\end{equation}
+for which $\vect{v}_{k}[q]^{H}\vect{h}_{i}[q]=0$ for all $i\neq k$, so all
+inter-user interference is removed and \eqref{eq:ul-sinr} reduces to
+$p_{k}[q]/(\sigma^{2}\norm{\vect{v}_{k}[q]}^{2})$. As in the downlink this needs
+$K\leq LM$ for the Gram matrix to be invertible, and it disregards the noise, so
+it is the scheme of choice only when the loading is negligible. Zero-forcing is
+the scheme adopted in the power model of \Cref{sec:pwr_model} and its distributed
+extension.
+
+Because the combiner is scale-invariant, the centralized design carries no power
+allocation of its own; the transmit powers are set at the users by
+\eqref{eq:ul-fractional-power} below. The \gls{cpu} does need the powers
+$\{p_{k}\}$ to build \eqref{eq:ul-centralized-rzf}, but these are large-scale
+quantities refreshed once per large-scale fading realisation, not once per
+coherence block.
+
+
+\subsubsection{Local Operation and Large-Scale Fading Decoding}
+\label{sssec:ul_local}
+
+In local operation each AP combines its own observation with its own \gls{csi}
+and forwards one scalar per user, so no instantaneous \gls{csi} crosses the
+fronthaul. This is split S3 of \Cref{ssec:split}. AP $l$ forms
+$\hat{s}_{kl}[q]=\vect{v}_{kl}[q]^{H}\vect{y}_{l}[q]$ using either \gls{mr}
+combining, which points along the local channel,
+\begin{equation}
+\label{eq:ul-mr-combiner}
+\vect{v}_{kl}[q] = \vect{h}_{kl}[q],
+\end{equation}
+or the local regularized combiner built from AP $l$'s own channel matrix
+$\mat{E}_{l}[q]=[\,\vect{h}_{1l}[q]\ \cdots\ \vect{h}_{Kl}[q]\,]\inC{M\times K}$,
+\begin{align}
+\label{eq:ul-local-rzf}
+\mat{V}_{l}[q] &= \big(\mat{E}_{l}[q]\mat{P}[q]\mat{E}_{l}[q]^{H}
++\sigma^{2}\mat{I}_{M}\big)^{-1}\mat{E}_{l}[q] \inC{M\times K},\\
+ l&=1,\dots,L,
+\end{align}
+whose column $k$ is $\vect{v}_{kl}[q]$. This is \eqref{eq:local-rzf} with the
+heuristic loading again replaced by its physical value, and it inverts an
+$M\times M$ matrix because the per-AP array is small. An AP can suppress only the
+interference it observes itself, using the $M$ degrees of freedom of its own
+array, so the coherent cross-AP interference rejection of
+\eqref{eq:ul-centralized-rzf} is lost; the loading is what keeps the inverse well
+conditioned in the usual regime $M<K$.
+
+What remains is how the \gls{cpu} fuses the $L$ local estimates. It applies one
+weight per AP and user,
+\begin{equation}
+\label{eq:ul-lsfd}
+\hat{s}_{k}[q] = \sum_{l=1}^{L} a_{kl}[q]^{*}\,\hat{s}_{kl}[q],
+\end{equation}
+collected into $\vect{a}_{k}[q]=[\,a_{k1}[q]\ \cdots\ a_{kL}[q]\,]^{\intercal}
+\inC{L}$. By \eqref{eq:ul-distributive} this is exactly the collective combiner
+$\vect{v}_{k}[q]$ whose $l$-th block is $a_{kl}[q]\vect{v}_{kl}[q]$, so
+\eqref{eq:ul-sinr} continues to apply unchanged and the fusion rule is part of the
+combiner rather than a separate stage. Two choices are used. Equal weighting,
+$a_{kl}[q]=1$, simply adds the local estimates and needs nothing at the \gls{cpu}
+beyond the streams themselves. \Gls{lsfd} instead optimizes the weights from the
+channel statistics: collecting the per-AP effective gains
+$g_{kil}[q]\triangleq\vect{v}_{kl}[q]^{H}\vect{h}_{il}[q]$ into
+$\vect{g}_{ki}[q]=[\,g_{ki1}[q]\ \cdots\ g_{kiL}[q]\,]^{\intercal}\inC{L}$, and
+writing $\mat{D}_{k}[q]$ for the diagonal matrix with entries
+$\norm{\vect{v}_{kl}[q]}^{2}$ (diagonal because the noise is independent across
+APs), the weights that maximize the resulting use-and-then-forget \gls{sinr} are
+\begin{align}
+\label{eq:ul-lsfd-weights}
+\vect{a}_{k}[q] ={}& \Big(\sum_{i=1}^{K} p_{i}[q]\,
+\expt{\vect{g}_{ki}[q]\vect{g}_{ki}[q]^{H}}
++ \sigma^{2}\expt{\mat{D}_{k}[q]}\Big)^{-1} \nonumber\\
+&\times \sqrt{p_{k}[q]}\ \expt{\vect{g}_{kk}[q]},
+\end{align}
+where the expectations are over the small-scale fading for fixed user positions
+\cite{demir2021foundations}.
+\todo{verify \eqref{eq:ul-lsfd-weights} against the LSFD expression in
+\cite{demir2021foundations} before it is used in the evaluation.}
+These weights are statistical, not instantaneous, so they are computed once per
+large-scale fading realisation and cost the fronthaul nothing per coherence
+block. The three fusion rules therefore span three cooperation levels at the same
+per-AP combiner: local combining at a single AP, equal-weight summation at the
+\gls{cpu}, and statistically weighted summation. Only the centralized combiner of
+\eqref{eq:ul-centralized-rzf} uses instantaneous \gls{csi} at the \gls{cpu}, and
+the SE expressions of the different levels must not be mixed.
+
+Two things should be flagged about how \eqref{eq:ul-sinr} is used at these lower
+levels. When the fusion weights are statistical, the \gls{cpu} does not know the
+instantaneous effective channel $\vect{v}_{k}[q]^{H}\vect{h}_{k}[q]$, and the
+rigorous achievable rate is then the use-and-then-forget bound, in which the mean
+effective channel is treated as the useful gain and its fluctuation as extra
+interference. Evaluating \eqref{eq:ul-rate-user} with the instantaneous
+\eqref{eq:ul-sinr}, as is done in the downlink of \Cref{sec:dmimo_dl_sysmodel},
+assumes instead that the effective channel is known wherever the decoding
+happens, and is therefore optimistic for local operation by the amount of
+residual channel hardening.
+\todo{decide whether the local-operation rate is reported with the instantaneous
+SINR, for consistency with the downlink, or with the use-and-then-forget bound,
+which is the achievable one; the gap grows as $M$ shrinks.}
+
+
+\subsubsection{Uplink Power Control}
+\label{sssec:ul_power}
+
+The powers $\{p_{k}\}$ are set at the users from the large-scale fading and, by
+\eqref{eq:ul-power-constraint}, are constrained one user at a time. Full power,
+$p_{k}=p_{\max}$, is the natural reference, but it is the worst case for
+fairness: a user close to an AP then swamps a distant one sharing the same
+resources. Fractional power control weights the users by their aggregate
+large-scale gain $\beta_{k}=\sum_{l=1}^{L}\beta_{kl}$,
+\begin{equation}
+\label{eq:ul-fractional-power}
+p_{k} = p_{\max}\,
+\frac{\beta_{k}^{\,v}}{\max_{i}\beta_{i}^{\,v}},
+\qquad k=1,\dots,K,
+\end{equation}
+which satisfies $p_{k}\leq p_{\max}$ for either sign of the exponent $v$, since
+the normalizing maximum is attained by the strongest user when $v>0$ and by the
+weakest when $v<0$. The exponent plays the same throughput-versus-fairness role
+as in \eqref{eq:centralized-fractional}, with $v=0$ recovering full power and
+$v=-1$ inverting the channel statistically, so that every user arrives at the
+network with the same average total gain $p_{k}\beta_{k}$. The normalization by a
+maximum rather than by a sum is what differs from the downlink rule
+\eqref{eq:centralized-fractional}: there a shared budget had to be divided among
+the users, whereas here each user has its own budget and the only role of the
+denominator is to keep the strongest user within it. As a result the uplink has
+no counterpart of the common rescaling \eqref{eq:power-normalization}, and no
+feasibility question arises.
+
+The uplink transmit power is spent at the users and therefore does not appear in
+the network consumption $P_{\mathrm{net}}$ of \eqref{eq:pnet}, which counts the
+APs, the fronthaul, and the \gls{cpu} only. The asymmetry this creates in the
+power model is worth stating plainly: in the downlink phase the APs pay for the
+PAs of \Cref{ssec:dmimo_pa}, whose consumption scales with the radiated power,
+whereas in the uplink phase they pay only for the receive front end
+\eqref{eq:ana_ul_ap} and the digital processing \eqref{eq:dig_ap}, both of which
+are essentially independent of $p_{\max}$. Uplink power control therefore acts on
+the delivered rate \eqref{eq:ul-rate-user} and on nothing else in
+\eqref{eq:ee_net}, which makes it a pure spectral-efficiency lever rather than an
+energy one, and it is the reason the uplink and downlink phases of the same frame
+have very different consumption profiles.
+
+
+\subsection{Complexity of combiners}
+\todo{compute complexity of the combiners so this can be used in the power model;
+under TDD reciprocity the centralized combiner reuses the matrix already
+inverted for \eqref{eq:gops_cen}, so only the application cost $2K'N$ should be
+charged in the uplink, whereas \gls{lsfd} adds the per-user $L\times L$ solve of
+\eqref{eq:ul-lsfd-weights} once per large-scale fading realisation.}

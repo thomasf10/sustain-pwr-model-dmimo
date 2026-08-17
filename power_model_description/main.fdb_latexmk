@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex main"] 1786450990.78605 "main.aux" "main.bbl" "main" 1786450999.26377 0
+["bibtex main"] 1786956701.25634 "main.aux" "main.bbl" "main" 1786956710.74841 0
   "./mybib.bib" 1786437525 66423 fc5b41ebced5df55f708dbdfa583a6f1 ""
   "C:/Users/Thomas/AppData/Local/Programs/MiKTeX/bibtex/bib/ieeetran/IEEEabrv.bib" 1440617548 20898 a5d2167c380db7dfff810b085c77ed63 ""
   "C:/Users/Thomas/AppData/Local/Programs/MiKTeX/bibtex/bst/ieeetran/IEEEtran.bst" 1440622569 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "main.aux" 1786450996 19950 71b4f17fe0f19018a4b24d3f9f94a4cd "pdflatex"
+  "main.aux" 1786956708 24455 30e920bb65a8081afdf44788ba309ff0 "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1786450991.37325 "c:/Users/Thomas/Documents/sustain-pwr-model-dmimo/power_model_description/main.tex" "main.pdf" "main" 1786450999.26597 0
+["pdflatex"] 1786956702.03844 "c:/Users/Thomas/Documents/sustain-pwr-model-dmimo/power_model_description/main.tex" "main.pdf" "main" 1786956710.75056 0
   "C:/Users/Thomas/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1782819617 320866 f38090857e4bb8b0a474a2ebeeef19d9 ""
   "C:/Users/Thomas/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1778676632 13350797 63c24b55f03e99b7f51b81a5c44d90c7 ""
   "C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc" 1458477487 4993 80dc9bab7f31fb78a000ccfed0e27cab ""
@@ -308,15 +308,16 @@
   "C:/Users/Thomas/AppData/Local/Programs/MiKTeX/tex/latex/xkeyval/xkeyval.sty" 1656236919 4937 4ce600ce9bd4ec84d0250eb6892fcf4f ""
   "C:/Users/Thomas/AppData/Local/Programs/MiKTeX/tex/latex/xstring/xstring.sty" 1693735632 123 a302f2c651a95033260db60e51527ae8 ""
   "IEEEtran.cls" 1781510317 288304 5b2e4fa15b0f7eabb840ebf67df4c0f7 ""
-  "abbr.tex" 1782985336 4376 940e8eb9e80bdc8b46990a0fddba859d ""
-  "c:/Users/Thomas/Documents/sustain-pwr-model-dmimo/power_model_description/main.tex" 1786436081 6727 6c54c190f299fe55107e4587aa1ec4de ""
-  "main.aux" 1786450996 19950 71b4f17fe0f19018a4b24d3f9f94a4cd "pdflatex"
-  "main.bbl" 1786450991 2441 8e49d3021b9918c1b95a0d0b8b34adaf "bibtex main"
-  "main.out" 1786450996 4805 1d0e24c8f1bc93a9d54aa800e7cc8856 "pdflatex"
-  "main.tex" 1786436081 6727 6c54c190f299fe55107e4587aa1ec4de ""
-  "sections/dmimo_pwr_model.tex" 1786450972 34918 13534a297a0045f6efce509b8c07a1bc ""
-  "sections/dmimo_sysmodel.tex" 1786437801 15218 892dc9bee9f108e6be45490ecb9a3924 ""
-  "sections/original_pwr_model.tex" 1786438548 14838 8ac1f122ba2d3c8f964977643b5588c8 ""
+  "abbr.tex" 1786955854 4430 eadbf19f48a1310b5e7adeabe549f36d ""
+  "c:/Users/Thomas/Documents/sustain-pwr-model-dmimo/power_model_description/main.tex" 1786608787 6767 42d741d3e5740bf7d80d1f43b1a137ff ""
+  "main.aux" 1786956708 24455 30e920bb65a8081afdf44788ba309ff0 "pdflatex"
+  "main.bbl" 1786956701 2441 8e49d3021b9918c1b95a0d0b8b34adaf "bibtex main"
+  "main.out" 1786956708 6229 7643a58611c9a1e8e8db58a67daf4978 "pdflatex"
+  "main.tex" 1786608787 6767 42d741d3e5740bf7d80d1f43b1a137ff ""
+  "sections/dmimo_pwr_model.tex" 1786612480 36424 8851976d7fc4ed6b197f78922e5ab8e7 ""
+  "sections/dmimo_sysmodel.tex" 1786612839 15872 5cf501cc2fc8fcc82962bc2a23044b2e ""
+  "sections/dmimo_ul_sysmodel.tex" 1786956681 17722 1fd674f3d624764598849ad40ecf8c31 ""
+  "sections/original_pwr_model.tex" 1786608391 14907 79f461b0ae93b468a7ecd17aa0dc8de7 ""
   (generated)
   "main.aux"
   "main.log"

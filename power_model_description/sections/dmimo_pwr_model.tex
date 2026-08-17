@@ -3,14 +3,14 @@
 
 The model of \Cref{sec:pwr_model} describes one central site: a single co-located array
 whose antennas, converters, and processors share a physical location, a clock, and a power
-supply. The distributed system of \Cref{sec:dmimo_sysmodel} replaces that site by
+supply. The distributed system of \Cref{sec:dmimo_dl_sysmodel} replaces that site by
 $L$ \glspl{ap} of $M$ antennas each, spread over the coverage area and tied to a
 \gls{cpu} by fronthaul links. Three things change as a result. First, the hardware
 blocks become per-AP quantities that must be summed over the network, each at its
 own operating point. Second, the transport between the \glspl{ap} and the \gls{cpu} has its own power consumption, wich is not modeled in the single-site model. Third, the digital
 processing chain is split across two locations (\gls{ap} and \gls{cpu}). This requires design choices about where a given operation runs. This section extends the parametric model along those three axes while keeping the frame-averaging machinery of \Cref{sec:frame} intact, so that the single-site model is recovered as a special case by setting $L=1$ with no fronthaul and no \gls{cpu}.
 
-Throughout, $l=1,\dots,L$ indexes APs, $k=1,\dots,K$ users, $q=1,\dots,Q$ subcarriers, and $i\in\{\mathrm{DL},\mathrm{UL}\}$ the link direction, matching \Cref{sec:dmimo_sysmodel}. Hardware parameters carried over from \Cref{sec:pwr_model} keep their symbols and now refer to a single AP.
+Throughout, $l=1,\dots,L$ indexes APs, $k=1,\dots,K$ users, $q=1,\dots,Q$ subcarriers, and $i\in\{\mathrm{DL},\mathrm{UL}\}$ the link direction, matching \Cref{sec:dmimo_dl_sysmodel}. Hardware parameters carried over from \Cref{sec:pwr_model} keep their symbols and now refer to a single AP. The number of data subcarriers is written $q_{i}$ in \eqref{eq:rate} and $Q_{\max}$ in \eqref{eq:load_inst}; we use $Q$ for it throughout and reserve $q$ for the subcarrier index. \todo{align the subcarrier-count symbol across \Cref{sec:pwr_model} and \Cref{sec:dmimo_dl_sysmodel}.}
 
 \subsection{Network power decomposition}
 \label{ssec:dmimo_structure}
@@ -59,7 +59,7 @@ it also relieves the fronthaul.
 \subsection{Serving clusters, per-AP load, and the shared frame}
 \label{ssec:dmimo_frame}
 
-In the fully distributed operation of \Cref{sec:dmimo_sysmodel} every AP serves
+In the fully distributed operation of \Cref{sec:dmimo_dl_sysmodel} every AP serves
 every user. The power model should not assume this, because restricting each AP
 to a subset of users is the standard way of keeping cell-free operation scalable
 and is also the main lever on fronthaul traffic. Let
@@ -103,35 +103,6 @@ and the shorthand $\mathcal{A}_{i,l}^{c}(P)\triangleq
 depend on the operating mode. Under full cell-free operation all APs share the
 same load, $\bar x_{i,l}=\bar x_{i}$, and \eqref{eq:frameavg_ap} collapses to
 \eqref{eq:frameavg}.
-
-\paragraph{Reconciling the two overhead accountings}
-\todo{double check this part and work out some inconcistencies in the notation used above wrt prolog factors}
-\Cref{sec:dmimo_sysmodel} charges the pilot overhead through the prelog
-$(1-\tau_{p}/\tau_{c})$ of the coherence-block bookkeeping, while
-\Cref{sec:rate} charges it through $\tau_{i}(1-\tau_{i,\mathrm{sig}})$. These are
-two descriptions of the same time budget and must be identified rather than
-multiplied. Under TDD reciprocity the pilots are sent in the uplink, so the
-uplink signalling phase of \Cref{sec:frame} \emph{is} the pilot phase of the
-coherence block, and writing $\tau_{d}^{\mathrm{DL}}$ for the number of samples
-per block that carry downlink data, the identification is
-\begin{equation}
-\label{eq:overhead_map}
-\tau_{\mathrm{UL}}\,\tau_{\mathrm{UL,sig}} = \frac{\tau_{p}}{\tau_{c}},
-\qquad
-\tau_{\mathrm{DL}}\,(1-\tau_{\mathrm{DL,sig}}) = \frac{\tau_{d}^{\mathrm{DL}}}{\tau_{c}},
-\end{equation}
-with $\tau_{d}^{\mathrm{DL}}\leq\tau_{c}-\tau_{p}$, the slack being the uplink
-data and the downlink demodulation reference signals. The downlink-only prelog
-$(1-\tau_{p}/\tau_{c})$ used in \Cref{sec:dmimo_sysmodel} is the special case
-$\tau_{d}^{\mathrm{DL}}=\tau_{c}-\tau_{p}$, in which the whole block after the
-pilots carries downlink data and neither uplink data nor downlink reference
-signals are scheduled. The rate expression \eqref{eq:rate} then applies the
-prelog once and must not apply it again. A second bookkeeping detail: the
-subcarrier count is written $q_{i}$ in \eqref{eq:rate}, $Q_{\max}$ in
-\eqref{eq:load_inst}, and $Q$ in \Cref{sec:dmimo_sysmodel}, while $q$ is also the
-subcarrier index. We use $Q$ for the number of evaluated data subcarriers
-throughout this section. \todo{align the symbols for the subcarrier count across
-\Cref{sec:pwr_model} and \Cref{sec:dmimo_sysmodel}.}
 
 \subsection{Per-AP power amplifiers}
 \label{ssec:dmimo_pa}
@@ -297,7 +268,7 @@ uplink combiner follows the same allocation as the downlink precoder. Splits S1
 and S2 both realise the centralized precoding of \Cref{sssec:centralized} and
 deliver the same rate; S3 is local operation (\Cref{sssec:local}) and delivers
 the lower rate of local precoding. $^{\dagger}$Listed for completeness but not
-priced, since \Cref{sec:dmimo_sysmodel} assumes perfect CSI \todo{add this}.}
+priced, since \Cref{sec:dmimo_dl_sysmodel} assumes perfect CSI \todo{add this}.}
 \label{tab:split}
 \ra{1.15}
 \begin{tabular}{@{}llccc@{}}
@@ -336,7 +307,7 @@ lower rate of local precoding.
 
 \subsection{Digital signal processing at the APs and the CPU}
 \label{ssec:dmimo_dig}
-
+\todo{check this}
 The per-chain digital costs of \Cref{sec:dig} carry over unchanged, evaluated
 with $M_{\mathrm{RF}}=M$ at each AP. Every AP performs the OFDM modulation and
 demodulation, the predistortion of its own PAs, and the baseband filtering
@@ -351,8 +322,7 @@ P_{\mathrm{dig,UL},l} &= P_{\mathrm{IFFT}} + P_{\mathrm{filt,BB}}
 with $\overline{P_{\mathrm{dig},l}}=
 \mathcal{A}_{\mathrm{DL},l}^{\mathrm{dig}}(P_{\mathrm{dig,DL},l})+
 \mathcal{A}_{\mathrm{UL},l}^{\mathrm{dig}}(P_{\mathrm{dig,UL},l})$. Only the
-MIMO-processing terms $P_{\mathrm{MIMO},i,l}$ depend on the split, and they are
-where the architecture actually shows.
+MIMO-processing terms $P_{\mathrm{MIMO},i,l}$ depend on the split.
 
 As in \Cref{sec:dig}, a MIMO-processing term is a static part plus
 $f_{s,\mathrm{I}}\Xi/\eta_{\mathrm{pre}}$, with $\Xi$ its complex operations per
@@ -633,9 +603,9 @@ Several effects are left out and are flagged here rather than silently absorbed
 into the parameters. Fronthaul quantization is modelled only through its rate:
 the $b_{\mathrm{FH}}$ bits per sample of \eqref{eq:fh_s1} add a distortion term
 to the effective SINR of \eqref{eq:downlink-sinr} that is not present in
-\Cref{sec:dmimo_sysmodel}, so S1 is charged for its fronthaul load but not
+\Cref{sec:dmimo_dl_sysmodel}, so S1 is charged for its fronthaul load but not
 debited for the accuracy it loses. Channel estimation processing is likewise
-unpriced: \Cref{sec:dmimo_sysmodel} assumes perfect \gls{csi}, so neither the
+unpriced: \Cref{sec:dmimo_dl_sysmodel} assumes perfect \gls{csi}, so neither the
 $LM\times K$ estimation at the CPU under centralized operation nor the $M\times
 K$ local estimation under S3 appears in \eqref{eq:cpu} or \eqref{eq:dig_ap},
 although both scale with the deployment. The synchronization and
@@ -645,5 +615,58 @@ consumes symbols that would otherwise carry data. Finally, the reduction factors
 $\delta^{\mu}_{c}$ and $\delta^{0}_{c}$, the supply-and-cooling efficiencies, and
 the PA parameters are all inherited from a macro base station and are the most
 likely source of systematic error when they are applied unchanged to a
-small outdoor AP. \todo{refit the AP-class hardware parameters, or report results
-as a sensitivity range over them.}
+small outdoor AP.
+
+\todo{Parameter values still to be sourced before the distributed model can be
+evaluated. Where a value cannot be pinned down, report results as a sensitivity
+range over it rather than picking a point value silently.
+
+\emph{New parameters, with no counterpart in \Cref{sec:pwr_model} and therefore
+no inherited value:}
+\begin{itemize}
+\item $\eta_{\mathrm{CPU,sc}}$ and $\eta_{\mathrm{FH,sc}}$ in \eqref{eq:pnet}:
+      supply and cooling of the central unit (an inverse data-centre PUE) and of
+      the fronthaul transceivers.
+\item $\delta^{\mathrm{ds}}$, $P^{0}_{\mathrm{AP},l}$, $P^{0}_{\mathrm{FH},l}$ in
+      \eqref{eq:pnet}: deep-sleep reduction factor and the AP and fronthaul base
+      levels it scales. Only needed once $\mathcal{S}\neq\{1,\dots,L\}$.
+\item $P_{\mathrm{sync}}$ in \eqref{eq:ana_avg_ap}: per-AP distribution of the
+      frequency and phase reference, and reciprocity calibration.
+\item $P_{\mathrm{CPU},0}$ in \eqref{eq:cpu}: always-on consumption of the
+      central unit. The number of FPGAs it runs the centralized precoder on is
+      also still implicit, since \eqref{eq:pmimo} names $\bar M_{\mathrm{RF}}$
+      only for the AP side.
+\item $P_{\mathrm{FH},0}$ and $\Pi_{\mathrm{FH}}$ in \eqref{eq:fh_basic}:
+      currently borrowed from \cite{ngo2018total}; confirm or replace for the
+      fronthaul technology assumed here.
+\item $b_{\mathrm{FH}}$ in \eqref{eq:fh_s1}: fronthaul quantiser resolution. It
+      sets the S1 fronthaul rate outright and is the largest single lever on it.
+\item $\delta^{\mu}_{\mathrm{FH}}$ in \eqref{eq:fh_avg}: idle reduction factor of
+      an optical transceiver, argued to sit near one but not sourced.
+\item $C_{\mathrm{FH}}$ in \Cref{ssec:dmimo_ee}: fronthaul link capacity, needed
+      before the S1 rates can be claimed feasible.
+\end{itemize}
+
+\emph{Inherited values fitted for a macro base station, which should be refitted
+for AP-class hardware rather than reused:}
+\begin{itemize}
+\item $\xi$, $\alpha$, $\eta_{\mathrm{PA,max}}$ in \eqref{eq:pa}: small AP
+      amplifiers, not macro-cell ones.
+\item $P_{\max}$: fix the sizing convention of \Cref{rem:pa_sizing}, since
+      $P_{\max}=\rho_{\max}/M$ and a fixed component rating give different
+      scaling laws for the network static floor.
+\item $\eta_{\mathrm{dig,sc}}$, $\eta_{\mathrm{ana,sc}}$,
+      $\eta_{\mathrm{PA,sc}}$: a passively cooled outdoor AP enclosure is not a
+      macro cabinet, and the cooling share of the overhead largely disappears.
+\item $\delta^{\mu}_{c}$ and $\delta^{0}_{c}$: micro-sleep and idle reduction
+      factors of AP-class hardware.
+\item $P_{s}$ and the 32 chains per FPGA in \eqref{eq:pmimo}: \Cref{rem:fpga}
+      shows this granularity dominates at small $M$, so check whether a
+      four-antenna AP really carries a full FPGA at $P_{s}$.
+\item $\eta_{\mathrm{pre}}$ and the other computational efficiencies: the AP-side
+      and CPU-side processors are different device classes, so a single value
+      shared by both nodes is unlikely to hold.
+\item $P_{\mathrm{LO}}$ and $P_{\mathrm{ana,misc}}$: now paid once per AP rather
+      than once per site, so the per-node value matters where the shared one did
+      not.
+\end{itemize}}
