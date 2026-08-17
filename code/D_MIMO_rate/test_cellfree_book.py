@@ -361,7 +361,9 @@ def run_montecarlo(cfg: DMIMOConfig, extras: BookExtras, label: str, key: str,
         Wbar = mh.precoding_directions(cfg, H_hat)
         rho = mh.power_control(cfg, beta, Wbar)
         W = mh.normalize_precoder(cfg, Wbar, rho)
-        sinr = mh.downlink_sinr(mh.effective_channel(H, W), cfg.noise_power)
+        # Per-subcarrier noise, matching dl_rate. The running example is
+        # frequency-flat (Q = 1), so this equals cfg.noise_power here.
+        sinr = mh.downlink_sinr(mh.effective_channel(H, W), cfg.noise_power_sc)
         se[i] = mh.spectral_efficiency(sinr, cfg.dl_prelog)
         power += mh.ap_powers(cfg, W)
     if progress:

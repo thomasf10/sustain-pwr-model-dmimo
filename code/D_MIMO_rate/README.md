@@ -105,27 +105,43 @@ positions, and are estimated by averaging over the `Q` subcarriers of the drop.
 That estimator is only as good as the subcarriers are numerous and decorrelated
 across the band.
 
-### Open issue: uplink and downlink use different noise conventions
+### The per-subcarrier noise convention
 
-**Uplink and downlink SEs from this package are not directly comparable while
-`Q > 1`.** Both system models are written per subcarrier, so a per-subcarrier
-signal power belongs against a per-subcarrier noise power. The uplink satisfies
-this identically: eq. ul-sinr is invariant to a common factor on `(p, sigma^2)`,
-so the per-subcarrier split `p_k[q] = p_k / Q` cancels against `sigma^2 / Q` and
-`uplink_sinr` can work with block totals without ever dividing by `Q`. The
-downlink has no such invariance. `normalize_precoder` sets
-`sum_q ||w_k[q]||^2 = rho_k`, making the *per-subcarrier* radiated power about
-`rho_k / Q`, but `dl_rate` then divides by the full-band `cfg.noise_power`
-(`-174 dBm/Hz + 10 log10(B) + F`). The downlink SINR is therefore low by a factor
-`Q`, which understates the downlink SE. Measured on `L=10, M=4, K=6, Q=16`, the
-downlink sum SE is 18.35 bit/s/Hz as the code stands against 29.09 with
-`cfg.noise_power / Q`; at the default `Q = 64` the gap is wider.
+Both system models are written per subcarrier, so a per-subcarrier signal power
+has to meet a per-subcarrier noise power. `cfg.noise_power` is the noise over the
+whole band, `-174 dBm/Hz + 10 log10(B) + F`; the quantity the SINR expressions
+need is `cfg.noise_power_sc = cfg.noise_power / Q`.
 
-This predates the uplink work and nothing here changes it, because the fix moves
-every published downlink number in this README. The two candidate fixes are
-passing `cfg.noise_power / Q` to `downlink_sinr` or scaling `W` by `sqrt(Q)`;
-they are equivalent. Note that the monograph benchmark is unaffected either way,
-since `config_cellfree_book` is frequency-flat with `Q = 1`.
+Only the ratio is physical, and it is the same whichever subcarrier count is used
+on both sides. An AP really spreads `rho_max` over all `B / Delta_f` subcarriers
+of the band against a noise `sigma^2 / (B / Delta_f)`, and the `Q` modelled
+subcarriers sample that, so dividing signal and noise by the same `Q` reproduces
+the true per-subcarrier SNR. What is not physical is mixing the two.
+
+The two directions arrive there differently:
+
+- **Uplink** is immune. Eq. ul-sinr is invariant to a common factor on
+  `(p, sigma^2)`, so the split `p_k[q] = p_k / Q` cancels against `sigma^2 / Q`
+  exactly. `uplink_sinr` works with block totals and never divides by `Q`;
+  passing the per-subcarrier pair instead is bit-identical.
+- **Downlink** is not. `normalize_precoder` sets `sum_q ||w_k[q]||^2 = rho_k`,
+  leaving about `rho_k / Q` per subcarrier, and the precoder carries the power
+  while the receiver noise does not scale with it. `dl_rate` therefore passes
+  `cfg.noise_power_sc`.
+
+This was fixed after the uplink was added: `dl_rate` previously paired the
+per-subcarrier precoder with the full-band noise, which scaled the downlink SINR
+down by `Q` and understated the downlink SE. On `L=10, M=4, K=6, Q=16` the
+downlink sum SE moves from 18.35 to 27.15 bit/s/Hz, which also restores the
+expected ordering against the uplink (18.21 bit/s/Hz): the AP transmits 10 dB
+more power than a handset from a far larger array, so a downlink below the uplink
+was the visible symptom. `sanity_checks.py` now pins the invariant that makes the
+convention checkable, namely that on a frequency-flat channel the per-subcarrier
+SE does not depend on how many subcarriers are evaluated.
+
+**The published benchmark numbers below are unaffected**, and were re-run to
+confirm it: `config_cellfree_book` is frequency-flat with `Q = 1`, where
+`noise_power_sc` and `noise_power` coincide.
 
 ## Before feeding these rates to the power model
 

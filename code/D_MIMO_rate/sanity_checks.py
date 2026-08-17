@@ -94,6 +94,11 @@ def check_config(chk: Checks) -> None:
 
     chk("M_tot = L * M", cfg.M_tot == cfg.L * cfg.M, f"{cfg.M_tot}")
     chk("noise_power matches dBm->W", np.isclose(cfg.noise_power, dbm_to_watt(cfg.noise_power_dBm)))
+    chk("noise_power_sc = noise_power / Q",
+        np.isclose(cfg.noise_power_sc, cfg.noise_power / cfg.Q))
+    chk("noise_power_sc = noise_power when Q = 1",
+        np.isclose(DMIMOConfig(L=6, M=4, K=4, Q=1).noise_power_sc,
+                   DMIMOConfig(L=6, M=4, K=4, Q=1).noise_power))
     chk("dl_prelog = (tau_c - tau_p)/tau_c",
         np.isclose(cfg.dl_prelog, (cfg.tau_c - cfg.tau_p) / cfg.tau_c))
     chk("rzf_regularization defaults to sigma^2",
@@ -137,6 +142,19 @@ def check_config(chk: Checks) -> None:
         cfg.path_loss_dB(100.0) > cfg.path_loss_dB(10.0) > cfg.path_loss_dB(1.0))
     chk("path_loss floors at min_ap_ue_distance",
         np.isclose(float(cfg.path_loss_dB(0.01)), float(cfg.path_loss_dB(cfg.min_ap_ue_distance))))
+
+    # AP placement: RANDOM spreads the APs, CENTER stacks them at the area
+    # centre for the L=1 co-located baseline. UEs stay uniform either way.
+    rng_p = np.random.default_rng(0)
+    c_rand = DMIMOConfig(L=6, M=4, K=4, Q=8)
+    ap_r, ue_r = mh.draw_positions(c_rand, rng_p)
+    chk("RANDOM placement spreads the APs", np.ptp(ap_r, axis=0).min() > 0)
+    c_ctr = DMIMOConfig(L=1, M=4, K=4, Q=8, ap_placement="center")
+    ap_c, ue_c = mh.draw_positions(c_ctr, rng_p)
+    chk("CENTER placement puts the site at the area centre",
+        np.allclose(ap_c, cfg.area_size / 2) and ap_c.shape == (1, 2))
+    chk("CENTER placement leaves the UEs uniform",
+        ue_c.shape == (c_ctr.K, 2) and ue_c.min() >= 0 and ue_c.max() < c_ctr.area_size)
 
     # String -> enum coercion.
     cfg2 = DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="L-RZF", operation="distributed",
@@ -324,6 +342,28 @@ def check_power_control(chk: Checks) -> None:
     chk("v<0 favours the weaker user", frac_rho(-1.0)[0] < frac_rho(-1.0)[1])
     chk("v=0 gives equal power", np.isclose(*frac_rho(0.0)))
 
+    # Q is a modelling choice, not a physical parameter: on a frequency-flat
+    # channel the per-subcarrier SE must not depend on how many subcarriers are
+    # evaluated. This holds only because the transmit budget and the noise are
+    # both divided by Q; pairing the per-subcarrier precoder with the full-band
+    # noise would make the SE grow with Q.
+    flat_cfg = dict(L=4, M=4, K=3, precoding="ZF", operation="centralized",
+                    channel_model="rayleigh")
+    H_one = synthetic_channel(DMIMOConfig(Q=1, **flat_cfg))     # (1, K, M_tot)
+    beta_flat = make_beta(DMIMOConfig(Q=1, **flat_cfg))         # fixed across the pair
+
+    def flat_se(n_sc):
+        c = DMIMOConfig(Q=n_sc, **flat_cfg)
+        H_flat = np.repeat(H_one, n_sc, axis=0)
+        W = mh.normalize_precoder(c, mh.precoding_directions(c, H_flat),
+                                  mh.power_control(c, beta_flat, None))
+        return mh.spectral_efficiency(
+            mh.downlink_sinr(mh.effective_channel(H_flat, W), c.noise_power_sc), 1.0)
+    se_q1, se_q8 = flat_se(1), flat_se(8)
+    chk("DL SE on a flat channel is independent of Q",
+        np.allclose(se_q1, se_q8),
+        f"Q=1 sum {se_q1.sum():.3f}, Q=8 sum {se_q8.sum():.3f}")
+
     # Centralized global scaling preserves the per-user power ratios set by rho.
     cr = DMIMOConfig(L=6, M=4, K=4, Q=8, precoding="ZF", operation="centralized",
                      power_alloc="fractional", v=0.7, channel_model="rayleigh")
@@ -399,7 +439,7 @@ def check_channel_and_e2e(chk: Checks) -> None:
     budget_ok = np.all(mh.ap_powers(cfg, W) <= cfg.rho_max * (1 + 1e-9))
     chk("per-AP power budget met after normalization", budget_ok)
 
-    sinr = mh.downlink_sinr(mh.effective_channel(H, W), cfg.noise_power)
+    sinr = mh.downlink_sinr(mh.effective_channel(H, W), cfg.noise_power_sc)
     se = mh.spectral_efficiency(sinr, cfg.dl_prelog)
     chk("end-to-end SE finite and positive",
         np.all(np.isfinite(se)) and np.all(se > 0),

@@ -33,15 +33,22 @@ By TDD reciprocity the same ``H`` serves both directions: the downlink applies
 the array response as ``h_k[q]^H``, so ``h_k[q]`` itself is the channel that
 carries user ``k``'s uplink signal to the ``LM`` distributed antennas.
 
-**Powers and the subcarrier dimension.** Downlink powers (``rho_max``,
-``rho_k``) are totals over the OFDM block, so :func:`normalize_precoder`
-normalizes ``sum_q ||w_k[q]||^2 = rho_k``. Uplink powers are handled the same
-way, but there the per-subcarrier split ``p_k[q] = p_k / Q`` cancels against the
-per-subcarrier noise ``sigma^2 / Q`` in every ratio the uplink forms (the SINR
-of eq. ul-sinr and the loading of eq. ul-centralized-rzf are both invariant to
-a common factor on ``(p, sigma^2)``). The uplink routines below therefore work
-directly with the block totals ``p`` and ``cfg.noise_power`` and never divide by
-``Q``.
+**Powers and the subcarrier dimension.** All transmit budgets are totals over
+the OFDM block, and both system models are written per subcarrier, so a
+per-subcarrier signal power has to meet the per-subcarrier noise
+``cfg.noise_power_sc = sigma^2 / Q`` rather than the full-band
+``cfg.noise_power``. The two directions reach that differently:
+
+* Downlink: :func:`normalize_precoder` normalizes ``sum_q ||w_k[q]||^2 = rho_k``,
+  leaving about ``rho_k / Q`` per subcarrier, so :func:`downlink_sinr` must be
+  given ``cfg.noise_power_sc``. The downlink SINR is *not* invariant to a common
+  rescaling of signal and noise, so getting this wrong scales it by ``Q``.
+* Uplink: eq. ul-sinr and the loading of eq. ul-centralized-rzf are both
+  invariant to a common factor on ``(p, sigma^2)``, so the split
+  ``p_k[q] = p_k / Q`` cancels against ``sigma^2 / Q`` exactly. The uplink
+  routines therefore work with the block totals ``p`` and ``cfg.noise_power``
+  and never divide by ``Q``; passing the per-subcarrier pair instead gives
+  bit-identical results.
 """
 
 from __future__ import annotations
@@ -49,6 +56,7 @@ from __future__ import annotations
 import numpy as np
 
 from config_dmimo import (
+    APPlacement,
     ChannelModel,
     CombiningScheme,
     DMIMOConfig,
@@ -116,12 +124,16 @@ def channel_realization(cfg: DMIMOConfig, channel, ap_pos, ue_pos,
 def draw_positions(cfg: DMIMOConfig, rng: np.random.Generator):
     """Draw AP and UE locations in the coverage area.
 
-    APs and UEs are dropped independently and uniformly over the square
+    UEs are always dropped uniformly over the square
     ``[0, area_size) x [0, area_size)`` [m] (the wrap-around torus of
-    :meth:`DMIMOConfig`, so no location is disadvantaged by an edge). Only the
-    horizontal ``(x, y)`` coordinates are random; the fixed ``ap_height`` and
-    ``ue_height`` set the vertical separation and are folded into the 3-D
-    distance by :func:`large_scale_fading`.
+    :meth:`DMIMOConfig`, so no location is disadvantaged by an edge). The APs
+    follow ``cfg.ap_placement``: ``RANDOM`` drops them uniformly too, which is
+    the cell-free convention, while ``CENTER`` puts them at the area centre and
+    exists for the ``L = 1`` co-located baseline, where a uniform drop would
+    sometimes park the only site in a corner. Only the horizontal ``(x, y)``
+    coordinates vary; the fixed ``ap_height`` and ``ue_height`` set the vertical
+    separation and are folded into the 3-D distance by
+    :func:`large_scale_fading`.
 
     Args:
         cfg: System configuration.
@@ -131,7 +143,10 @@ def draw_positions(cfg: DMIMOConfig, rng: np.random.Generator):
         Tuple ``(ap_pos, ue_pos)`` of arrays shaped ``(L, 2)`` and ``(K, 2)``
         holding the horizontal AP and UE coordinates [m].
     """
-    ap_pos = rng.uniform(0.0, cfg.area_size, size=(cfg.L, 2))
+    if cfg.ap_placement is APPlacement.CENTER:
+        ap_pos = np.tile(cpu_position(cfg), (cfg.L, 1))
+    else:
+        ap_pos = rng.uniform(0.0, cfg.area_size, size=(cfg.L, 2))
     ue_pos = rng.uniform(0.0, cfg.area_size, size=(cfg.K, 2))
     return ap_pos, ue_pos
 
@@ -710,9 +725,17 @@ def downlink_sinr(G: np.ndarray, noise_power: float) -> np.ndarray:
 
     ``SINR_k[q] = |G_kk|^2 / (sum_{i != k} |G_ki|^2 + sigma^2)``.
 
+    This is a per-subcarrier expression and ``G`` is built from precoders that
+    :func:`normalize_precoder` has spread over the ``Q`` subcarriers, so
+    ``noise_power`` must be the per-subcarrier ``cfg.noise_power_sc`` and not the
+    full-band ``cfg.noise_power``. Unlike the uplink, the downlink SINR is not
+    invariant to a common rescaling of signal and noise, so the mismatch does not
+    cancel: it scales the SINR by ``Q``.
+
     Args:
         G: Effective-channel matrices ``(Q, K, K)``.
-        noise_power: Receiver noise power sigma^2 [W].
+        noise_power: Per-subcarrier receiver noise power sigma^2 [W], i.e.
+            ``cfg.noise_power_sc``.
 
     Returns:
         Array ``(Q, K)`` of linear SINR values.

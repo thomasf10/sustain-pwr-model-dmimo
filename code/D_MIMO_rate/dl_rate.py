@@ -108,7 +108,9 @@ def simulate_downlink(cfg: DMIMOConfig,
 
         # --- Signal processing (implemented) -----------------------------
         G = mh.effective_channel(H, W)
-        sinr = mh.downlink_sinr(G, cfg.noise_power)
+        # Per-subcarrier noise: normalize_precoder spreads rho_k over the Q
+        # subcarriers, so the SINR must meet sigma^2 / Q, not the full-band one.
+        sinr = mh.downlink_sinr(G, cfg.noise_power_sc)
         se_k = mh.spectral_efficiency(sinr, cfg.dl_prelog)
         se_samples[i] = se_k
         se_acc += se_k

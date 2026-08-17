@@ -186,6 +186,21 @@ class PowerControlScheme(str, Enum):
     FRACTIONAL = "fractional"  # large-scale-fading fractional allocation (beta^v)
 
 
+class APPlacement(str, Enum):
+    """How the APs are positioned in the coverage area.
+
+    ``RANDOM`` drops them uniformly, which is the cell-free convention and the
+    default. ``CENTER`` puts every AP at the area centre, which is only
+    meaningful for ``L = 1``: it is the co-located baseline, a single site
+    covering the area from the middle rather than from a random corner. Using
+    ``RANDOM`` for a one-site deployment would penalize it for an edge position
+    that a real single-cell deployment would never choose.
+    """
+
+    RANDOM = "random"  # uniform over the coverage area (cell-free default)
+    CENTER = "center"  # all APs at the area centre (co-located baseline, L = 1)
+
+
 class ChannelModel(str, Enum):
     """Backend used to draw channel realizations.
 
@@ -255,6 +270,7 @@ class DMIMOConfig:
     antenna_pattern: str = "omni"  # AP element pattern ("omni" or "38.901")
 
     # --- Propagation / deployment -----------------------------------------
+    ap_placement: APPlacement = APPlacement.RANDOM  # AP drop rule; UEs are always uniform
     area_size: float = 200.0    # Square coverage-area side [m] (wrap-around); dense FR3 hotspot
     ap_height: float = 10.0     # AP height [m]
     ue_height: float = 1.5      # UE height [m]
@@ -292,6 +308,15 @@ class DMIMOConfig:
         self.fusion = FusionRule(self.fusion)
         self.ul_se_bound = SEBound(self.ul_se_bound)
         self.channel_model = ChannelModel(self.channel_model)
+        self.ap_placement = APPlacement(self.ap_placement)
+
+        if self.ap_placement is APPlacement.CENTER and self.L > 1:
+            warnings.warn(
+                f"ap_placement=CENTER with L={self.L}: all {self.L} APs are stacked at the "
+                "area centre, which is a co-located array described as L separate APs, not a "
+                "distributed deployment. This is only intended for the L=1 baseline.",
+                stacklevel=2,
+            )
 
         for name in ("L", "M", "K", "Q", "tau_c", "tau_p", "n_realizations"):
             if getattr(self, name) <= 0:
@@ -409,8 +434,35 @@ class DMIMOConfig:
 
     @property
     def noise_power(self) -> float:
-        """Receiver noise power sigma^2 in watts."""
+        """Receiver noise power sigma^2 over the full bandwidth B, in watts."""
         return dbm_to_watt(self.noise_power_dBm)
+
+    @property
+    def noise_power_sc(self) -> float:
+        """Receiver noise power in one of the Q evaluated subcarriers [W].
+
+        Both system models are written per subcarrier, so a per-subcarrier signal
+        power has to meet a per-subcarrier noise power. The transmit budgets
+        (``rho_max``, ``p_max``) are totals over the OFDM block, and the pipeline
+        spreads them over the ``Q`` evaluated subcarriers, so the matching noise
+        is ``sigma^2 / Q``.
+
+        Only the *ratio* is physical, and it is the same whichever count is used
+        on both sides: an AP really spreads ``rho_max`` over all ``B / Delta_f``
+        subcarriers of the band against a noise ``sigma^2 / (B / Delta_f)``, and
+        the ``Q`` modelled subcarriers sample that. Dividing signal and noise by
+        the same ``Q`` therefore reproduces the true per-subcarrier SNR. What is
+        *not* physical is mixing the two, which is why this property exists
+        rather than the full-band :attr:`noise_power` being used directly in the
+        SINR expressions.
+
+        The uplink never needs this: eq. ul-sinr is invariant to a common factor
+        on ``(p, sigma^2)``, so the uplink routines work with block totals and
+        the factor cancels itself (see :mod:`mimo_helpers`). The downlink has no
+        such invariance, because the precoder carries the power and the receiver
+        noise does not scale with it.
+        """
+        return self.noise_power / self.Q
 
     # --- Derived: precoding / power control -------------------------------
     @property
