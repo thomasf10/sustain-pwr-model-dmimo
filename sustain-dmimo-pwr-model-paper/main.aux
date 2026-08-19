@@ -7,8 +7,7 @@
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
-\citation{peschiera2026fr3}
-\citation{peschiera2026fr3}
+\citation{3GPP_TR38864}
 \def\@LN@column{1}
 \providecommand\@newglossary[4]{}
 \@newglossary{main}{glg}{gls}{glo}
@@ -17,122 +16,179 @@
 \@writefile{toc}{\contentsline {section}{\numberline {II}D-MIMO System Model}{1}{section.2}\protected@file@percent }
 \newlabel{sec:sysmodel}{{II}{1}{D-MIMO System Model}{section.2}{}}
 \newlabel{sec:sysmodel@cref}{{[section][2][]II}{[1][1][]1}{}{}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {III}Power Model Description}{1}{section.3}\protected@file@percent }
-\newlabel{sec:pwr_model}{{III}{1}{Power Model Description}{section.3}{}}
-\newlabel{sec:pwr_model@cref}{{[section][3][]III}{[1][1][]1}{}{}{}}
 \def\@LN@column{2}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Network Power Consumption}{1}{subsection.3.1}\protected@file@percent }
-\newlabel{ssec:pnet}{{\mbox  {III-A}}{1}{Network Power Consumption}{subsection.3.1}{}}
-\newlabel{ssec:pnet@cref}{{[subsection][1][3]\mbox  {III-A}}{[1][1][]1}{}{}{}}
-\newlabel{eq:pnet}{{1}{1}{Network Power Consumption}{equation.1}{}}
-\newlabel{eq:pnet@cref}{{[equation][1][]1}{[1][1][]1}{}{}{}}
-\newlabel{eq:pap}{{2}{1}{Network Power Consumption}{equation.2}{}}
-\newlabel{eq:pap@cref}{{[equation][2][]2}{[1][1][]1}{}{}{}}
-\newlabel{sssec:split}{{\mbox  {III-A}1}{1}{Functional split}{subsubsection.3.1.1}{}}
-\newlabel{sssec:split@cref}{{[subsubsection][1][3,1]\mbox  {III-A}1}{[1][1][]1}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}1}Functional split}{1}{subsubsection.3.1.1}\protected@file@percent }
+\newlabel{eq:load}{{1}{1}{D-MIMO System Model}{equation.1}{}}
+\newlabel{eq:load@cref}{{[equation][1][]1}{[1][1][]1}{}{}{}}
+\newlabel{eq:frame_data}{{3}{1}{D-MIMO System Model}{equation.3}{}}
+\newlabel{eq:frame_data@cref}{{[equation][3][]3}{[1][1][]1}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Signal Model}{1}{subsection.2.1}\protected@file@percent }
+\newlabel{ssec:signal}{{\mbox  {II-A}}{1}{Signal Model}{subsection.2.1}{}}
+\newlabel{ssec:signal@cref}{{[subsection][1][2]\mbox  {II-A}}{[1][1][]1}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {II-A}1}Downlink}{1}{subsubsection.2.1.1}\protected@file@percent }
+\citation{tr38901}
+\citation{hoydis2022sionna}
+\def\@LN@column{1}
+\newlabel{eq:dl-sinr}{{6}{2}{Downlink}{equation.6}{}}
+\newlabel{eq:dl-sinr@cref}{{[equation][6][]6}{[1][1][]2}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {II-A}2}Uplink}{2}{subsubsection.2.1.2}\protected@file@percent }
+\newlabel{eq:ul-distributive}{{8}{2}{Uplink}{equation.8}{}}
+\newlabel{eq:ul-distributive@cref}{{[equation][8][]8}{[1][2][]2}{}{}{}}
+\newlabel{eq:ul-sinr}{{9}{2}{Uplink}{equation.9}{}}
+\newlabel{eq:ul-sinr@cref}{{[equation][9][]9}{[1][2][]2}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Channel and Noise Model}{2}{subsection.2.2}\protected@file@percent }
+\newlabel{ssec:channel}{{\mbox  {II-B}}{2}{Channel and Noise Model}{subsection.2.2}{}}
+\newlabel{ssec:channel@cref}{{[subsection][2][2]\mbox  {II-B}}{[1][2][]2}{}{}{}}
+\newlabel{eq:beta}{{10}{2}{Channel and Noise Model}{equation.10}{}}
+\newlabel{eq:beta@cref}{{[equation][10][]10}{[1][2][]2}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Centralized and Distributed Operation}{2}{subsection.2.3}\protected@file@percent }
+\newlabel{ssec:operation}{{\mbox  {II-C}}{2}{Centralized and Distributed Operation}{subsection.2.3}{}}
+\newlabel{ssec:operation@cref}{{[subsection][3][2]\mbox  {II-C}}{[1][2][]2}{}{}{}}
+\newlabel{eq:ptl}{{11}{2}{Centralized and Distributed Operation}{equation.11}{}}
+\newlabel{eq:ptl@cref}{{[equation][11][]11}{[1][2][]2}{}{}{}}
+\def\@LN@column{2}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {II-C}1}Centralized operation (splits S1, S2)}{2}{subsubsection.2.3.1}\protected@file@percent }
+\newlabel{eq:zf-precoder}{{12}{2}{Centralized operation (splits S1, S2)}{equation.12}{}}
+\newlabel{eq:zf-precoder@cref}{{[equation][12][]12}{[1][2][]2}{}{}{}}
+\newlabel{eq:dl-fractional}{{13}{2}{Centralized operation (splits S1, S2)}{equation.13}{}}
+\newlabel{eq:dl-fractional@cref}{{[equation][13][]13}{[1][2][]2}{}{}{}}
+\newlabel{eq:power-normalization}{{14}{2}{Centralized operation (splits S1, S2)}{equation.14}{}}
+\newlabel{eq:power-normalization@cref}{{[equation][14][]14}{[1][2][]2}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {II-C}2}Distributed operation (split S3)}{2}{subsubsection.2.3.2}\protected@file@percent }
+\newlabel{eq:local-rzf}{{15}{2}{Distributed operation (split S3)}{equation.15}{}}
+\newlabel{eq:local-rzf@cref}{{[equation][15][]15}{[1][2][]2}{}{}{}}
+\newlabel{eq:ul-local-mmse}{{16}{2}{Distributed operation (split S3)}{equation.16}{}}
+\newlabel{eq:ul-local-mmse@cref}{{[equation][16][]16}{[1][2][]2}{}{}{}}
+\newlabel{eq:local-fractional}{{17}{2}{Distributed operation (split S3)}{equation.17}{}}
+\newlabel{eq:local-fractional@cref}{{[equation][17][]17}{[1][2][]2}{}{}{}}
+\citation{peschiera2026fr3}
+\citation{peschiera2026fr3}
+\citation{peschiera2026fr3}
+\citation{peschiera2026fr3}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-D}}Delivered Rates}{3}{subsection.2.4}\protected@file@percent }
+\newlabel{ssec:rates}{{\mbox  {II-D}}{3}{Delivered Rates}{subsection.2.4}{}}
+\newlabel{ssec:rates@cref}{{[subsection][4][2]\mbox  {II-D}}{[1][2][]3}{}{}{}}
+\newlabel{eq:se}{{18}{3}{Delivered Rates}{equation.18}{}}
+\newlabel{eq:se@cref}{{[equation][18][]18}{[1][2][]3}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Power Model Description}{3}{section.3}\protected@file@percent }
+\newlabel{sec:pwr_model}{{III}{3}{Power Model Description}{section.3}{}}
+\newlabel{sec:pwr_model@cref}{{[section][3][]III}{[1][3][]3}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Network Power Consumption}{3}{subsection.3.1}\protected@file@percent }
+\newlabel{ssec:pnet}{{\mbox  {III-A}}{3}{Network Power Consumption}{subsection.3.1}{}}
+\newlabel{ssec:pnet@cref}{{[subsection][1][3]\mbox  {III-A}}{[1][3][]3}{}{}{}}
+\newlabel{eq:pnet}{{19}{3}{Network Power Consumption}{equation.19}{}}
+\newlabel{eq:pnet@cref}{{[equation][19][]19}{[1][3][]3}{}{}{}}
+\newlabel{eq:pap}{{20}{3}{Network Power Consumption}{equation.20}{}}
+\newlabel{eq:pap@cref}{{[equation][20][]20}{[1][3][]3}{}{}{}}
+\def\@LN@column{2}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Node at which each digital operation runs. The uplink combiner follows the downlink precoder. Channel estimation is listed for completeness but is not priced, since perfect \gls {csi} is assumed.}}{3}{table.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:split}{{I}{3}{Node at which each digital operation runs. The uplink combiner follows the downlink precoder. Channel estimation is listed for completeness but is not priced, since perfect \gls {csi} is assumed}{table.caption.1}{}}
+\newlabel{tab:split@cref}{{[table][1][]I}{[1][3][]3}{}{}{}}
+\newlabel{sssec:split}{{\mbox  {III-A}1}{3}{Functional split}{subsubsection.3.1.1}{}}
+\newlabel{sssec:split@cref}{{[subsubsection][1][3,1]\mbox  {III-A}1}{[1][3][]3}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}1}Functional split}{3}{subsubsection.3.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}2}MIMO processing and its placement}{3}{subsubsection.3.1.2}\protected@file@percent }
+\newlabel{eq:gops_cen}{{21}{3}{MIMO processing and its placement}{equation.21}{}}
+\newlabel{eq:gops_cen@cref}{{[equation][21][]21}{[1][3][]3}{}{}{}}
+\newlabel{eq:gops_loc}{{22}{3}{MIMO processing and its placement}{equation.22}{}}
+\newlabel{eq:gops_loc@cref}{{[equation][22][]22}{[1][3][]3}{}{}{}}
+\newlabel{eq:gops_split}{{23}{3}{MIMO processing and its placement}{equation.23}{}}
+\newlabel{eq:gops_split@cref}{{[equation][23][]23}{[1][3][]3}{}{}{}}
 \citation{peschiera2026fr3}
 \citation{ngo2018total}
 \def\@LN@column{1}
-\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Node at which each digital operation runs. The uplink combiner follows the downlink precoder. Channel estimation is listed for completeness but is not priced, since perfect \gls {csi} is assumed.}}{2}{table.caption.1}\protected@file@percent }
-\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{tab:split}{{I}{2}{Node at which each digital operation runs. The uplink combiner follows the downlink precoder. Channel estimation is listed for completeness but is not priced, since perfect \gls {csi} is assumed}{table.caption.1}{}}
-\newlabel{tab:split@cref}{{[table][1][]I}{[1][1][]2}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}2}MIMO processing and its placement}{2}{subsubsection.3.1.2}\protected@file@percent }
-\newlabel{eq:gops_cen}{{3}{2}{MIMO processing and its placement}{equation.3}{}}
-\newlabel{eq:gops_cen@cref}{{[equation][3][]3}{[1][2][]2}{}{}{}}
-\newlabel{eq:gops_loc}{{4}{2}{MIMO processing and its placement}{equation.4}{}}
-\newlabel{eq:gops_loc@cref}{{[equation][4][]4}{[1][2][]2}{}{}{}}
-\newlabel{eq:gops_split}{{5}{2}{MIMO processing and its placement}{equation.5}{}}
-\newlabel{eq:gops_split@cref}{{[equation][5][]5}{[1][2][]2}{}{}{}}
-\newlabel{eq:pmimo}{{7}{2}{MIMO processing and its placement}{equation.7}{}}
-\newlabel{eq:pmimo@cref}{{[equation][7][]7}{[1][2][]2}{}{}{}}
+\newlabel{eq:pmimo}{{25}{4}{MIMO processing and its placement}{equation.25}{}}
+\newlabel{eq:pmimo@cref}{{[equation][25][]25}{[1][4][]4}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}3}Central unit}{4}{subsubsection.3.1.3}\protected@file@percent }
+\newlabel{eq:cpu}{{26}{4}{Central unit}{equation.26}{}}
+\newlabel{eq:cpu@cref}{{[equation][26][]26}{[1][4][]4}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Fronthaul and Synchronization}{4}{subsection.3.2}\protected@file@percent }
+\newlabel{ssec:fh}{{\mbox  {III-B}}{4}{Fronthaul and Synchronization}{subsection.3.2}{}}
+\newlabel{ssec:fh@cref}{{[subsection][2][3]\mbox  {III-B}}{[1][4][]4}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}1}Fronthaul}{4}{subsubsection.3.2.1}\protected@file@percent }
+\newlabel{eq:fh_basic}{{27}{4}{Fronthaul}{equation.27}{}}
+\newlabel{eq:fh_basic@cref}{{[equation][27][]27}{[1][4][]4}{}{}{}}
+\newlabel{eq:fh_s1}{{28}{4}{Fronthaul}{equation.28}{}}
+\newlabel{eq:fh_s1@cref}{{[equation][28][]28}{[1][4][]4}{}{}{}}
+\newlabel{eq:fh_s2}{{29}{4}{Fronthaul}{equation.29}{}}
+\newlabel{eq:fh_s2@cref}{{[equation][29][]29}{[1][4][]4}{}{}{}}
 \def\@LN@column{2}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}3}Central unit}{2}{subsubsection.3.1.3}\protected@file@percent }
-\newlabel{eq:cpu}{{8}{2}{Central unit}{equation.8}{}}
-\newlabel{eq:cpu@cref}{{[equation][8][]8}{[1][2][]2}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Fronthaul and Synchronization}{2}{subsection.3.2}\protected@file@percent }
-\newlabel{ssec:fh}{{\mbox  {III-B}}{2}{Fronthaul and Synchronization}{subsection.3.2}{}}
-\newlabel{ssec:fh@cref}{{[subsection][2][3]\mbox  {III-B}}{[1][2][]2}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}1}Fronthaul}{2}{subsubsection.3.2.1}\protected@file@percent }
-\newlabel{eq:fh_basic}{{9}{2}{Fronthaul}{equation.9}{}}
-\newlabel{eq:fh_basic@cref}{{[equation][9][]9}{[1][2][]2}{}{}{}}
-\newlabel{eq:fh_s1}{{10}{2}{Fronthaul}{equation.10}{}}
-\newlabel{eq:fh_s1@cref}{{[equation][10][]10}{[1][2][]2}{}{}{}}
-\newlabel{eq:fh_s2}{{11}{2}{Fronthaul}{equation.11}{}}
-\newlabel{eq:fh_s2@cref}{{[equation][11][]11}{[1][2][]2}{}{}{}}
-\newlabel{eq:fh_ul}{{12}{2}{Fronthaul}{equation.12}{}}
-\newlabel{eq:fh_ul@cref}{{[equation][12][]12}{[1][2][]2}{}{}{}}
-\newlabel{eq:fh_duty}{{13}{2}{Fronthaul}{equation.13}{}}
-\newlabel{eq:fh_duty@cref}{{[equation][13][]13}{[1][2][]2}{}{}{}}
+\newlabel{eq:fh_ul}{{30}{4}{Fronthaul}{equation.30}{}}
+\newlabel{eq:fh_ul@cref}{{[equation][30][]30}{[1][4][]4}{}{}{}}
+\newlabel{eq:fh_duty}{{31}{4}{Fronthaul}{equation.31}{}}
+\newlabel{eq:fh_duty@cref}{{[equation][31][]31}{[1][4][]4}{}{}{}}
+\newlabel{eq:fh_avg}{{32}{4}{Fronthaul}{equation.32}{}}
+\newlabel{eq:fh_avg@cref}{{[equation][32][]32}{[1][4][]4}{}{}{}}
+\newlabel{eq:fh_rate_avg}{{33}{4}{Fronthaul}{equation.33}{}}
+\newlabel{eq:fh_rate_avg@cref}{{[equation][33][]33}{[1][4][]4}{}{}{}}
+\newlabel{rem:fh_ceiling}{{1}{4}{Fronthaul ceiling on energy efficiency}{remark.1}{}}
+\newlabel{rem:fh_ceiling@cref}{{[remark][1][]1}{[1][4][]4}{}{}{}}
+\newlabel{sssec:sync}{{\mbox  {III-B}2}{4}{Synchronization}{subsubsection.3.2.2}{}}
+\newlabel{sssec:sync@cref}{{[subsubsection][2][3,2]\mbox  {III-B}2}{[1][4][]4}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}2}Synchronization}{4}{subsubsection.3.2.2}\protected@file@percent }
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
 \def\@LN@column{1}
-\newlabel{eq:fh_avg}{{14}{3}{Fronthaul}{equation.14}{}}
-\newlabel{eq:fh_avg@cref}{{[equation][14][]14}{[1][3][]3}{}{}{}}
-\newlabel{eq:fh_rate_avg}{{15}{3}{Fronthaul}{equation.15}{}}
-\newlabel{eq:fh_rate_avg@cref}{{[equation][15][]15}{[1][3][]3}{}{}{}}
-\newlabel{rem:fh_ceiling}{{1}{3}{Fronthaul ceiling on energy efficiency}{remark.1}{}}
-\newlabel{rem:fh_ceiling@cref}{{[remark][1][]1}{[1][3][]3}{}{}{}}
-\newlabel{sssec:sync}{{\mbox  {III-B}2}{3}{Synchronization}{subsubsection.3.2.2}{}}
-\newlabel{sssec:sync@cref}{{[subsubsection][2][3,2]\mbox  {III-B}2}{[1][3][]3}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}2}Synchronization}{3}{subsubsection.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Access Point and Co-located Power Consumption}{5}{subsection.3.3}\protected@file@percent }
+\newlabel{ssec:ap}{{\mbox  {III-C}}{5}{Access Point and Co-located Power Consumption}{subsection.3.3}{}}
+\newlabel{ssec:ap@cref}{{[subsection][3][3]\mbox  {III-C}}{[1][5][]5}{}{}{}}
+\newlabel{sssec:frame}{{\mbox  {III-C}1}{5}{Frame structure and operating-mode averaging}{subsubsection.3.3.1}{}}
+\newlabel{sssec:frame@cref}{{[subsubsection][1][3,3]\mbox  {III-C}1}{[1][5][]5}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}1}Frame structure and operating-mode averaging}{5}{subsubsection.3.3.1}\protected@file@percent }
+\newlabel{eq:frameavg}{{34}{5}{Frame structure and operating-mode averaging}{equation.34}{}}
+\newlabel{eq:frameavg@cref}{{[equation][34][]34}{[1][5][]5}{}{}{}}
 \def\@LN@column{2}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Access Point and Co-located Power Consumption}{3}{subsection.3.3}\protected@file@percent }
-\newlabel{ssec:ap}{{\mbox  {III-C}}{3}{Access Point and Co-located Power Consumption}{subsection.3.3}{}}
-\newlabel{ssec:ap@cref}{{[subsection][3][3]\mbox  {III-C}}{[1][3][]3}{}{}{}}
-\newlabel{sssec:frame}{{\mbox  {III-C}1}{3}{Frame structure and operating-mode averaging}{subsubsection.3.3.1}{}}
-\newlabel{sssec:frame@cref}{{[subsubsection][1][3,3]\mbox  {III-C}1}{[1][3][]3}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}1}Frame structure and operating-mode averaging}{3}{subsubsection.3.3.1}\protected@file@percent }
-\newlabel{eq:frameavg}{{16}{3}{Frame structure and operating-mode averaging}{equation.16}{}}
-\newlabel{eq:frameavg@cref}{{[equation][16][]16}{[1][3][]3}{}{}{}}
-\newlabel{eq:frame_map}{{17}{3}{Frame structure and operating-mode averaging}{equation.17}{}}
-\newlabel{eq:frame_map@cref}{{[equation][17][]17}{[1][3][]3}{}{}{}}
-\newlabel{sssec:pa}{{\mbox  {III-C}2}{3}{Power amplifiers}{subsubsection.3.3.2}{}}
-\newlabel{sssec:pa@cref}{{[subsubsection][2][3,3]\mbox  {III-C}2}{[1][3][]3}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}2}Power amplifiers}{3}{subsubsection.3.3.2}\protected@file@percent }
-\newlabel{eq:pa}{{18}{3}{Power amplifiers}{equation.18}{}}
-\newlabel{eq:pa@cref}{{[equation][18][]18}{[1][3][]3}{}{}{}}
+\newlabel{eq:frame_map}{{35}{5}{Frame structure and operating-mode averaging}{equation.35}{}}
+\newlabel{eq:frame_map@cref}{{[equation][35][]35}{[1][5][]5}{}{}{}}
+\newlabel{sssec:pa}{{\mbox  {III-C}2}{5}{Power amplifiers}{subsubsection.3.3.2}{}}
+\newlabel{sssec:pa@cref}{{[subsubsection][2][3,3]\mbox  {III-C}2}{[1][5][]5}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}2}Power amplifiers}{5}{subsubsection.3.3.2}\protected@file@percent }
+\newlabel{eq:pa}{{36}{5}{Power amplifiers}{equation.36}{}}
+\newlabel{eq:pa@cref}{{[equation][36][]36}{[1][5][]5}{}{}{}}
+\newlabel{eq:pa_avg_ap}{{37}{5}{Power amplifiers}{equation.37}{}}
+\newlabel{eq:pa_avg_ap@cref}{{[equation][37][]37}{[1][5][]5}{}{}{}}
+\newlabel{rem:pa_sizing}{{2}{5}{Amplifier sizing}{remark.2}{}}
+\newlabel{rem:pa_sizing@cref}{{[remark][2][]2}{[1][5][]5}{}{}{}}
+\newlabel{eq:pa_compact}{{38}{5}{Amplifier sizing}{equation.38}{}}
+\newlabel{eq:pa_compact@cref}{{[equation][38][]38}{[1][5][]5}{}{}{}}
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
 \citation{peschiera2026fr3}
-\def\@LN@column{1}
-\newlabel{eq:pa_avg_ap}{{19}{4}{Power amplifiers}{equation.19}{}}
-\newlabel{eq:pa_avg_ap@cref}{{[equation][19][]19}{[1][4][]4}{}{}{}}
-\newlabel{rem:pa_sizing}{{2}{4}{Amplifier sizing}{remark.2}{}}
-\newlabel{rem:pa_sizing@cref}{{[remark][2][]2}{[1][4][]4}{}{}{}}
-\newlabel{eq:pa_compact}{{20}{4}{Amplifier sizing}{equation.20}{}}
-\newlabel{eq:pa_compact@cref}{{[equation][20][]20}{[1][4][]4}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}3}Analog front end}{4}{subsubsection.3.3.3}\protected@file@percent }
-\newlabel{eq:ana_dl_ap}{{21}{4}{Analog front end}{equation.21}{}}
-\newlabel{eq:ana_dl_ap@cref}{{[equation][21][]21}{[1][4][]4}{}{}{}}
-\newlabel{eq:ana_ul_ap}{{22}{4}{Analog front end}{equation.22}{}}
-\newlabel{eq:ana_ul_ap@cref}{{[equation][22][]22}{[1][4][]4}{}{}{}}
-\newlabel{eq:ana_avg_ap}{{23}{4}{Analog front end}{equation.23}{}}
-\newlabel{eq:ana_avg_ap@cref}{{[equation][23][]23}{[1][4][]4}{}{}{}}
-\def\@LN@column{2}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}4}Digital signal processing}{4}{subsubsection.3.3.4}\protected@file@percent }
-\newlabel{eq:dig_ap}{{24}{4}{Digital signal processing}{equation.24}{}}
-\newlabel{eq:dig_ap@cref}{{[equation][24][]24}{[1][4][]4}{}{}{}}
-\newlabel{rem:fpga}{{3}{4}{Loss of static-power amortisation}{remark.3}{}}
-\newlabel{rem:fpga@cref}{{[remark][3][]3}{[1][4][]4}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}5}Co-located baseline}{4}{subsubsection.3.3.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Delivered Rate and Energy Efficiency}{4}{subsection.3.4}\protected@file@percent }
-\newlabel{ssec:ee}{{\mbox  {III-D}}{4}{Delivered Rate and Energy Efficiency}{subsection.3.4}{}}
-\newlabel{ssec:ee@cref}{{[subsection][4][3]\mbox  {III-D}}{[1][4][]4}{}{}{}}
-\newlabel{eq:ee_net}{{26}{4}{Delivered Rate and Energy Efficiency}{equation.26}{}}
-\newlabel{eq:ee_net@cref}{{[equation][26][]26}{[1][4][]4}{}{}{}}
 \bibstyle{IEEEtran}
 \bibdata{IEEEabrv,mybib}
 \bibcite{peschiera2026fr3}{1}
-\bibcite{ngo2018total}{2}
+\bibcite{3GPP_TR38864}{2}
+\bibcite{tr38901}{3}
+\bibcite{hoydis2022sionna}{4}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Numerical Evaluation}{5}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion}{5}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{References}{5}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}3}Analog front end}{6}{subsubsection.3.3.3}\protected@file@percent }
+\newlabel{eq:ana_dl_ap}{{39}{6}{Analog front end}{equation.39}{}}
+\newlabel{eq:ana_dl_ap@cref}{{[equation][39][]39}{[1][6][]6}{}{}{}}
+\newlabel{eq:ana_ul_ap}{{40}{6}{Analog front end}{equation.40}{}}
+\newlabel{eq:ana_ul_ap@cref}{{[equation][40][]40}{[1][6][]6}{}{}{}}
+\newlabel{eq:ana_avg_ap}{{41}{6}{Analog front end}{equation.41}{}}
+\newlabel{eq:ana_avg_ap@cref}{{[equation][41][]41}{[1][6][]6}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}4}Digital signal processing}{6}{subsubsection.3.3.4}\protected@file@percent }
+\newlabel{eq:dig_ap}{{42}{6}{Digital signal processing}{equation.42}{}}
+\newlabel{eq:dig_ap@cref}{{[equation][42][]42}{[1][6][]6}{}{}{}}
+\newlabel{rem:fpga}{{3}{6}{Loss of static-power amortisation}{remark.3}{}}
+\newlabel{rem:fpga@cref}{{[remark][3][]3}{[1][6][]6}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}5}Co-located baseline}{6}{subsubsection.3.3.5}\protected@file@percent }
 \def\@LN@column{2}
-\gdef \@abspage@last{5}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Delivered Rate and Energy Efficiency}{6}{subsection.3.4}\protected@file@percent }
+\newlabel{ssec:ee}{{\mbox  {III-D}}{6}{Delivered Rate and Energy Efficiency}{subsection.3.4}{}}
+\newlabel{ssec:ee@cref}{{[subsection][4][3]\mbox  {III-D}}{[1][6][]6}{}{}{}}
+\newlabel{eq:ee_net}{{44}{6}{Delivered Rate and Energy Efficiency}{equation.44}{}}
+\newlabel{eq:ee_net@cref}{{[equation][44][]44}{[1][6][]6}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Numerical Evaluation}{6}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion}{6}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{6}{section*.2}\protected@file@percent }
+\bibcite{ngo2018total}{5}
+\def\@LN@column{1}
+\def\@LN@column{2}
+\gdef \@abspage@last{7}

@@ -4,19 +4,15 @@
 We first describe the full power consumption of a distributed network (\Cref{ssec:pnet}), then we focus on the two contributions that are specific for \gls{dmimo}, i.e., the fronthaul and the synchronization of
 physically separate nodes (\Cref{ssec:fh}). Finally we describe the parametric model of the \gls{ap} consumption, which is based on~\cite{peschiera2026fr3} (\Cref{ssec:ap}).
 
-\todo{will probably be redundant if we have the sys model}
-Throughout, $l=1,\dots,L$ indexes the \glspl{ap}, $m=1,\dots,M$ the antennas of
-one \gls{ap}, $k=1,\dots,K$ the single-antenna users, $q$ the subcarriers, and
-$i\in\{\mathrm{DL},\mathrm{UL}\}$ the link direction. The \glspl{ap} are fully
-digital, so each carries $M$ \gls{rf} chains, and the network holds $LM$
-antennas in total. The co-located reference is one site of $M_{\mathrm{ant}}=LM$
-antennas. Every \gls{ap} is assumed active and serves every user, and both
-directions are evaluated at full physical resource load,
+The topology, the indices $l,m,k,q$, the per-\gls{ap} budget $\rho_{\max}$ and
+radiated power $P_{T,l}$, the frame structure and
+the delivered rates $R_{\mathrm{DL}},R_{\mathrm{UL}}$ are those of
+\Cref{sec:sysmodel}, and $i\in\{\mathrm{DL},\mathrm{UL}\}$ indexes the link
+direction. The \glspl{ap} are fully digital, so each carries $M$ \gls{rf} chains.
+Every \gls{ap} is assumed active and serves every user, and both directions are
+evaluated at full physical resource load,
 $\bar x_{\mathrm{DL}}=\bar x_{\mathrm{UL}}=1$, so all \glspl{ap} share one
-network-wide operating load. \todo{align these symbols with
-\Cref{sec:sysmodel} once the system model section is written; $\rho_{\max}$,
-$P_{T,l}$, $R_{\mathrm{DL}}$, $R_{\mathrm{UL}}$ and the coherence block
-$\tau_c=\tau_p+\tau_u+\tau_d$ are taken from there.}
+network-wide operating load.
 
 \subsection{Network Power Consumption}
 \label{ssec:pnet}
@@ -299,7 +295,7 @@ into reference signalling, for a fraction $\tau_{i}\tau_{i,\mathrm{sig}}$, data
 transmission, for a fraction
 $\bar x_{i}\tau_{i}(1-\tau_{i,\mathrm{sig}})$, micro-sleep, for
 $(1-\bar x_{i})\tau_{i}(1-\tau_{i,\mathrm{sig}})$, and idle, for $(1-\tau_{i})$,
-where $\bar x_{i}\in[0,1]$ is the average physical resource load. The frame
+with the resource load $\bar x_{i}$ of \eqref{eq:load}. The frame
 timing is shared by the whole network: under \gls{tdd} the \glspl{ap} must switch
 direction together. In micro-sleep and idle a component drops to a fraction
 $\delta^{\mu}_{c},\delta^{0}_{c}\in[0,1]$ of a base level $P^{0}$. For a
@@ -355,12 +351,13 @@ $\eta_{\mathrm{PA,max}}$ the maximum efficiency, $\xi\in[0,1]$ the
 static-to-dynamic ratio and $\alpha\in[0,1]$ the efficiency exponent. Each
 \gls{ap} is an independent transmitter with its own budget $\rho_{\max}$, so the
 single site power of \cite{peschiera2026fr3} becomes the vector of radiated
-powers $P_{T,l}=\sum_{q}\sum_{k}\expt{\norm{\vect{w}_{kl}[q]}^{2}}\leq\rho_{\max}$
-supplied by the rate model, which the two operation modes fill in differently:
-local operation meets the constraint with equality at every \gls{ap}, whereas
-centralized operation rescales all \glspl{ap} by one common factor and brings
-only the busiest of them to its budget. Assuming the \gls{ap} power is shared
-equally across its antennas, $P_{a,l}=P_{T,l}/M$, and
+powers $P_{T,l}$ of \eqref{eq:ptl}, supplied by the rate model, which the two
+operation modes fill in differently: distributed operation meets the constraint
+with equality at every \gls{ap}, $P_{T,l}=\rho_{\max}$, whereas centralized
+operation
+rescales all \glspl{ap} by one common factor and brings only the busiest of them
+to its budget. Assuming the \gls{ap} power is shared equally across its antennas,
+$P_{a,l}=P_{T,l}/M$, and
 \begin{equation}
 \label{eq:pa_avg_ap}
 \overline{P_{\mathrm{PA},l}} = M\,
@@ -390,14 +387,16 @@ data-mode consumption of an \gls{ap} independent of $M$,
 \begin{equation}
 \label{eq:pa_compact}
 M\,P_{\mathrm{PA}}(P_{a,l}) =
-\frac{\rho_{\max}}{\eta_{\mathrm{PA,max}}}\left[\xi + (1-\xi)\,u_{l}^{\alpha}\right],
-\qquad u_{l} = \frac{P_{T,l}}{\rho_{\max}},
+\frac{\rho_{\max}}{\eta_{\mathrm{PA,max}}}\left[\xi + (1-\xi)
+\left(\frac{P_{T,l}}{\rho_{\max}}\right)^{\alpha}\right],
 \end{equation}
-so the network static floor is $L\xi\rho_{\max}/\eta_{\mathrm{PA,max}} =
+so the amplifiers see the precoders of \Cref{ssec:operation} only through the
+fraction $P_{T,l}/\rho_{\max}\in[0,1]$ of the budget that \gls{ap} $l$ radiates,
+and the network static floor is $L\xi\rho_{\max}/\eta_{\mathrm{PA,max}} =
 \xi P_{\mathrm{TX}}/\eta_{\mathrm{PA,max}}$, the same for both deployments at
 equal total transmit power. The per-\gls{ap} constraint then costs the network
-twice under centralized operation: only a fraction $\bar u<1$ of the budget is
-radiated, while the static floor is paid in full.
+twice under centralized operation: only part of the budget is radiated, while
+the static floor is paid in full.
 \todo{source $\xi,\alpha,\eta_{\mathrm{PA,max}}$ for AP-class amplifiers; the
 values used are fitted for macro-cell hardware.}
 \end{remark}
@@ -477,8 +476,8 @@ differ in a hardware constant.
 \label{ssec:ee}
 
 The delivered sum rates $R_{\mathrm{DL}}$ and $R_{\mathrm{UL}}$ come from the
-rate model of \Cref{sec:sysmodel} with the prelogs $\tau_{d}/\tau_{c}$ and
-$\tau_{u}/\tau_{c}$ already applied, and the network energy efficiency is the
+rate model of \Cref{sec:sysmodel} with the data-fraction prelogs of
+\eqref{eq:se} already applied, and the network energy efficiency is the
 delivered rate per consumed watt,
 \begin{equation}
 \label{eq:ee_net}

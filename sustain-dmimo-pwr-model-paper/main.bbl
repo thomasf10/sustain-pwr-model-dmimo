@@ -27,6 +27,27 @@ E.~Peschiera, S.~Yun, Y.~Lee, L.~V. der Perre, and F.~Rottenberg, ``A
   \emph{ICASSP 2026 - 2026 IEEE International Conference on Acoustics, Speech
   and Signal Processing (ICASSP)}, 2026, pp. 21\,476--21\,480.
 
+\bibitem{3GPP_TR38864}
+{3GPP}, ``Study on network energy savings for {NR} (release 18),'' 3rd
+  Generation Partnership Project (3GPP), Technical Report TR 38.864, Mar. 2023,
+  version 18.1.0.
+
+\bibitem{tr38901}
+\BIBentryALTinterwordspacing
+------, ``{Study on channel model for frequencies from 0.5 to 100 GHz},'' 3rd
+  Generation Partnership Project (3GPP), Technical Report TR 38.901, version
+  16.1.0, Dec. 2020. [Online]. Available:
+  \url{https://www.3gpp.org/DynaReport/38901.htm}
+\BIBentrySTDinterwordspacing
+
+\bibitem{hoydis2022sionna}
+\BIBentryALTinterwordspacing
+J.~Hoydis, S.~Cammerer, F.~{Ait Aoudia}, A.~Vem, N.~Binder, G.~Marcus, and
+  A.~Keller, ``{Sionna: An Open-Source Library for Next-Generation Physical
+  Layer Research},'' \emph{arXiv preprint}, no. arXiv:2203.11854, 2022.
+  [Online]. Available: \url{https://arxiv.org/abs/2203.11854}
+\BIBentrySTDinterwordspacing
+
 \bibitem{ngo2018total}
 H.~Q. Ngo, L.-N. Tran, T.~Q. Duong, M.~Matthaiou, and E.~G. Larsson, ``{On the
   Total Energy Efficiency of Cell-Free Massive MIMO},'' \emph{IEEE Transactions

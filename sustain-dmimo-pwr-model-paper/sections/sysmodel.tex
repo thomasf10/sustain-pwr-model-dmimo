@@ -1,2 +1,223 @@
 \section{D-MIMO System Model}
 \label{sec:sysmodel}
+
+We consider a \gls{tdd} \gls{dmimo} network in which $L$ \glspl{ap}, each with
+$M$ antennas, jointly serve $K$ single-antenna \glspl{ue} over $Q$
+\gls{ofdm} subcarriers, resulting in $LM$ total antennas. All $L$ \glspl{ap} are connected to
+a \gls{cpu} by fronthaul links. The indices $l=1,\dots,L$, $m=1,\dots,M$,
+$k=1,\dots,K$ and $q=1,\dots,Q$ denote the number of \glspl{ap}, antennas per \gls{ap}, \glspl{ue} and subcarriers respectively. Co-located \gls{mmimo} is the special case
+$L=1$ with $M_{\mathrm{ant}}=LM$ antennas on a single site at the centre of the
+coverage area. Co-located and distributed \gls{mimo} consider the same number of total antennas and radiate the same total power, they only differ in where the antennas sit.
+
+
+We consider the same frame structure as in~\cite{peschiera2026fr3}. Namely, the total frame length is $T_f$ which is split into a \gls{dl} and \gls{ul} phase of length $\tau_{\mathrm{DL}}T_f$ and $\tau_{\mathrm{UL}}T_f$ respectively, with $\tau_{\mathrm{DL}}, \tau_{\mathrm{UL}} \in [0,1]$. We consider $N_{\mathrm{DL}}$ available \gls{ofdm} symbols in \gls{dl} and $N_{\mathrm{UL}}$ in \gls{ul}, of which $N_{\mathrm{a, DL}}$ and $N_{\mathrm{a, UL}}$ are activated and carrying data. The activated fraction is the average physical resource load
+\begin{align}
+\label{eq:load}
+\bar{x}_{i} = \frac{N_{\mathrm{a},i}}{N_{i}} \in [0,1] \quad i \in \{\mathrm{DL}, \mathrm{UL}\},
+\end{align}
+so $\bar{x}_{i}=1$ is a fully loaded direction and $\bar{x}_{i}=0$ one that carries reference signals only. In general, as defined in~\cite{peschiera2026fr3}, the load also counts how many \glspl{ue} are served and how many subcarriers each of them is allocated. We assume throughout that every activated symbol serves all $K$ \glspl{ue} on all $Q$ subcarriers, so the load reduces to the ratio of activated to available symbols. The \gls{ul} and \gls{dl} frames are further subdevided into three parts as depicted in \todo{add fig and ref it}. The first part is for reference signaling and has length
+\begin{align}
+    \tau_i \tau_{\mathrm{sig}, i} \quad i \in \{\mathrm{DL}, \mathrm{UL}\}, 
+\end{align}
+where $\tau_{\mathrm{sig}, i} \in [0,1]$ is the fraction of the frame used for signaling. The second part is for data transmission and has length
+\begin{align}
+\label{eq:frame_data}
+    \tau_i (1 - \tau_{\mathrm{sig}, i}) \bar{x}_{i}\quad i \in \{\mathrm{DL}, \mathrm{UL}\}.
+\end{align}
+The third part represents a micro-sleep or \gls{dtx} mode~\cite{3GPP_TR38864} and has length
+\begin{align}
+   \tau_i (1 - \tau_{\mathrm{sig}, i})(1 - \bar{x}_{i})\quad i \in \{\mathrm{DL}, \mathrm{UL}\}.
+\end{align}
+
+%A coherence block spans $\tau_{c}$ samples and splits as $\tau_{c}=\tau_{p}+\tau_{u}+\tau_{d}$ into uplink pilots, uplink data and downlink data. 
+% We assume perfect \gls{csi} throughout: every precoder and combiner is built from the true channels, so there is no estimation error and no pilot contamination, which requires $\tau_{p}\geq K$ for the pilots to be mutually orthogonal. The pilot overhead is nevertheless charged to the rate through $\tau_{p}$, and the mapping onto the frame fractions of \Cref{sssec:frame} is \eqref{eq:frame_map}, so the rate model and the power model describe one and the same frame.
+
+\subsection{Signal Model}
+\label{ssec:signal}
+
+Let $\vect{h}_{kl}[q]\inC{M}$ be the channel from \gls{ap} $l$ to \gls{ue} $k$.
+Stacking the \glspl{ap} gives the collective channel
+$\vect{h}_{k}[q]=[\,\vect{h}_{k1}[q]^{\intercal}\ \cdots\
+\vect{h}_{kL}[q]^{\intercal}\,]^{\intercal}\inC{LM}$ and
+$\mat{H}[q]=[\,\vect{h}_{1}[q]\ \cdots\ \vect{h}_{K}[q]\,]\inC{LM\times K}$.
+
+
+\subsubsection{Downlink}
+\gls{ap} $l$ transmits $\vect{x}_{l}[q]=\sum_{k}\vect{w}_{kl}[q]s_{k}[q]$, with
+$\vect{w}_{kl}[q]\inC{M}$ its precoding vector for \gls{ue} $k$ and $s_{k}[q]$
+the unit-power data symbols, mutually independent across \glspl{ue}. Let $\vect{w}_{k}[q]\inC{LM}$ be the collection of the $L$ precoders of the \glspl{ap} $\vect{w}_{kl}[q]$, the
+signal received by \gls{ue} $k$ is
+\begin{align}
+y_{k}[q]=\vect{h}_{k}[q]^{H}\vect{w}_{k}[q]s_{k}[q]
++\sum_{i\neq k}\vect{h}_{k}[q]^{H}\vect{w}_{i}[q]s_{i}[q]+n_{k}[q]
+\end{align} 
+with $n_{k}[q]\sim\cn{0}{\sigma^{2}/Q}$. Treating the multi-user interference as
+noise,
+\begin{equation}
+\label{eq:dl-sinr}
+\mathrm{SINR}_{k}^{\mathrm{DL}}[q] =
+\frac{\abs{\vect{h}_{k}[q]^{H}\vect{w}_{k}[q]}^{2}}
+{\sum_{i\neq k}\abs{\vect{h}_{k}[q]^{H}\vect{w}_{i}[q]}^{2} + \sigma^{2}/Q} ,
+\end{equation}
+where $\sigma^{2}$ is the receiver noise power. 
+\subsubsection{Uplink}
+\gls{ue} $k$ transmits with power $p_{k}[q]=p_{k}/Q$ subject to its own budget
+$p_{k}\leq p_{\max}$, and \gls{ap} $l$ observes
+\begin{align}
+\vect{y}_{l}[q]=\sum_{k}\sqrt{p_{k}[q]}\,\vect{h}_{kl}[q]s_{k}[q]+\vect{n}_{l}[q]\end{align}
+with $\vect{n}_{l}[q]\sim\cn{\vect{0}}{(\sigma^{2}/Q)\mat{I}_{M}}$. Applying a receive combiner $\vect{v}_{k}[q]\inC{LM}$ gives
+\begin{equation}
+\label{eq:ul-distributive}
+\hat{s}_{k}[q] = \vect{v}_{k}[q]^{H}\vect{y}[q]
+= \sum_{l=1}^{L}\vect{v}_{kl}[q]^{H}\vect{y}_{l}[q] .
+\end{equation}
+%Linear combining can therefor be performed per \glspl{ap}, i.e., in distributed operation an \gls{ap} holding its own combining coefficients forms its partial sum locally and forwards one scalar per \gls{ue} instead of $M$ sample streams. 
+The resulting \gls{sinr} is
+\begin{equation}
+\label{eq:ul-sinr}
+\mathrm{SINR}_{k}^{\mathrm{UL}}[q] =
+\frac{p_{k}\abs{\vect{v}_{k}[q]^{H}\vect{h}_{k}[q]}^{2}}
+{\sum_{i\neq k}p_{i}\abs{\vect{v}_{k}[q]^{H}\vect{h}_{i}[q]}^{2}
++ \sigma^{2}\norm{\vect{v}_{k}[q]}^{2}}.
+\end{equation}
+
+
+\subsection{Channel and Noise Model}
+\label{ssec:channel}
+
+Channels are drawn from the 3GPP TR 38.901 urban microcell model \cite{tr38901}
+through the Sionna implementation \cite{hoydis2022sionna}. Each \gls{ap} is a
+38.901 base station carrying an $M$-element half-wavelength \gls{ula} of
+omnidirectional elements at height $h_{\mathrm{AP}}$, and each \gls{ue} is a
+single-antenna outdoor terminal at height $h_{\mathrm{UE}}$. \glspl{ue} are
+dropped uniformly over a square coverage area of side $D$, as are the \glspl{ap}.
+In the co-located case a single \gls{bs} is placed at the centre. The receiver noise power follows from the thermal noise density,
+$\sigma^{2}\,[\mathrm{dBm}] = -174 + 10\log_{10}(B/\mathrm{Hz}) + F$, with $B$
+the bandwidth and $F$ the noise figure in dB.
+
+The model is specified through realizations rather than a closed-form correlation
+matrix, so the large-scale fading coefficient $\beta_{kl}$, used for power control, is estimated from the realization itself as 
+\begin{equation}
+\label{eq:beta}
+\beta_{kl} = \frac{1}{MQ}\sum_{q=1}^{Q}\norm{\vect{h}_{kl}[q]}^{2}.
+\end{equation}
+
+
+\subsection{Centralized and Distributed Operation}
+\label{ssec:operation}
+
+Unlike the co-located case, which has a single sum-power budget, each \gls{ap} has its own power constraint. Since the symbols are independent
+and unit-power, the power radiated by \gls{ap} $l$ over the \gls{ofdm} block is
+\begin{equation}
+\label{eq:ptl}
+P_{T,l} = \sum_{q=1}^{Q}\sum_{k=1}^{K}\norm{\vect{w}_{kl}[q]}^{2} \leq \rho_{\max}.
+\end{equation}
+How \eqref{eq:ptl} is met is the difference between centralized and distributed operation, which is also related to the functional splits of \Cref{sssec:split}.
+
+\subsubsection{Centralized operation (splits S1, S2)}
+The \gls{cpu} holds $\mat{H}[q]$ and designs all precoders jointly. In the downlink it applies
+\gls{zf},
+\begin{equation}
+\label{eq:zf-precoder}
+\bar{\mat{W}}[q] = \mat{H}[q]\big(\mat{H}[q]^{H}\mat{H}[q]\big)^{-1}
+\inC{LM\times K},
+\end{equation}
+which nulls all inter-user interference and requires $K\leq LM$. A single power
+coefficient $\rho_{k}$ is attached to each \gls{ue}, since the precoding direction already fixes how that power spreads over the $LM$ antennas. Fractional power control weights the \glspl{ue} by their aggregate gain $\beta_{k}=\sum_{l}\beta_{kl}$,
+\begin{equation}
+\label{eq:dl-fractional}
+\rho_{k} = P_{\mathrm{tot}}\,\frac{\beta_{k}^{\,v}}{\sum_{i}\beta_{i}^{\,v}},
+\qquad P_{\mathrm{tot}} = L\rho_{\max},
+\end{equation}
+with the exponent $v$ trading throughput against fairness\footnote{A positive $v$ follows the channel and serves the \glspl{ue} with the largest aggregate gain first, which maximizes the sum rate but starves those at the edge of the coverage area. A negative $v$ compensates the weak \glspl{ue}: at $v=-1$ the product
+$\rho_{k}\beta_{k}$ is the same for every \gls{ue}, so all of them are received
+at approximately equal signal power, which is the fair extreme. Values in
+$[-1,1]$ therefore interpolate between a throughput-optimal and a max-min-fair
+allocation.}. 
+This power normalization is applied as
+\begin{equation}
+\label{eq:power-normalization}
+\vect{w}_{k}[q] = \gamma\sqrt{\rho_{k}}\,
+\frac{\bar{\vect{w}}_{k}[q]}{\sqrt{\sum_{q'}\norm{\bar{\vect{w}}_{k}[q']}^{2}}},
+\qquad
+\gamma = \sqrt{\frac{\rho_{\max}}{\max_{l}\tilde{p}_{l}}},
+\end{equation}
+where $\tilde p_{l}$ is the power \gls{ap} $l$ would radiate before that
+rescaling. Only the busiest \gls{ap} then reaches its budget. Since
+$\sum_{k}\rho_{k}=L\rho_{\max}$ the nominal per-\gls{ap} powers average to
+$\rho_{\max}$, so $\gamma\leq 1$, the constraint is always met. The uplink counterpart forwards the raw
+observations to the \gls{cpu}, which combines over all $LM$ antennas with
+$\mat{V}[q]=\mat{H}[q](\mat{H}[q]^{H}\mat{H}[q])^{-1}$. 
+
+\subsubsection{Distributed operation (split S3)}
+Each \gls{ap} designs its own precoder/combiner from its local \gls{csi}, so it suppresses only the interference it generates or observes itself and the coherent cross-\gls{ap} cancellation is lost. Writing $\mat{E}_{l}[q]=[\,\vect{h}_{1l}[q]\ \cdots\
+\vect{h}_{Kl}[q]\,]\inC{M\times K}$ for the local channel matrix and
+$\mat{P}=\diag{p_{1},\dots,p_{K}}$,
+\begin{align}
+\label{eq:local-rzf}
+\mat{W}_{l}[q] &= \big(\mat{E}_{l}[q]\mat{E}_{l}[q]^{H}
++ \lambda\mat{I}_{M}\big)^{-1}\mat{E}_{l}[q], \\
+\label{eq:ul-local-mmse}
+\mat{V}_{l}[q] &= \big(\mat{E}_{l}[q]\mat{P}\mat{E}_{l}[q]^{H}
++ \lambda\mat{I}_{M}\big)^{-1}\mat{E}_{l}[q],
+\end{align}
+are the local \gls{rzf} precoder/combiner which correspond to and the local \gls{mmse} precoder/combiner, with $\lambda=\sigma^{2}$. Each \gls{ap} also allocates its own power budget among the \glspl{ue} from local statistics,
+\begin{equation}
+\label{eq:local-fractional}
+\rho_{kl} = \rho_{\max}\,\frac{\beta_{kl}^{\,v}}{\sum_{i}\beta_{il}^{\,v}},
+\end{equation}
+so $\sum_{k}\rho_{kl}=\rho_{\max}$ by construction and every \gls{ap} meets
+\eqref{eq:ptl} with equality, $P_{T,l}=\rho_{\max}$, without any
+\gls{cpu}-side rescaling. In
+the uplink the \gls{cpu} fuses the $L$ local estimates by summing them,
+$\hat s_{k}[q]=\sum_{l}\vect{v}_{kl}[q]^{H}\vect{y}_{l}[q]$.
+
+In the uplink fractional power control is the same for both centralized and distributed operation at $p_{k}=p_{\max}\beta_{k}^{\,v_{\mathrm{ul}}}/\max_{i}\beta_{i}^{\,v_{\mathrm{ul}}}$. This is normalized by a maximum rather than a sum because each \gls{ue} has its own independent power budget.
+
+
+% The two modes therefore trade in opposite directions. Centralized operation buys
+% cross-\gls{ap} interference nulling at the price of instantaneous collective
+% \gls{csi} at the \gls{cpu}, which is what forces the fronthaul of S1 and S2 to
+% carry samples during the pilot phase, and it leaves part of the transmit budget
+% unused, $P_{T,l}<\rho_{\max}$. Distributed operation needs no instantaneous \gls{csi} at the
+% \gls{cpu} and radiates the full budget, but delivers the lower rate of local
+% processing. Uplink powers follow
+% $p_{k}=p_{\max}\beta_{k}^{\,v_{\mathrm{ul}}}/\max_{i}\beta_{i}^{\,v_{\mathrm{ul}}}$
+% in both modes, normalized by a maximum rather than a sum because each \gls{ue}
+% owns its budget; this power is spent at the \glspl{ue} and so never enters
+% $P_{\mathrm{net}}$.
+
+\subsection{Delivered Rates}
+\label{ssec:rates}
+
+The per-\gls{ue} spectral efficiencies average over the subcarriers and over the
+Monte Carlo channel realizations,
+\begin{align}
+\label{eq:se}
+\mathrm{SE}_{k}^{i} = \tau_{i}(1-\tau_{\mathrm{sig},i})\,\bar{x}_{i}\,
+\expt{\frac{1}{Q}\sum_{q=1}^{Q}
+\log_{2}\!\left(1+\mathrm{SINR}_{k}^{i}[q]\right)}
+\end{align}
+with $i\in\{\mathrm{DL},\mathrm{UL}\}$, the prelog
+is the data fraction \eqref{eq:frame_data} of the frame, since reference
+signalling and the deactivated symbols carry no payload. 
+The delivered sum rates can then be written as $R_{i}= \tilde B \sum_{k}\mathrm{SE}_{k}^{i}$, with
+the effective bandwidth $\tilde B = 0.9\,B$. 
+
+% \todo{Three points to settle before the numbers are final.
+% %(i) \eqref{eq:se} delivers the rate over the full bandwidth $B$, whereas the
+% % encoder and decoder of \cite{peschiera2026fr3} are driven by $R/\tilde B$ with
+% % the effective bandwidth $\tilde B = 0.9\,B$; pick one convention and apply it on
+% % both sides.
+% (ii) \eqref{eq:ul-sinr} is the instantaneous, genie-aided expression, which
+% assumes the effective channel is known wherever decoding happens. That is
+% consistent with the downlink, but under the equal-weight fusion used for S3 the
+% \gls{cpu} does not know it, and the rigorous figure there is the
+% use-and-then-forget bound; \eqref{eq:ul-sinr} therefore flatters S3 by the amount
+% of residual channel hardening, which grows as $M$ shrinks.
+% (iii) The loading $\lambda=\sigma^{2}$ in \eqref{eq:local-rzf} is the value for a
+% unit-power dual uplink; for the physically scaled channels used here it should be
+% $\sigma^{2}/\rho$ at the intended per-\gls{ue} power $\rho\approx\rho_{\max}/K$.
+% The value used is therefore smaller than the intended one by the factor
+% $1/\rho\gg 1$, which pushes \eqref{eq:local-rzf} towards a plain local \gls{zf}
+% and understates the regularization that split S3 is supposed to have.}
