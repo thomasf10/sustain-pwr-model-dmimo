@@ -1,0 +1,104 @@
+\appendices
+\crefalias{section}{appendix}
+\crefalias{subsection}{appendix}
+\section{Operation Counts of the Precoders and Combiners}
+\label{app:complexity}
+
+This appendix derives the entries of \Cref{tab:complexity}. Operations are
+counted as in \cite{peschiera2026fr3}: a complex multiply-accumulate is two
+operations, so an inner product of two length-$r$ complex vectors costs $2r$
+operations and the efficiencies $\eta$ of \eqref{eq:pmimo} are expressed per
+operation. All counts below are per subcarrier and per coherence block; dividing
+by $\upsilon_{\mathrm{coh}}$ turns them into the per-sample figures used in
+\eqref{eq:gops_split}. The subcarrier index is dropped throughout.
+
+\subsection{Computing the precoder or combiner}
+Every scheme of \Cref{ssec:operation} other than \gls{mr} has the same three
+stages, and the two families differ only in which dimension is inverted. Let
+$\mat{A}\inC{n\times n}$ be the Hermitian positive definite matrix that is
+factorized and let $r$ be the length of the vectors from which its entries are
+built, which is also the number of right-hand sides that are solved against it.
+The centralized precoder \eqref{eq:zf-precoder} and its uplink counterpart form
+$\mat{A}=\mat{H}^{H}\mat{H}$ and solve $\bar{\mat{W}}\mat{A}=\mat{H}$ for the
+$LM$ rows of $\mat{H}\inC{LM\times K}$, so $n=K$ and $r=LM$. The local schemes
+\eqref{eq:local-rzf} and \eqref{eq:ul-local-mmse} form
+$\mat{A}=\mat{E}_{l}\mat{E}_{l}^{H}+\lambda\mat{I}_{M}$ and solve
+$\mat{A}\mat{W}_{l}=\mat{E}_{l}$ for the $K$ columns of
+$\mat{E}_{l}\inC{M\times K}$, so $n=M$ and $r=K$. The three stages cost
+\begin{enumerate}
+\item \emph{Gram matrix.} $\mat{A}$ is Hermitian, so only its $n(n+1)/2$
+upper-triangular entries are formed, each an inner product of length $r$ at $2r$
+operations, giving $(n^{2}+n)\,r$. The diagonal loading $\lambda\mat{I}_{n}$ adds
+$n$ real additions, and the power weighting $\mat{P}$ of
+\eqref{eq:ul-local-mmse} rescales the $K$ columns of $\mat{E}_{l}$ beforehand at
+$O(MK)$; both are dropped as lower order.
+\item \emph{Cholesky factorization.} $\mat{A}=\mat{L}\mat{L}^{H}$ costs
+$n^{3}/3$ operations, the count used in \cite{peschiera2026fr3}.
+\item \emph{Triangular solves.} Forward and backward substitution against
+$\mat{L}$ costs $n^{2}$ complex multiply-accumulates per right-hand side
+\cite[App.~B.1.1]{massivemimobook}, hence $2n^{2}$ operations, and there are
+$r$ of them, giving $2n^{2}r$.
+\end{enumerate}
+Summing the three stages,
+\begin{equation}
+\label{eq:app_chol}
+\upsilon_{\mathrm{coh}}\,\Xi_{\mathrm{comp}}(n,r) =
+\frac{n^{3}}{3} + 3n^{2}r + n\,r ,
+\end{equation}
+which is the second row of \Cref{tab:complexity} at $(n,r)=(K,LM)$ and the third
+at $(n,r)=(M,K)$. Setting $r$ to the number of \gls{rf} chains of a single site
+recovers the co-located count of \cite{peschiera2026fr3} exactly, so the
+distributed and co-located deployments are priced by the same expression and can
+be compared. The \gls{mr} row costs nothing to compute: under the perfect
+\gls{csi} assumed here the direction is the channel itself,
+$\bar{\vect{w}}_{k}=\vect{h}_{k}$ in the downlink and
+$\vect{v}_{kl}=\vect{h}_{kl}$ in the uplink, so no factorization is performed.
+
+Only the middle term of \eqref{eq:app_chol} is a genuine cubic cost in the
+antenna count, and it is the one that separates the two families. At
+$(n,r)=(K,LM)$ the factorization grows as $K^{2}LM$ and is carried by a single
+node, whereas at $(n,r)=(M,K)$ each of the $L$ \glspl{ap} pays $M^{2}K$, for a
+network total of $LM^{2}K$. Local processing is therefore cheaper than
+centralized processing by a factor $K/M$ in this term, which is the
+computational counterpart of the rate loss it accepts.
+
+\begin{remark}[Convention on the cubic term]
+\label{rem:cubic}
+Counting a complex multiply-accumulate as two operations, as stages 1 and 3 do,
+would give $2(n^{3}-n)/3$ rather than $n^{3}/3$ for the Cholesky factorization
+\cite[App.~B.1.1]{massivemimobook}. We keep $n^{3}/3$ so that
+\eqref{eq:app_chol} reproduces \cite{peschiera2026fr3} term for term and the
+co-located baseline is not priced by a different rule than the distributed
+network. The residual ambiguity is the ratio $n/(9r)$ of the factorization to
+the dominant $3n^{2}r$ term, which is small wherever the matrix is small
+relative to the number of right-hand sides. Both families satisfy this at the
+operating point used here, $K=20$ \glspl{ue} against $LM=64$ antennas
+centrally and $M=4$ antennas against $K=20$ \glspl{ue} locally, giving
+$\SI{3.5}{\percent}$ and
+$\SI{2.2}{\percent}$. It ceases to hold for the local schemes once an \gls{ap}
+carries as many antennas as the network serves \glspl{ue}, so a deployment with
+few large \glspl{ap} should be checked against the doubled term.
+\todo{fix these numbers once $K$ and the deployment sweep are final.}
+\end{remark}
+
+\subsection{Applying the precoder or combiner}
+Applying is scheme-independent. \gls{ap} $l$ forms
+$\vect{x}_{l}=\mat{W}_{l}\vect{s}$ with $\mat{W}_{l}\inC{M\times K}$, which is
+$MK$ complex multiplications and $M(K-1)$ complex additions, hence $2KM$
+operations per sample to leading order. In the uplink the partial sums
+$\vect{v}_{kl}^{H}\vect{y}_{l}$ of \eqref{eq:ul-distributive} cost the same,
+$K$ inner products of length $M$. A node that processes all $LM$ antennas, which
+is the \gls{cpu} under S1, pays $2K\,LM$ instead. This is the $2K$ operations
+per sample and per processed antenna quoted in \Cref{sssec:mimo} and it appears
+once per direction, since the precoded samples and the combined samples are
+distinct data.
+
+\subsection{What is not counted}
+The power control of \eqref{eq:dl-fractional} and \eqref{eq:local-fractional}
+needs the precoder norms $\sum_{q}\norm{\bar{\vect{w}}_{k}[q]}^{2}$ and the
+large-scale coefficients \eqref{eq:beta}, which is $O(K\,LM)$ per coherence block
+across the network and therefore below the $O(K^{2}LM)$ factorization it is
+attached to. Channel estimation is not priced either, since perfect \gls{csi} is
+assumed, and \Cref{tab:split} lists it for completeness only. Neither omission
+is specific to the distributed deployment, so both cancel in the comparison of
+\Cref{ssec:ee}.

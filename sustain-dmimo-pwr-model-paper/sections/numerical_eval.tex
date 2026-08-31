@@ -1,1 +1,223 @@
 \section{Numerical Evaluation}
+\label{sec:numerical}
+
+\subsection{Parameters}
+\label{ssec:params}
+
+The evaluation needs three groups of parameters. The deployment, channel and
+frame of \Cref{sec:sysmodel} are collected in \Cref{tab:params_sys}. The
+hardware constants of the \gls{ap} and of the co-located baseline are inherited
+unchanged from the \gls{fr3} \gls{bs} model of \cite{peschiera2026fr3} and are
+listed in \Cref{tab:params_hw}, so that the two deployments cannot differ in a
+hardware constant. The quantities that exist only in a distributed network, that
+is the fronthaul, the central unit and the per-\gls{ap} synchronization, are
+collected in \Cref{tab:params_dmimo}.
+
+\begin{table}[t]
+\centering
+\caption{Deployment, channel and frame parameters of \Cref{sec:sysmodel}.
+Entries marked $\ddag$ are design choices that still have to be fixed; the
+remaining rows are either cited or derived from a cited quantity. The noise
+figure is an assumption rather than a measured value, and $\sigma^{2}$ inherits
+that status through \Cref{ssec:channel}.
+\todo{settle every $\ddag$ row before the figures are final; the topology row in
+particular, since \Cref{rem:fh_ceiling} and \Cref{rem:fpga} quote $L=16$, $M=4$
+while the rate model is configured with $L=40$, $M=4$, $K=20$.}}
+\label{tab:params_sys}
+\ra{1.15}
+\begin{tabular}{@{}llr@{}}
+\toprule
+Symbol & Description & Value \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Topology}}\\
+$L$        & Number of \glspl{ap}                & $16$ $\ddag$ \\
+$M$        & Antennas per \gls{ap}               & $4$ $\ddag$ \\
+$LM$       & Total antennas, both deployments    & $64$ \\
+$K$        & Single-antenna \glspl{ue}           & $20$ $\ddag$ \\
+$Q$        & Subcarriers evaluated               & $64$ $\ddag$ \\
+$D$        & Coverage-area side                  & \SI{200}{\metre} $\ddag$ \\
+$h_{\mathrm{AP}}$ & \gls{ap} height~\cite{tr38901}  & \SI{10}{\metre} \\
+$h_{\mathrm{UE}}$ & \gls{ue} height~\cite{tr38901}  & \SI{1.5}{\metre} \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Radio}}\\
+$f_{c}$    & Carrier frequency                   & \SI{7}{\giga\hertz} $\ddag$ \\
+$B$        & Bandwidth~\cite{peschiera2026fr3}   & \SI{400}{\mega\hertz} \\
+$\Delta_f$ & Subcarrier spacing~\cite{peschiera2026fr3} & \SI{120}{\kilo\hertz} \\
+$\tilde B$ & Effective bandwidth, $0.9B$         & \SI{360}{\mega\hertz} \\
+$F$        & Receiver noise figure               & \SI{8}{\deci\bel} $\ddag$ \\
+$\sigma^{2}$ & Noise power, from \Cref{ssec:channel} & $-80.0$\,dBm \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Transmit power and power control}}\\
+$\rho_{\max}$ & Per-\gls{ap} budget              & \SI{1}{\watt} $\ddag$ \\
+$P_{\mathrm{TX}}$ & Total budget, $L\rho_{\max}$ & \SI{16}{\watt} \\
+$p_{\max}$ & Per-\gls{ue} uplink budget          & \SI{0.1}{\watt} $\ddag$ \\
+$v$        & Downlink fractional exponent        & $0.5$ $\ddag$ \\
+$v_{\mathrm{ul}}$ & Uplink fractional exponent   & $-0.5$ $\ddag$ \\
+$\lambda$  & Local \gls{rzf} loading             & $\sigma^{2}$ $\ddag$ \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Frame}}\\
+$\tau_{\mathrm{DL}}$ & Downlink share of the frame        & $0.9$ $\ddag$ \\
+$\tau_{\mathrm{UL}}$ & Uplink share, $1-\tau_{\mathrm{DL}}$ & $0.1$ \\
+$\tau_{\mathrm{DL,sig}}$ & Downlink signalling fraction   & $0$ $\ddag$ \\
+$\tau_{\mathrm{UL,sig}}$ & Uplink signalling fraction     & $1$ $\ddag$ \\
+$\bar x_{\mathrm{DL}},\bar x_{\mathrm{UL}}$ & Resource load & $1$ $\ddag$ \\
+$\upsilon_{\mathrm{coh}}$ & Samples per coherence block   & $200$ $\ddag$ \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Monte Carlo}}\\
+           & Channel realizations per point      & $100$ $\ddag$ \\
+           & Channel model~\cite{tr38901,hoydis2022sionna} & 38.901 UMi \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table*}[t]
+\centering
+\caption{Hardware constants of the \gls{ap} and of the co-located baseline,
+inherited unchanged from the \gls{fr3} \gls{bs} model of
+\cite{peschiera2026fr3} and applied to both deployments. $P_{s}$ is the static
+power of one \gls{fpga} and is charged to the precoder, the combiner and the
+baseband filter; the encoder, decoder, \gls{ifft} and predistortion blocks carry
+a further \SI{0.1}{\watt} each inside the component models of that reference.
+$P_{\max}$ follows the sizing convention of \Cref{rem:pa_sizing} rather than
+being a component rating. The phase-shifter figure of merit is not listed
+because the array is fully digital.
+\todo{units are missing for $\Xi_{\mathrm{DAC},1}$, $\Xi_{\mathrm{DAC},2}$,
+$\Xi_{\mathrm{LNA}}$ and $\Xi_{\mathrm{mix}}$; take them from
+\cite{peschiera2026fr3} or drop the rows, since a bare number is not
+reproducible. $\xi$, $\alpha$ and $\eta_{\mathrm{PA,max}}$ were fitted for
+macro-cell amplifiers and should be refitted for \gls{ap}-class hardware
+(\Cref{rem:pa_sizing}). Every value here is traceable to the authors' own
+evaluation script, but the equation numbering that script is documented against
+does not match \cite{peschiera2026fr3}, so confirm each value against the
+published version before quoting it.}}
+\label{tab:params_hw}
+\ra{1.15}
+\begin{tabular}{@{}llr@{\hskip 2em}llr@{}}
+\toprule
+Symbol & Description & Value & Symbol & Description & Value \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Supply and cooling}}
+  & \multicolumn{3}{l}{\emph{Analog front end}}\\
+$\eta_{\mathrm{dig,sc}}$ & Digital block            & $0.81$
+  & $b_{\mathrm{DAC}}$ & \gls{dac} effective bits        & $8$ \\
+$\eta_{\mathrm{ana,sc}}$ & Analog block             & $0.81$
+  & $f_{\mathrm{DAC}}$ & \gls{dac} sampling frequency    & \SI{5}{\giga\hertz} \\
+$\eta_{\mathrm{PA,sc}}$  & Amplifier block          & $0.81$
+  & $\Xi_{\mathrm{DAC},1}$ & \gls{dac} figure of merit 1 & \num{1.5e-5} \\
+\cmidrule(r){1-3}
+\multicolumn{3}{@{}l}{\emph{Power amplifier}}
+  & $\Xi_{\mathrm{DAC},2}$ & \gls{dac} figure of merit 2 & \num{1.5e-12} \\
+$\xi$              & Static-to-dynamic ratio        & $0.1$
+  & $b_{\mathrm{ADC}}$ & \gls{adc} effective bits        & $8$ \\
+$\alpha$           & Efficiency exponent            & $0.75$
+  & $f_{\mathrm{ADC}}$ & \gls{adc} sampling frequency    & \SI{5}{\giga\hertz} \\
+$\eta_{\mathrm{PA,max}}$ & Maximum efficiency       & $0.15$
+  & $W_{\mathrm{ADC}}$ & \gls{adc} Walden figure of merit & \SI{70}{\femto\joule} \\
+$P_{\max}$         & Rating, $\rho_{\max}/M$        & \SI{0.25}{\watt}
+  & $\Xi_{\mathrm{LNA}}$ & \gls{lna} figure of merit     & \num{2.7e-11} \\
+$\zeta_{\mathrm{sig}}$ & Signalling power fraction  & $1/12$
+  & $\Xi_{\mathrm{mix}}$ & Mixer figure of merit         & \num{2.5e-13} \\
+\cmidrule(r){1-3}
+\multicolumn{3}{@{}l}{\emph{Digital processing}}
+  & $P_{\mathrm{LO}}$ & Local oscillator                 & \SI{40}{\milli\watt} \\
+$Q_{\mathrm{IFFT}}$ & \gls{ifft} size                & $4096$
+  & $P_{\mathrm{filt,RF}}$ & \gls{rf} filter             & \SI{5}{\milli\watt} \\
+$\mu$              & Sampling-frequency factor      & $0.9$
+  & $P_{\mathrm{ana,misc}}$ & Miscellaneous analog       & \SI{0}{\watt} \\
+$f_{s,\mathrm{I}}$ & Constellation rate, $\mu B$    & \SI{360}{\mega\hertz}
+  & \multicolumn{3}{l}{}\\
+$f_{s,\mathrm{II}}$ & Baseband rate, $Q_{\mathrm{IFFT}}\Delta_f$ & \SI{491.52}{\mega\hertz}
+  & \multicolumn{3}{l}{\emph{Computational efficiencies [OPS/W]}}\\
+$\Xi_{\mathrm{DPD}}$ & Predistortion, ops per sample & $50$
+  & $\eta_{\mathrm{enc}},\eta_{\mathrm{dec}}$ & Encoder, decoder (ASIC) & \num{2e12} \\
+$n_{\mathrm{filt,BB}}$ & Baseband-filter taps        & $20$
+  & $\eta_{\mathrm{IFFT}},\eta_{\mathrm{DPD}}$ & \gls{ifft}, predistortion (ASIC) & \num{2e12} \\
+$o_{\mathrm{filt,BB}}$ & Baseband oversampling       & $4$
+  & $\eta$ & Precoder, combiner (\gls{fpga}) & \num{0.2e12} \\
+$P_{s}$ & Static power per \gls{fpga}               & \SI{1}{\watt}
+  & $\eta_{\mathrm{filt,BB}}$ & Baseband filter (\gls{fpga}) & \num{0.2e12} \\
+   & \gls{rf} chains per \gls{fpga}                  & $32$
+  & \multicolumn{3}{l}{}\\
+\cmidrule(r){1-3}
+\multicolumn{3}{@{}l}{\emph{Reduction factors (micro-sleep / idle)}}
+  & \multicolumn{3}{l}{}\\
+$\delta^{\mu}_{\mathrm{dig}},\delta^{0}_{\mathrm{dig}}$ & Digital & $0.5$, $0.25$
+  & \multicolumn{3}{l}{}\\
+$\delta^{\mu}_{\mathrm{ana}},\delta^{0}_{\mathrm{ana}}$ & Analog  & $0.75$, $0.5$
+  & \multicolumn{3}{l}{}\\
+$\delta^{\mu}_{\mathrm{PA}},\delta^{0}_{\mathrm{PA}}$   & Amplifier & $0.5$, $0.25$
+  & \multicolumn{3}{l}{}\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]
+\centering
+\caption{Parameters specific to the distributed network. A value is given only
+where it comes from a reference; TBD marks a quantity that the co-located model
+of \cite{peschiera2026fr3} does not contain and for which no source has been
+established, so no number is quoted here.
+\todo{source every TBD row. The implementation currently runs placeholders for
+them, chosen only to be of the right order of magnitude; they are deliberately
+not printed here, and any conclusion that turns on one of them has to be
+reported as a sensitivity range rather than a point value. Check
+$P_{\mathrm{FH},0}$ and $\Pi_{\mathrm{FH}}$ against \cite{ngo2018total} before
+quoting them.}}
+\label{tab:params_dmimo}
+\ra{1.15}
+\begin{tabular}{@{}llrl@{}}
+\toprule
+Symbol & Description & Value & Source \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Fronthaul}}\\
+$P_{\mathrm{FH},0}$ & Traffic-independent power per link
+  & \SI{0.825}{\watt} & \cite{ngo2018total} \\
+$\Pi_{\mathrm{FH}}$ & Traffic-dependent coefficient
+  & \SI{0.25}{\watt}/Gbit/s & \cite{ngo2018total} \\
+$b_{\mathrm{FH}}$ & Bits per real sample            & TBD & \\
+$\delta^{\mu}_{\mathrm{FH}}$ & Idle transceiver reduction & TBD & \\
+$\eta_{\mathrm{FH,sc}}$ & Supply and cooling        & TBD & \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Central unit}}\\
+$P_{\mathrm{CPU},0}$ & Always-on consumption        & TBD & \\
+$\eta_{\mathrm{CPU,sc}}$ & Supply and cooling, $\approx 1/\mathrm{PUE}$
+  & TBD & \\
+  & \gls{rf} chains per \gls{cpu} \gls{fpga}        & $32$
+  & \cite{peschiera2026fr3} \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Synchronization}}\\
+$P_{\mathrm{sync}}$ & Per-\gls{ap} reference hardware & TBD & \\
+$\eta_{\mathrm{sync,sc}}$ & Supply and cooling      & TBD & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\todo{Parameters that still need a decision rather than a source.
+(i) The headline topology: \Cref{rem:fh_ceiling} and \Cref{rem:fpga} quote
+$L=16$, $M=4$, whereas the rate model is configured with $L=40$, $M=4$, $K=20$;
+one of the two has to move.
+(ii) The frame in \Cref{tab:params_sys} gives $\tau_{\mathrm{UL,sig}}=1$, so the
+uplink phase carries nothing but pilots and $R_{\mathrm{UL}}=0$. The evaluation
+is then downlink-only and \eqref{eq:ee_net} reduces to
+$R_{\mathrm{DL}}/P_{\mathrm{net}}$; either say so explicitly or give the uplink
+a data phase.
+(iii) With $\tau_{\mathrm{DL,sig}}=0$ the amplifier signalling level of
+\eqref{eq:pa_avg_ap} is never reached, so $\zeta_{\mathrm{sig}}$ has no effect
+on the reported numbers.
+(iv) $\upsilon_{\mathrm{coh}}$ is stated outright as $200$ samples; the
+Doppler-derived value of \cite{peschiera2026fr3}, at a maximum path-length
+difference of \SI{300}{\metre} and a receiver velocity of
+\SI{30}{\metre\per\second}, would be about $714$ samples at
+$f_{c}=\SI{7}{\giga\hertz}$. Pick one and state which.
+(v) $Q=64$ subcarriers are evaluated while the \gls{ofdm} system carries
+$Q_{\mathrm{IFFT}}=4096$; say that the former is a Monte Carlo subset so the two
+are not read as the same quantity.
+(vi) \eqref{eq:pmimo} charges $P_{s}=\SI{1}{\watt}$ per \gls{fpga} to the
+precoder, the combiner and the baseband filter, while the \gls{ifft} and
+predistortion blocks each carry a flat \SI{0.1}{\watt} that does not depend on
+the antenna count. \Cref{rem:fpga} discusses only the first, but both are paid
+once per node: the network pays $L\times\SI{0.2}{\watt}$ of \gls{ifft} and
+predistortion static where the co-located site pays \SI{0.2}{\watt}, an exactly
+$L$-fold penalty, against the $L\lceil M/32\rceil$ versus $\lceil LM/32\rceil$
+ratio of the \gls{fpga} term. The remark therefore understates the loss of
+amortisation; either extend it or say that it treats the dominant term only.}
