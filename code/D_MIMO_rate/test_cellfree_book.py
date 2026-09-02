@@ -133,8 +133,9 @@ def check_parameters(chk: Checks) -> None:
         f"{cfg_a.noise_power_dBm:.2f} dBm")
     chk("max DL power per AP = 200 mW", cfg_a.rho_max == 0.2)
     chk("max UL power per UE = 100 mW", extras.p_ul_max == 0.1)
-    chk("tau_c = 200, tau_p = 10", (cfg_a.tau_c, cfg_a.tau_p) == (200, 10))
-    chk("DL prelog tau_d/tau_c = 190/200",
+    chk("tau_c = 200, tau_p = 10",
+        (cfg_a.tau_c, round(cfg_a.tau_p)) == (200, 10))
+    chk("DL prelog (tau_c - tau_p)/tau_c = 190/200",
         np.isclose(cfg_a.dl_prelog, 0.95), f"{cfg_a.dl_prelog:.3f}")
 
     # beta[dB] = -30.5 - 36.7 log10(d/1m): -140.6 dB at d = 1 km.

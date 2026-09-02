@@ -33,7 +33,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .config import UNSOURCED, DMIMOPowerParams
+from .config import ASSUMED, UNSOURCED, DMIMOPowerParams
 
 SCHEMA_VERSION = 1
 
@@ -176,6 +176,11 @@ def build(*, name: str, description: str, scenario, sweep: dict,
             {"name": n, "meaning": what,
              "value": _jsonable(getattr(next(iter(params_by_deployment.values())), n))}
             for n, what in UNSOURCED
+        ],
+        "assumed_parameters": [
+            {"name": n, "meaning": what,
+             "value": _jsonable(getattr(next(iter(params_by_deployment.values())), n))}
+            for n, what in ASSUMED
         ],
         "results": [_result_record(r) for r in results],
         "figures": _jsonable(list(figures)),

@@ -2,7 +2,7 @@
 \label{sec:sysmodel}
 
 We consider a \gls{tdd} \gls{dmimo} network in which $L$ \glspl{ap}, each with
-$M$ antennas, jointly serve $K$ single-antenna \glspl{ue} over $Q$
+$M$ antennas, jointly serve $K$ single-antenna \glspl{ue} over $Q$ data
 \gls{ofdm} subcarriers, resulting in $LM$ total antennas. All $L$ \glspl{ap} are connected to
 a \gls{cpu} by fronthaul links. The indices $l=1,\dots,L$, $m=1,\dots,M$,
 $k=1,\dots,K$ and $q=1,\dots,Q$ denote the number of \glspl{ap}, antennas per \gls{ap}, \glspl{ue} and subcarriers respectively. Co-located \gls{mmimo} is the special case
@@ -38,7 +38,7 @@ The third part represents a micro-sleep or \gls{dtx} mode~\cite{3GPP_TR38864} an
 Let $\vect{h}_{kl}[q]\inC{M}$ be the channel from \gls{ap} $l$ to \gls{ue} $k$.
 Stacking the \glspl{ap} gives the collective channel
 $\vect{h}_{k}[q]=[\,\vect{h}_{k1}[q]^{\intercal}\ \cdots\
-\vect{h}_{kL}[q]^{\intercal}\,]^{\intercal}\inC{LM}$ and
+\vect{h}_{kL}[q]^{\intercal}\,]^{\intercal}\inC{LM}$ and combining the users gives
 $\mat{H}[q]=[\,\vect{h}_{1}[q]\ \cdots\ \vect{h}_{K}[q]\,]\inC{LM\times K}$.
 
 
@@ -90,13 +90,12 @@ through the Sionna implementation \cite{hoydis2022sionna}. Each \gls{ap} is a
 38.901 base station carrying an $M$-element half-wavelength \gls{ula} of
 omnidirectional elements at height $h_{\mathrm{AP}}$, and each \gls{ue} is a
 single-antenna outdoor terminal at height $h_{\mathrm{UE}}$. \glspl{ue} are
-dropped uniformly over a square coverage area of side $D$, as are the \glspl{ap}.
+sampled uniformly over a square coverage area of size $D\times D$ \si{\metre\squared}, as are the \glspl{ap}.
 In the co-located case a single \gls{bs} is placed at the centre. The receiver noise power follows from the thermal noise density,
 $\sigma^{2}\,[\mathrm{dBm}] = -174 + 10\log_{10}(B/\mathrm{Hz}) + F$, with $B$
 the bandwidth and $F$ the noise figure in dB.
 
-The model is specified through realizations rather than a closed-form correlation
-matrix, so the large-scale fading coefficient $\beta_{kl}$, used for power control, is estimated from the realization itself as 
+The large-scale fading coefficient $\beta_{kl}$, used for power control, is estimated as 
 \begin{equation}
 \label{eq:beta}
 \beta_{kl} = \frac{1}{MQ}\sum_{q=1}^{Q}\norm{\vect{h}_{kl}[q]}^{2}.
@@ -106,16 +105,16 @@ matrix, so the large-scale fading coefficient $\beta_{kl}$, used for power contr
 \subsection{Centralized and Distributed Operation}
 \label{ssec:operation}
 
-Unlike the co-located case, which has a single sum-power budget, each \gls{ap} has its own power constraint. Since the symbols are independent
+Each \gls{ap} has its own power constraint. Since the symbols are independent
 and unit-power, the power radiated by \gls{ap} $l$ over the \gls{ofdm} block is
 \begin{equation}
 \label{eq:ptl}
 P_{T,l} = \sum_{q=1}^{Q}\sum_{k=1}^{K}\norm{\vect{w}_{kl}[q]}^{2} \leq \rho_{\max}.
 \end{equation}
-How \eqref{eq:ptl} is met is the difference between centralized and distributed operation, which is also related to the functional splits of \Cref{sssec:split}.
+How this power constraint is met is the difference between centralized and distributed operation, this also depends on the functional splits of \Cref{sssec:split}.
 
 \subsubsection{Centralized operation (splits S1, S2)}
-The \gls{cpu} holds $\mat{H}[q]$ and designs all precoders jointly. In the downlink it applies
+The \gls{cpu} estimates the full channel matrix $\mat{H}[q]$ and designs all precoders jointly. In the downlink it applies
 \gls{zf},
 \begin{equation}
 \label{eq:zf-precoder}
@@ -150,7 +149,7 @@ observations to the \gls{cpu}, which combines over all $LM$ antennas with
 $\mat{V}[q]=\mat{H}[q](\mat{H}[q]^{H}\mat{H}[q])^{-1}$. 
 
 \subsubsection{Distributed operation (split S3)}
-Each \gls{ap} designs its own precoder/combiner from its local \gls{csi}, so it suppresses only the interference it generates or observes itself and the coherent cross-\gls{ap} cancellation is lost. Writing $\mat{E}_{l}[q]=[\,\vect{h}_{1l}[q]\ \cdots\
+Each \gls{ap} designs its own precoder/combiner from its local \gls{csi}. Writing $\mat{E}_{l}[q]=[\,\vect{h}_{1l}[q]\ \cdots\
 \vect{h}_{Kl}[q]\,]\inC{M\times K}$ for the local channel matrix and
 $\mat{P}=\diag{p_{1},\dots,p_{K}}$,
 \begin{align}
@@ -161,7 +160,7 @@ $\mat{P}=\diag{p_{1},\dots,p_{K}}$,
 \mat{V}_{l}[q] &= \big(\mat{E}_{l}[q]\mat{P}\mat{E}_{l}[q]^{H}
 + \lambda\mat{I}_{M}\big)^{-1}\mat{E}_{l}[q],
 \end{align}
-are the local \gls{rzf} precoder/combiner which correspond to and the local \gls{mmse} precoder/combiner, with $\lambda=\sigma^{2}$. Each \gls{ap} also allocates its own power budget among the \glspl{ue} from local statistics,
+are the local \gls{rzf} precoder/combiner which correspond to the local \gls{mmse} precoder/combiner, with $\lambda=\sigma^{2}$. Each \gls{ap} also allocates its own power budget among the \glspl{ue} from local statistics,
 \begin{equation}
 \label{eq:local-fractional}
 \rho_{kl} = \rho_{\max}\,\frac{\beta_{kl}^{\,v}}{\sum_{i}\beta_{il}^{\,v}},

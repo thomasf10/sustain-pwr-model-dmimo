@@ -19,7 +19,7 @@ $\bar x_{\mathrm{DL}}=\bar x_{\mathrm{UL}}=1$.
 \label{ssec:pnet}
 
 The network consumption contains the $L$ \glspl{ap}, the $L$ fronthaul links
-that tie them to the \gls{cpu}, and the \gls{cpu} itself,
+that connect them to the \gls{cpu}, and the \gls{cpu} itself,
 \begin{equation}
 \label{eq:pnet}
 P_{\mathrm{net}} = \sum_{l=1}^{L}
@@ -87,7 +87,7 @@ S3 delivers a lower rate due to local processing.
 \centering
 \caption{Node at which each digital operation runs. The uplink combiner follows
 the downlink precoder. Channel estimation is listed for completeness but is not
-priced, since perfect \gls{csi} is assumed. \todo{see what to do with channel estimation consumption}}
+priced, since perfect \gls{csi} is assumed. }
 \label{tab:split}
 \ra{1.15}
 \begin{tabular}{@{}lccc@{}}
@@ -191,7 +191,14 @@ encoder and decoder models $P_{\mathrm{enc}}$, $P_{\mathrm{dec}}$ of
 &+ \mathcal{A}_{\mathrm{UL}}\!\left(P_{\mathrm{dec}}
 + P_{\mathrm{MIMO,UL}}^{\mathrm{CPU}}\right),
 \end{align}
-with $P_{\mathrm{CPU},0}$ the always-on consumption of the central unit.
+with $P_{\mathrm{CPU},0}$ the always-on consumption of the central unit. It does
+not cover the baseband hardware: the \glspl{fpga} on which the collective array
+is processed are already charged through the $\bar M P_{s}$ term of
+\eqref{eq:pmimo}, with $\bar M=\lceil LM/32\rceil$, and the encoder and decoder
+carry their own static power inside $P_{\mathrm{enc}}$ and $P_{\mathrm{dec}}$.
+$P_{\mathrm{CPU},0}$ is therefore only what remains, the chassis and the
+infrastructure of the central unit, together with the shared reference clock of
+\Cref{sssec:sync}.
 
 \subsection{Fronthaul and Synchronization}
 \label{ssec:fh}
@@ -284,8 +291,8 @@ Under a data-sharing split the same payload is duplicated to every \gls{ap}, so
 the network fronthaul load is $L\,R_{\mathrm{DL}}$. Keeping only this term in
 \eqref{eq:pnet} bounds the downlink energy efficiency by
 $1/(\Pi_{\mathrm{FH}}L)$, independently of the bandwidth, the transmit power and
-the precoder. With $L=16$ and $\Pi_{\mathrm{FH}}=\SI{0.25}{\watt}$ per Gbit/s the
-network cannot exceed $\SI{250}{\mega\bit\per\joule}$ however well everything
+the precoder. With $L=32$ and $\Pi_{\mathrm{FH}}=\SI{0.25}{\watt}$ per Gbit/s the
+network cannot exceed $\SI{125}{\mega\bit\per\joule}$ however well everything
 else is designed, which is why the serving cluster size is the dominant lever on
 cell-free energy efficiency.
 \end{remark}
@@ -307,13 +314,13 @@ A shared master clock is not a per-\gls{ap} cost and is counted in
 $P_{\mathrm{CPU},0}$ instead. The over-the-air part of reciprocity calibration
 is frame time and \gls{cpu} computation rather than a continuous per-\gls{ap}
 power, and is not modelled.
-\todo{source a value for $P_{\mathrm{sync}}$ and $\eta_{\mathrm{sync,sc}}$. The
-plausible range for the reference hardware spans roughly two orders of magnitude,
-from a temperature-controlled oscillator slaved over the fronthaul to an
-oven-controlled one with its own GNSS receiver, and at $L=32$ that range
-moves $P_{\mathrm{net}}$ by about $\SI{18}{\percent}$. Report it as a
-sensitivity band rather than a point value. Over-the-air calibration also
-consumes frame time, which is not yet charged to $\tau_{i,\mathrm{sig}}$.}
+% \todo{source a value for $P_{\mathrm{sync}}$. The
+% plausible range for the reference hardware spans roughly two orders of magnitude,
+% from a temperature-controlled oscillator slaved over the fronthaul to an
+% oven-controlled one with its own GNSS receiver, and at $L=32$ that range
+% moves $P_{\mathrm{net}}$ by about $\SI{18}{\percent}$. Report it as a
+% sensitivity band rather than a point value. Over-the-air calibration also
+% consumes frame time, which is not yet charged to $\tau_{i,\mathrm{sig}}$.}
 
 \subsection{Access Point and Co-located Power Consumption}
 \label{ssec:ap}
@@ -386,8 +393,10 @@ and the network static floor is $L\xi\rho_{\max}/\eta_{\mathrm{PA,max}} =
 equal total transmit power. The per-\gls{ap} constraint then costs the network
 twice under centralized operation: only part of the budget is radiated, while
 the static floor is paid in full.
-\todo{source $\xi,\alpha,\eta_{\mathrm{PA,max}}$ for AP-class amplifiers; the
-values used are fitted for macro-cell hardware.}
+The convention also fixes the operating budget, since $P_{\max}$ is a device
+rating rather than a free parameter: at the \gls{fr3} amplifier of
+\cite{peschiera2026fr3} the network budget is $P_{\mathrm{TX}}=LM\,P_{\max}$,
+which is how \Cref{tab:params_sys} is set.
 \end{remark}
 
 \subsubsection{Analog front end}
@@ -443,9 +452,9 @@ on the split.
 The precoder, combiner and baseband filter share a static power $P_{s}$ per
 FPGA, one per group of $32$ chains. A co-located array of $M_{\mathrm{ant}}$
 antennas amortises that power over $32$ chains at a time, whereas a network of
-$L$ \glspl{ap} with $M<32$ antennas each pays it $L$ times. At $L=16$ and $M=4$
-the network runs $16$ FPGAs where a co-located array of the same $64$ antennas
-runs $2$. Chopping a large array into many small ones leaves the per-chain
+$L$ \glspl{ap} with $M<32$ antennas each pays it $L$ times. At $L=32$ and $M=4$
+the network runs $32$ FPGAs where a co-located array of the same $128$ antennas
+runs $4$. Chopping a large array into many small ones leaves the per-chain
 digital costs untouched but destroys the sharing of the fixed ones, and this is a
 general feature rather than an artefact of the value $32$.
 \end{remark}

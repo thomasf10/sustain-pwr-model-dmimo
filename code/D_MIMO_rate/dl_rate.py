@@ -13,8 +13,8 @@ The channel realization comes from the backend selected by ``cfg.channel_model``
 (Sionna 38.901 UMi by default, or the analytical Rayleigh model).
 
 Per-user SEs are averaged over realizations to give the ergodic result. The DL
-sum rate in bit/s is ``sum_k SE_k * B`` and is what feeds the encoder/MIMO terms
-of the power model (``\\eqref{eq:rate}`` in the manuscript).
+sum rate in bit/s is ``B_tilde * sum_k SE_k`` on the effective bandwidth
+``B_tilde = 0.9 B``, and is what feeds the encoder/MIMO terms of the power model.
 """
 
 from __future__ import annotations
@@ -45,8 +45,14 @@ class DownlinkResult:
 
     @property
     def sum_rate(self) -> float:
-        """Downlink ergodic sum rate [bit/s] = sum_se * B."""
-        return self.sum_se * self.cfg.B
+        """Downlink ergodic sum rate [bit/s], ``R_DL = B_tilde * sum_k SE_k``.
+
+        The system model carries the delivered rate on the *effective* bandwidth
+        ``B_tilde = 0.9 B``, not on the full ``B``. The encoder and decoder
+        models of the power package are driven by ``R / B_tilde``, so using
+        ``B`` here would inflate both the rate and the coding power by 1/0.9.
+        """
+        return self.sum_se * self.cfg.B_tilde
 
     @property
     def se_5pct(self) -> float:
@@ -63,7 +69,8 @@ def simulate_downlink(cfg: DMIMOConfig,
                       rng: Optional[np.random.Generator] = None,
                       visualize: bool = False,
                       plot_cdf: bool = False,
-                      report_fronthaul: bool = False) -> DownlinkResult:
+                      report_fronthaul: bool = False,
+                      progress: bool = True) -> DownlinkResult:
     """Run the downlink SE evaluation for a configuration.
 
     Args:
@@ -75,6 +82,9 @@ def simulate_downlink(cfg: DMIMOConfig,
             :func:`mimo_helpers.plot_se_cdf` once the run finishes.
         report_fronthaul: If true, print the CPU-to-AP fronthaul length overview
             (:func:`mimo_helpers.fronthaul_summary`) for the first drop.
+        progress: Show the per-drop progress bar. Set false when this run is one
+            step of an outer sweep that draws its own bar, so the two do not
+            write to the same terminal line.
 
     Returns:
         A :class:`DownlinkResult` with the ergodic per-user SE, mean per-AP
@@ -90,7 +100,8 @@ def simulate_downlink(cfg: DMIMOConfig,
     # Build the channel backend once (Sionna UMi model or analytical Rayleigh).
     channel = mh.build_channel(cfg)
 
-    for i in tqdm(range(cfg.n_realizations), desc="Channel realizations", unit="drop"):
+    for i in tqdm(range(cfg.n_realizations), desc="Channel realizations",
+                  unit="drop", disable=not progress):
         # --- Channel model (mimo_helpers) --------------------------------
         ap_pos, ue_pos = mh.draw_positions(cfg, rng)
         if i == 0:

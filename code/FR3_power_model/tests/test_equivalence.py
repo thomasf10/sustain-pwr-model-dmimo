@@ -154,7 +154,12 @@ def legacy_point(M_ant, M_RF, P_T, R_DL, R_UL, xbar_DL=1.0, xbar_UL=1.0):
 
 
 def _check(M_ant, M_RF, P_T, R_DL, R_UL, xbar_DL=1.0, xbar_UL=1.0):
-    p = PowerParams()
+    # The supply-and-cooling efficiencies are pinned to the legacy value here
+    # rather than taken from the defaults. Fig_2a.py / Fig_2b.py use 0.81 while
+    # the published text of the paper states 0.8, so PowerParams follows the
+    # text and this test follows the script it is meant to reproduce. Do not
+    # "fix" this to the default: it would stop testing the refactor.
+    p = PowerParams(eta_dig_sc=0.81, eta_ana_sc=0.81, eta_PA_sc=0.81)
     op = OperatingPoint(M_ant=M_ant, M_RF=M_RF, P_T=P_T, R_DL=R_DL, R_UL=R_UL,
                         xbar_DL=xbar_DL, xbar_UL=xbar_UL)
     b = compute(p, op)

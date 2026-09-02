@@ -122,6 +122,14 @@ point rather than a truncated curve.
 `python scripts/compare_deployments.py` at 64 total antennas, `K = 10`, 20 drops
 per point.
 
+> **Stale.** These numbers predate the alignment with the cleaned-up system and
+> power models: they were produced at `f_c = 7 GHz`, `b_FH = 12`, the old
+> coherence-block frame, `R = B sum_k SE_k` rather than `B_tilde sum_k SE_k`,
+> and with the S3 local factorization charged in the downlink only. The
+> deployment is also no longer the headline one (128 antennas, `K = 20`). The
+> mechanisms described below still hold, but every figure in the tables has to
+> be regenerated before it is quoted.
+
 ### Sweep 1: transmit power, at L = 16 x M = 4
 
 | deployment | P_TX [W] | R_DL [Gb/s] | R_UL [Gb/s] | R_tot [Gb/s] | P_net [W] | EE [Mb/J] |
@@ -189,15 +197,16 @@ has too few degrees of freedom to suppress `K = 10` users, and the fronthaul
 grows with the link count regardless. Fully distributed operation therefore has a
 genuine optimum in the number of APs, which centralized operation does not.
 
-**Warning: several parameters are placeholders.** `eta_FH_sc`, `eta_CPU_sc`,
-`b_FH`, `delta_FH_micro`, `P_CPU_0` and `P_sync` have no counterpart in the
-co-located model and no sourced value yet (see the to-do list at the end of
-`dmimo_pwr_model.tex`); `unsourced_parameters()` prints them at the top of every
-run and every manifest names them. Since the fronthaul is the dominant term,
-`b_FH` and `Pi_FH` in particular carry the S1-versus-S2-versus-S3 conclusion, and
-it should be reported as a sensitivity range over them rather than as a point
-value. The inherited PA constants `xi`, `alpha` and `eta_PAmax` were fitted for
-macro-cell amplifiers, not AP-class ones.
+**Warning: several parameters are placeholders.** `b_FH`, `delta_FH_micro` and
+`P_sync` have no counterpart in the co-located model and no sourced value yet,
+and `eta_FH_sc`, `eta_CPU_sc`, `eta_sync_sc` and `P_CPU_0` are fixed by a stated
+assumption rather than a measurement. `unsourced_parameters()` prints both
+groups at the top of every run and every manifest names them. Since the
+fronthaul is the dominant term, `b_FH` and `Pi_FH` in particular carry the
+S1-versus-S2-versus-S3 conclusion, and it should be reported as a sensitivity
+range over them rather than as a point value. The PA constants `xi`, `alpha` and
+`eta_PAmax` are those of the SiGe BiCMOS amplifier measured at FR3, so they are
+already appropriate to this band.
 
 ## Network overviews
 
@@ -231,40 +240,33 @@ machine-readable matters more than being hand-editable. Manifests are committed
 rather than ignored, unlike the figures, because they are the record of what the
 figures mean.
 
-## Time budget: the two sets of taus
+## Time budget: one frame, two packages
 
-The two packages describe the same time budget in different vocabularies, and
-this is the single most likely source of a silent factor-of-something error when
-wiring them together. `DMIMOPowerParams.from_rate_config` is the one place that
-resolves it, and it should be the only way these parameters are built.
+The two packages describe the same time budget, and it used to be in two
+different vocabularies, which was the single most likely source of a silent
+factor-of-something error when wiring them together. Both now hold the **frame
+fractions** of the system model, so `DMIMOPowerParams.from_rate_config` copies
+them across rather than translating, and it should still be the only way these
+parameters are built.
 
-`../FR3_power_model/` works in the **frame domain**. `PowerParams` carries
-`tau_DL` (downlink share of the frame, default `0.75`), `tau_UL = 1 - tau_DL`,
-and the signalling fractions `tau_DLsig = tau_ULsig = 1/14`. Its downlink prelog
-is `tau_DL * (1 - tau_DLsig)`.
-
-`../D_MIMO_rate/` works in the **coherence-block domain**. `DMIMOConfig` splits a
-block of `tau_c = 200` samples into `tau_p` pilots, `tau_u` uplink data and
-`tau_d` downlink data, and exposes `dl_prelog = tau_d / tau_c` and
-`ul_prelog = tau_u / tau_c`.
-
-Charging the pilots to the uplink signalling phase, as `dmimo_sysmodel.tex`
-does, pins the mapping exactly:
+A TDD frame splits into a downlink phase `tau_DL` (default `0.75`) and an uplink
+phase `tau_UL = 1 - tau_DL`, each spending `tau_isig` (default `1/14`) on
+reference signalling and carrying data on the fraction `xbar_i` of what is left,
+the rest being micro-sleep. Both `PowerParams` and `DMIMOConfig` carry those
+fields under the same names, and the spectral-efficiency prelog of the rate
+model,
 
 ```
-tau_DL    = tau_d / tau_c
-tau_UL    = (tau_p + tau_u) / tau_c        ( = 1 - tau_DL )
-tau_ULsig = tau_p / (tau_p + tau_u)
-tau_DLsig = 0                              (the downlink phase is all data)
+dl_prelog = tau_DL * (1 - tau_DLsig) * xbar_DL
+ul_prelog = tau_UL * (1 - tau_ULsig) * xbar_UL
 ```
 
-so `tau_UL * tau_ULsig` is the pilot share and `tau_UL * (1 - tau_ULsig)` the
-uplink data share. The degenerate `tau_u = 0` gives `tau_ULsig = 1`, the
-downlink-only frame in which the uplink phase carries nothing but pilots, with
-`tau_UL = tau_p/tau_c = 0.1` and `tau_DL = 0.9`. `test_frame_mapping_from_rate_config`
-pins all four identities.
+is by construction the fraction of the frame that `frame_average` charges at the
+data power level. A direction whose signalling fraction reaches one, or whose
+load is zero, carries no data and delivers no rate.
+`test_frame_is_shared_with_the_rate_config` pins the identities.
 
-Two further consequences:
+Three further consequences:
 
 - **The rates are already delivered rates.** The rate model applies
   `dl_prelog` / `ul_prelog` inside `mimo_helpers.spectral_efficiency`, so
@@ -273,9 +275,18 @@ Two further consequences:
   that charging the delivered rate directly is *equivalent* to frame-averaging
   the peak rate, so doing both would count the frame structure twice;
   `test_s3_downlink_prelog_is_not_applied_twice` guards it.
-- **`tau_p` is pure bookkeeping.** Under the perfect-CSI assumption of
-  `mimo_helpers.estimate_channels` it never touches the SINR, only the prelog. It
-  stops being free the moment pilot-based estimation is modelled.
+- **The delivered rate rides on the effective bandwidth.**
+  `R_i = B_tilde * sum_k SE_k` with `B_tilde = 0.9 B`, and the encoder and
+  decoder models divide by that same `B_tilde`, so the factor cancels and the
+  coding power tracks the spectral efficiency. `from_rate_config` copies
+  `B_tilde_factor` across so the two packages cannot disagree about it.
+- **`tau_p` is derived and is pure bookkeeping.** The frame spans one coherence
+  block, so `DMIMOConfig.tau_p` reports the signalling samples that the frame
+  implies. Under the perfect-CSI assumption of `mimo_helpers.estimate_channels`
+  it never touches the SINR. It matters only as a check: the default frame
+  leaves about 14 signalling samples per block, fewer than the `K = 20`
+  orthogonal pilots a real estimator would need, and `DMIMOConfig` warns about
+  it. That gap stops being free the moment pilot-based estimation is modelled.
 
 ### The coherence block had two values
 

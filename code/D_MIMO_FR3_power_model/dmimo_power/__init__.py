@@ -31,6 +31,7 @@ for _sibling in ("FR3_power_model", "D_MIMO_rate"):
         sys.path.insert(0, _path)
 
 from .config import (  # noqa: E402
+    ASSUMED,
     UNSOURCED,
     DMIMOPowerParams,
     PASizing,
@@ -60,6 +61,7 @@ __all__ = [
     "DMIMOPowerParams",
     "PASizing",
     "Split",
+    "ASSUMED",
     "UNSOURCED",
     "unsourced_parameters",
     "NetworkBreakdown",

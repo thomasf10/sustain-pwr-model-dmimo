@@ -36,9 +36,9 @@ class PowerParams:
     B_tilde_factor: float = 0.9  # Effective-bandwidth factor (B_tilde = factor * B)
 
     # --- Supply & cooling efficiencies (eq 2.19) --------------------------
-    eta_dig_sc: float = 0.81
-    eta_ana_sc: float = 0.81
-    eta_PA_sc: float = 0.81
+    eta_dig_sc: float = 0.8
+    eta_ana_sc: float = 0.8
+    eta_PA_sc: float = 0.8
 
     # --- Frame timing (Fig 2.2) -------------------------------------------
     tau_DL: float = 0.75        # DL duration / frame duration

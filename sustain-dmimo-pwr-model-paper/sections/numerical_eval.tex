@@ -4,25 +4,21 @@
 \subsection{Parameters}
 \label{ssec:params}
 
-The evaluation needs three groups of parameters. The deployment, channel and
+The evaluation parameters are split up into three groups. The deployment, channel and
 frame of \Cref{sec:sysmodel} are collected in \Cref{tab:params_sys}. The
-hardware constants of the \gls{ap} and of the co-located baseline are inherited
-unchanged from the \gls{fr3} \gls{bs} model of \cite{peschiera2026fr3} and are
-listed in \Cref{tab:params_hw}, so that the two deployments cannot differ in a
-hardware constant. The quantities that exist only in a distributed network, that
+hardware constants of the \gls{ap} and of the co-located baseline are inherited from the \gls{fr3} \gls{bs} model of \cite{peschiera2026fr3} and are
+listed in \Cref{tab:params_hw}. The quantities that exist only in a distributed network, that
 is the fronthaul, the central unit and the per-\gls{ap} synchronization, are
 collected in \Cref{tab:params_dmimo}.
 
+Note that the number of data subcarriers is set to $Q=3000$ for the power model. However, the rate model instead evaluates the subcarrier average of \eqref{eq:se} on $64$
+subcarriers and scales the resulting spectral efficiency by $\tilde B$, as evaluating all $3000$ subcarriers would consume unnecessary compute time.
+
+
+
 \begin{table}[t]
 \centering
-\caption{Deployment, channel and frame parameters of \Cref{sec:sysmodel}.
-Entries marked $\ddag$ are design choices that still have to be fixed; the
-remaining rows are either cited or derived from a cited quantity. The noise
-figure is an assumption rather than a measured value, and $\sigma^{2}$ inherits
-that status through \Cref{ssec:channel}.
-\todo{settle every $\ddag$ row before the figures are final; the topology row in
-particular, since \Cref{rem:fh_ceiling} and \Cref{rem:fpga} quote $L=16$, $M=4$
-while the rate model is configured with $L=40$, $M=4$, $K=20$.}}
+\caption{Deployment, channel and frame parameters of \Cref{sec:sysmodel}.}
 \label{tab:params_sys}
 \ra{1.15}
 \begin{tabular}{@{}llr@{}}
@@ -30,41 +26,43 @@ while the rate model is configured with $L=40$, $M=4$, $K=20$.}}
 Symbol & Description & Value \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Topology}}\\
-$L$        & Number of \glspl{ap}                & $16$ $\ddag$ \\
-$M$        & Antennas per \gls{ap}               & $4$ $\ddag$ \\
-$LM$       & Total antennas, both deployments    & $64$ \\
-$K$        & Single-antenna \glspl{ue}           & $20$ $\ddag$ \\
-$Q$        & Subcarriers evaluated               & $64$ $\ddag$ \\
-$D$        & Coverage-area side                  & \SI{200}{\metre} $\ddag$ \\
+$L$        & Number of \glspl{ap}, swept         & $1,2,\dots,128$ \\
+$M$        & Antennas per \gls{ap}, $LM/L$       & $128,\dots,1$ \\
+$LM$       & Total antennas, both deployments    & $128$ \\
+$K$        & Single-antenna \glspl{ue}           & $20$ \\
+$Q$        & Data subcarriers, $\tilde B/\Delta_f$ & $3000$ \\
+$D$        & Coverage-area side                  & \SI{200}{\metre} \\
 $h_{\mathrm{AP}}$ & \gls{ap} height~\cite{tr38901}  & \SI{10}{\metre} \\
 $h_{\mathrm{UE}}$ & \gls{ue} height~\cite{tr38901}  & \SI{1.5}{\metre} \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Radio}}\\
-$f_{c}$    & Carrier frequency                   & \SI{7}{\giga\hertz} $\ddag$ \\
+$f_{c}$    & Carrier frequency                   & \SI{10}{\giga\hertz}  \\
 $B$        & Bandwidth~\cite{peschiera2026fr3}   & \SI{400}{\mega\hertz} \\
 $\Delta_f$ & Subcarrier spacing~\cite{peschiera2026fr3} & \SI{120}{\kilo\hertz} \\
 $\tilde B$ & Effective bandwidth, $0.9B$         & \SI{360}{\mega\hertz} \\
-$F$        & Receiver noise figure               & \SI{8}{\deci\bel} $\ddag$ \\
+$F$        & Receiver noise figure               & \SI{8}{\deci\bel} \\
 $\sigma^{2}$ & Noise power, from \Cref{ssec:channel} & $-80.0$\,dBm \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Transmit power and power control}}\\
-$\rho_{\max}$ & Per-\gls{ap} budget              & \SI{1}{\watt} $\ddag$ \\
-$P_{\mathrm{TX}}$ & Total budget, $L\rho_{\max}$ & \SI{16}{\watt} \\
-$p_{\max}$ & Per-\gls{ue} uplink budget          & \SI{0.1}{\watt} $\ddag$ \\
-$v$        & Downlink fractional exponent        & $0.5$ $\ddag$ \\
-$v_{\mathrm{ul}}$ & Uplink fractional exponent   & $-0.5$ $\ddag$ \\
-$\lambda$  & Local \gls{rzf} loading             & $\sigma^{2}$ $\ddag$ \\
+$P_{\mathrm{TX}}$ & Total budget, $LM\,P_{\max}$    & \SI{12.8}{\watt} \\
+$\rho_{\max}$ & Per-\gls{ap} budget, $P_{\mathrm{TX}}/L$
+  & \SI{0.4}{\watt} at $L=32$ \\
+$p_{\max}$ & Per-\gls{ue} uplink budget          & \SI{0.1}{\watt}  \\
+$v$        & Downlink fractional exponent        & $0.5$  \\
+$v_{\mathrm{ul}}$ & Uplink fractional exponent   & $-0.5$  \\
+$\lambda$  & Local \gls{rzf} loading             & $\sigma^{2}$ \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Frame}}\\
-$\tau_{\mathrm{DL}}$ & Downlink share of the frame        & $0.9$ $\ddag$ \\
-$\tau_{\mathrm{UL}}$ & Uplink share, $1-\tau_{\mathrm{DL}}$ & $0.1$ \\
-$\tau_{\mathrm{DL,sig}}$ & Downlink signalling fraction   & $0$ $\ddag$ \\
-$\tau_{\mathrm{UL,sig}}$ & Uplink signalling fraction     & $1$ $\ddag$ \\
-$\bar x_{\mathrm{DL}},\bar x_{\mathrm{UL}}$ & Resource load & $1$ $\ddag$ \\
-$\upsilon_{\mathrm{coh}}$ & Samples per coherence block   & $200$ $\ddag$ \\
+$\tau_{\mathrm{DL}}$ & Downlink share of the frame        & $0.75$  \\
+$\tau_{\mathrm{UL}}$ & Uplink share, $1-\tau_{\mathrm{DL}}$ & $0.25$ \\
+$\tau_{\mathrm{DL,sig}}$ & Downlink signalling fraction   & $1/14$  \\
+$\tau_{\mathrm{UL,sig}}$ & Uplink signalling fraction     & $1/14$  \\
+$\bar x_{\mathrm{DL}},\bar x_{\mathrm{UL}}$ & Resource load & $1$  \\
+$\upsilon_{\mathrm{coh}}$ & Samples per coherence block   & $200$  \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Monte Carlo}}\\
-           & Channel realizations per point      & $100$ $\ddag$ \\
+           & Channel realizations per point      & $20$  \\
+$Q_{\mathrm{MC}}$ & Subcarriers evaluated per realization & $64$  \\
            & Channel model~\cite{tr38901,hoydis2022sionna} & 38.901 UMi \\
 \bottomrule
 \end{tabular}
@@ -73,23 +71,8 @@ $\upsilon_{\mathrm{coh}}$ & Samples per coherence block   & $200$ $\ddag$ \\
 \begin{table*}[t]
 \centering
 \caption{Hardware constants of the \gls{ap} and of the co-located baseline,
-inherited unchanged from the \gls{fr3} \gls{bs} model of
-\cite{peschiera2026fr3} and applied to both deployments. $P_{s}$ is the static
-power of one \gls{fpga} and is charged to the precoder, the combiner and the
-baseband filter; the encoder, decoder, \gls{ifft} and predistortion blocks carry
-a further \SI{0.1}{\watt} each inside the component models of that reference.
-$P_{\max}$ follows the sizing convention of \Cref{rem:pa_sizing} rather than
-being a component rating. The phase-shifter figure of merit is not listed
-because the array is fully digital.
-\todo{units are missing for $\Xi_{\mathrm{DAC},1}$, $\Xi_{\mathrm{DAC},2}$,
-$\Xi_{\mathrm{LNA}}$ and $\Xi_{\mathrm{mix}}$; take them from
-\cite{peschiera2026fr3} or drop the rows, since a bare number is not
-reproducible. $\xi$, $\alpha$ and $\eta_{\mathrm{PA,max}}$ were fitted for
-macro-cell amplifiers and should be refitted for \gls{ap}-class hardware
-(\Cref{rem:pa_sizing}). Every value here is traceable to the authors' own
-evaluation script, but the equation numbering that script is documented against
-does not match \cite{peschiera2026fr3}, so confirm each value against the
-published version before quoting it.}}
+inherited from the \gls{fr3} \gls{bs} model of
+\cite{peschiera2026fr3} and applied to both deployments.}
 \label{tab:params_hw}
 \ra{1.15}
 \begin{tabular}{@{}llr@{\hskip 2em}llr@{}}
@@ -98,25 +81,27 @@ Symbol & Description & Value & Symbol & Description & Value \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Supply and cooling}}
   & \multicolumn{3}{l}{\emph{Analog front end}}\\
-$\eta_{\mathrm{dig,sc}}$ & Digital block            & $0.81$
+$\eta_{\mathrm{dig,sc}}$ & Digital block            & $0.8$
   & $b_{\mathrm{DAC}}$ & \gls{dac} effective bits        & $8$ \\
-$\eta_{\mathrm{ana,sc}}$ & Analog block             & $0.81$
+$\eta_{\mathrm{ana,sc}}$ & Analog block             & $0.8$
   & $f_{\mathrm{DAC}}$ & \gls{dac} sampling frequency    & \SI{5}{\giga\hertz} \\
-$\eta_{\mathrm{PA,sc}}$  & Amplifier block          & $0.81$
-  & $\Xi_{\mathrm{DAC},1}$ & \gls{dac} figure of merit 1 & \num{1.5e-5} \\
+$\eta_{\mathrm{PA,sc}}$  & Amplifier block          & $0.8$
+  & $\Xi_{\mathrm{DAC},1}$ & \gls{dac} static coefficient & \SI{1.5e-5}{\watt} \\
 \cmidrule(r){1-3}
 \multicolumn{3}{@{}l}{\emph{Power amplifier}}
-  & $\Xi_{\mathrm{DAC},2}$ & \gls{dac} figure of merit 2 & \num{1.5e-12} \\
+  & $\Xi_{\mathrm{DAC},2}$ & \gls{dac} dynamic coefficient & \SI{1.5e-12}{\joule\per\bit} \\
 $\xi$              & Static-to-dynamic ratio        & $0.1$
   & $b_{\mathrm{ADC}}$ & \gls{adc} effective bits        & $8$ \\
 $\alpha$           & Efficiency exponent            & $0.75$
   & $f_{\mathrm{ADC}}$ & \gls{adc} sampling frequency    & \SI{5}{\giga\hertz} \\
 $\eta_{\mathrm{PA,max}}$ & Maximum efficiency       & $0.15$
   & $W_{\mathrm{ADC}}$ & \gls{adc} Walden figure of merit & \SI{70}{\femto\joule} \\
-$P_{\max}$         & Rating, $\rho_{\max}/M$        & \SI{0.25}{\watt}
-  & $\Xi_{\mathrm{LNA}}$ & \gls{lna} figure of merit     & \num{2.7e-11} \\
+$P_{\max}$         & Rating, $\rho_{\max}/M$        & \SI{0.1}{\watt}
+  & $\Xi_{\mathrm{LNA}}$ & \gls{lna}, $P_{\mathrm{LNA}}=\Xi_{\mathrm{LNA}}B$
+  & \SI{2.7e-11}{\watt\per\hertz} \\
 $\zeta_{\mathrm{sig}}$ & Signalling power fraction  & $1/12$
-  & $\Xi_{\mathrm{mix}}$ & Mixer figure of merit         & \num{2.5e-13} \\
+  & $\Xi_{\mathrm{mix}}$ & Mixer, $P_{\mathrm{mix}}=\Xi_{\mathrm{mix}}f_{c}$
+  & \SI{2.5e-13}{\watt\per\hertz} \\
 \cmidrule(r){1-3}
 \multicolumn{3}{@{}l}{\emph{Digital processing}}
   & $P_{\mathrm{LO}}$ & Local oscillator                 & \SI{40}{\milli\watt} \\
@@ -127,15 +112,15 @@ $\mu$              & Sampling-frequency factor      & $0.9$
 $f_{s,\mathrm{I}}$ & Constellation rate, $\mu B$    & \SI{360}{\mega\hertz}
   & \multicolumn{3}{l}{}\\
 $f_{s,\mathrm{II}}$ & Baseband rate, $Q_{\mathrm{IFFT}}\Delta_f$ & \SI{491.52}{\mega\hertz}
-  & \multicolumn{3}{l}{\emph{Computational efficiencies [OPS/W]}}\\
+  & \multicolumn{3}{l}{\emph{Computational efficiencies [complex GOPS/W]}}\\
 $\Xi_{\mathrm{DPD}}$ & Predistortion, ops per sample & $50$
-  & $\eta_{\mathrm{enc}},\eta_{\mathrm{dec}}$ & Encoder, decoder (ASIC) & \num{2e12} \\
+  & $\eta_{\mathrm{enc}},\eta_{\mathrm{dec}}$ & Encoder, decoder (ASIC) & \num{2000} \\
 $n_{\mathrm{filt,BB}}$ & Baseband-filter taps        & $20$
-  & $\eta_{\mathrm{IFFT}},\eta_{\mathrm{DPD}}$ & \gls{ifft}, predistortion (ASIC) & \num{2e12} \\
+  & $\eta_{\mathrm{IFFT}},\eta_{\mathrm{DPD}}$ & \gls{ifft}, predistortion (ASIC) & \num{2000} \\
 $o_{\mathrm{filt,BB}}$ & Baseband oversampling       & $4$
-  & $\eta$ & Precoder, combiner (\gls{fpga}) & \num{0.2e12} \\
+  & $\eta$ & Precoder, combiner (\gls{fpga}) & \num{200} \\
 $P_{s}$ & Static power per \gls{fpga}               & \SI{1}{\watt}
-  & $\eta_{\mathrm{filt,BB}}$ & Baseband filter (\gls{fpga}) & \num{0.2e12} \\
+  & $\eta_{\mathrm{filt,BB}}$ & Baseband filter (\gls{fpga}) & \num{200} \\
    & \gls{rf} chains per \gls{fpga}                  & $32$
   & \multicolumn{3}{l}{}\\
 \cmidrule(r){1-3}
@@ -153,14 +138,8 @@ $\delta^{\mu}_{\mathrm{PA}},\delta^{0}_{\mathrm{PA}}$   & Amplifier & $0.5$, $0.
 
 \begin{table}[t]
 \centering
-\caption{Parameters specific to the distributed network. A value is given only
-where it comes from a reference; TBD marks a quantity that the co-located model
-of \cite{peschiera2026fr3} does not contain and for which no source has been
-established, so no number is quoted here.
-\todo{source every TBD row. The implementation currently runs placeholders for
-them, chosen only to be of the right order of magnitude; they are deliberately
-not printed here, and any conclusion that turns on one of them has to be
-reported as a sensitivity range rather than a point value. Check
+\caption{Parameters specific to the distributed network. 
+\todo{Check
 $P_{\mathrm{FH},0}$ and $\Pi_{\mathrm{FH}}$ against \cite{ngo2018total} before
 quoting them.}}
 \label{tab:params_dmimo}
@@ -170,54 +149,309 @@ quoting them.}}
 Symbol & Description & Value & Source \\
 \midrule
 \multicolumn{4}{@{}l}{\emph{Fronthaul}}\\
-$P_{\mathrm{FH},0}$ & Traffic-independent power per link
+$P_{\mathrm{FH},0}$ & Traffic-independent power
   & \SI{0.825}{\watt} & \cite{ngo2018total} \\
 $\Pi_{\mathrm{FH}}$ & Traffic-dependent coefficient
   & \SI{0.25}{\watt}/Gbit/s & \cite{ngo2018total} \\
-$b_{\mathrm{FH}}$ & Bits per real sample            & TBD & \\
-$\delta^{\mu}_{\mathrm{FH}}$ & Idle transceiver reduction & TBD & \\
-$\eta_{\mathrm{FH,sc}}$ & Supply and cooling        & TBD & \\
+$b_{\mathrm{FH}}$ & Bits per real sample            & 8 & \\
+$\delta^{\mu}_{\mathrm{FH}}$ & Idle transceiver reduction & 0.25 & assumed\\
+$\eta_{\mathrm{FH,sc}}$ & Supply and cooling        & $0.8$ & assumed \\
 \midrule
 \multicolumn{4}{@{}l}{\emph{Central unit}}\\
-$P_{\mathrm{CPU},0}$ & Always-on consumption        & TBD & \\
-$\eta_{\mathrm{CPU,sc}}$ & Supply and cooling, $\approx 1/\mathrm{PUE}$
-  & TBD & \\
+$P_{\mathrm{CPU},0}$ & Always-on consumption        & \SI{0}{\watt} & assumed \\
+$\eta_{\mathrm{CPU,sc}}$ & Supply and cooling       & $0.8$ & assumed \\
   & \gls{rf} chains per \gls{cpu} \gls{fpga}        & $32$
   & \cite{peschiera2026fr3} \\
 \midrule
 \multicolumn{4}{@{}l}{\emph{Synchronization}}\\
-$P_{\mathrm{sync}}$ & Per-\gls{ap} reference hardware & TBD & \\
-$\eta_{\mathrm{sync,sc}}$ & Supply and cooling      & TBD & \\
+$P_{\mathrm{sync}}$ & Per-\gls{ap} reference hardware & \SI{0.1}{\watt} & \\
+$\eta_{\mathrm{sync,sc}}$ & Supply and cooling      & $0.8$ & assumed \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\todo{Parameters that still need a decision rather than a source.
-(i) The headline topology: \Cref{rem:fh_ceiling} and \Cref{rem:fpga} quote
-$L=16$, $M=4$, whereas the rate model is configured with $L=40$, $M=4$, $K=20$;
-one of the two has to move.
-(ii) The frame in \Cref{tab:params_sys} gives $\tau_{\mathrm{UL,sig}}=1$, so the
-uplink phase carries nothing but pilots and $R_{\mathrm{UL}}=0$. The evaluation
-is then downlink-only and \eqref{eq:ee_net} reduces to
-$R_{\mathrm{DL}}/P_{\mathrm{net}}$; either say so explicitly or give the uplink
-a data phase.
-(iii) With $\tau_{\mathrm{DL,sig}}=0$ the amplifier signalling level of
-\eqref{eq:pa_avg_ap} is never reached, so $\zeta_{\mathrm{sig}}$ has no effect
-on the reported numbers.
-(iv) $\upsilon_{\mathrm{coh}}$ is stated outright as $200$ samples; the
-Doppler-derived value of \cite{peschiera2026fr3}, at a maximum path-length
-difference of \SI{300}{\metre} and a receiver velocity of
-\SI{30}{\metre\per\second}, would be about $714$ samples at
-$f_{c}=\SI{7}{\giga\hertz}$. Pick one and state which.
-(v) $Q=64$ subcarriers are evaluated while the \gls{ofdm} system carries
-$Q_{\mathrm{IFFT}}=4096$; say that the former is a Monte Carlo subset so the two
-are not read as the same quantity.
-(vi) \eqref{eq:pmimo} charges $P_{s}=\SI{1}{\watt}$ per \gls{fpga} to the
-precoder, the combiner and the baseband filter, while the \gls{ifft} and
-predistortion blocks each carry a flat \SI{0.1}{\watt} that does not depend on
-the antenna count. \Cref{rem:fpga} discusses only the first, but both are paid
-once per node: the network pays $L\times\SI{0.2}{\watt}$ of \gls{ifft} and
-predistortion static where the co-located site pays \SI{0.2}{\watt}, an exactly
-$L$-fold penalty, against the $L\lceil M/32\rceil$ versus $\lceil LM/32\rceil$
-ratio of the \gls{fpga} term. The remark therefore understates the loss of
-amortisation; either extend it or say that it treats the dominant term only.}
+\subsection{Evaluation Scenarios}
+\label{ssec:scenarios}
+
+We consider four evaluations that use the parameters of \Cref{tab:params_sys,tab:params_hw,%
+tab:params_dmimo}. All of them hold the total antenna count at $LM=128$ and the total transmit budget at $P_{\mathrm{TX}}$, the two deployments cover the same
+area with the same radiating hardware and the same radiated power, and differ
+only in how finely that hardware is spread. Distributing therefore never adds
+antennas, it only redistributes them. The amplifier rating
+$P_{\max}=\rho_{\max}/M=P_{\mathrm{TX}}/(LM)$ is the same at every point of
+every evaluation, so the amplifiers are physically identical hardware throughout and
+any change in the amplifier consumption comes from utilisation alone. \todo{this probably captures enough so that remark 2 could be shortened or removed }
+The first evaluation considers the delivered rate against the consumed power, by sweeping $P_{\mathrm{TX}}$, with the amplifiers re-sized at each point so that every point on the curve is a deployment dimensioned for the budget it is given. It is reported for the co-located baseline and for the three splits of \Cref{tab:split}, at $L\in\{32,64,128\}$, that is at $M\in\{4,2,1\}$ antennas per \gls{ap}. 
+The second evaluation varies $L$ over $2,4,\dots,128$ at fixed $P_{\mathrm{TX}}$ and
+reports $P_{\mathrm{net}}$, again for the three splits. The co-located baseline of
+\Cref{ssec:ap} is drawn alongside it at $L=1$. 
+The third evaluation considers the same sweep as evaluation two but looks at the contributions of \eqref{eq:pnet} and \eqref{eq:pap}, namely the amplifier, digital, analog, fronthaul, central-unit and synchronization blocks. 
+The fourth evaluation reports the energy efficiency \eqref{eq:ee_net} over the same sweep.
+Because the delivered rate is not constant along it, $P_{\mathrm{net}}$ alone
+cannot say whether distributing is beneficial. The fronthaul ceiling $1/(\Pi_{\mathrm{FH}}L)$ of \Cref{rem:fh_ceiling} is drawn alongside the data-sharing splits.
+
+\subsection{Evaluation 1: Delivered Rate against Consumed Power}
+\label{ssec:eval_rate_power}
+
+\begin{figure*}[t]
+\centering
+\input{figs/eval1_rate_vs_power.tex}
+\caption{Delivered sum rate against network power consumption, at $LM=128$
+antennas and $K=20$ \glspl{ue}. Each curve is obtained by sweeping the
+total transmit budget over $P_{\mathrm{TX}}\in\{1.6,3.2,6.4,12.8,25.6,51.2\}\,\mathrm{W}$, increasing upward, with the amplifiers re-sized at every point.}
+\label{fig:eval1}
+\end{figure*}
+
+\Cref{fig:eval1} illustrates the delivered rate against the consumed power, when sweeping the transmit power. Distributing the array enables a higher rate but results in a higher power consumption. At the nominal budget $P_{\mathrm{TX}}=\SI{12.8}{\watt}$ and $L=32$, centralized
+\gls{dmimo} delivers \SI{69.7}{\giga\bit\per\second} against
+\SI{44.4}{\giga\bit\per\second} for the co-located site, a factor $1.57$, but
+draws \SI{470}{\watt} against \SI{188}{\watt}. The rate gain is overwhelmingly
+in the uplink, \SI{14.9}{\giga\bit\per\second} against
+\SI{4.9}{\giga\bit\per\second}, which is macro diversity working as expected:
+every \gls{ue} is close to some \gls{ap}, whereas a single central array serves
+the edge of the coverage area over the full path loss. 
+
+The shape difference in the curves of the different deployments is significant. The co-located curve
+is the only one that moves substantially along the power axis, from
+\SI{121}{\watt} to \SI{417}{\watt} across a $32$-fold increase in the power budget. The distributed curves S1 and S2 are close to vertical: the rate climbs while $P_{\mathrm{net}}$ marginally increases. This highlights the fact that the distributed network carries a large consumed power overhead due to the fronthaul and distributed processing. Additionally, split S3 has a relatively flat rate when the transmit budget increases. Since local processing is interference-limited rather than noise-limited, raising every \gls{ap}'s power raises the interference with the signal and thus results in a stable \gls{sinr}. 
+
+The three distributed curves have a different power consumption, mainly due to the fronthaul requirements. A link
+operated under S1 carries $M$ quantized sample streams over the fronthaul in either direction by
+\eqref{eq:fh_s1}, so the network transports $LM$ streams. A link operated under S2 or S3 carries the
+traffic expressed in the user domain instead: $K$ uplink partial sums per
+\gls{ap} according to \eqref{eq:fh_ul}, together with the downlink
+payload duplicated to every \gls{ap}. Moving the precoder and the combiner out
+to the \glspl{ap} therefore converts antenna-domain streams into user-domain
+streams, and that conversion compresses the link only when an \gls{ap} has more
+antennas than served \glspl{ue}. Considernig the scenario of $K=20$ \glspl{ue} and $M=\{4, 2, 1\}$ the fronthaul consumption of S2 and S3 are much higher than the one of S1. Split S2 is accordingly the most expensive of the three and worsens fastest with $L$, from \SI{1124}{\watt} to \SI{3962}{\watt} between $L=32$ and $L=128$ at the
+nominal budget, while delivering exactly the rate of S1. S3 has a slighlty lower consumption as compared to S2, since local processing delivers a lower rate, and as such requires a lower fronthaul rate. 
+
+
+
+\subsection{Evaluation 2: Network Power against the Number of \glspl{ap}}
+\label{ssec:eval_power_aps}
+
+\begin{figure}[t]
+\centering
+\input{figs/eval2_power_vs_aps.tex}
+\caption{Network power consumption against the number of \glspl{ap}, at the
+fixed total budget $P_{\mathrm{TX}}=\SI{12.8}{\watt}$, the fixed antenna total
+$LM=128$ and $K=20$ \glspl{ue}.}
+\label{fig:eval2}
+\end{figure}
+
+\Cref{fig:eval2} reports network power when $L$ is varied. No distributed deployment is
+cheaper than the co-located baseline anywhere on the sweep. The cheapest
+distributed point of the whole figure is S3 at $L=2$, at \SI{238}{\watt} against
+\SI{187}{\watt} for the single site, and the gap widens monotonically from
+there. Since every point radiates the same budget from the same $128$ antennas,
+the entire difference is the cost of separating them, i.e., fronthaul and processing cost.
+
+% The three splits differ in shape rather than in level, and they cross. S1 is
+% almost flat over the first half of the sweep, \SI{409}{\watt} at $L=2$ against
+% \SI{427}{\watt} at $L=16$, and rises only afterwards, through \SI{470}{} and
+% \SI{563}{} to \SI{754}{\watt} at $L=128$, a factor $1.8$ end to end. S2 and S3
+% start well below it, at \SI{244}{} and \SI{238}{\watt}, and then grow by factors
+% $16$ and $10$ to \SI{3962}{} and \SI{2439}{\watt}. Both cross S1 between $L=8$
+% and $L=16$. Which split is the cheap one is therefore a property of the
+% topology and not of the split: on wide \glspl{ap} the narrow-fronthaul splits
+% win, on narrow ones the sample-forwarding split does, and the crossing sits at
+% $M\approx 8{\dots}16$ antennas per \gls{ap} for $K=20$ \glspl{ue}.
+
+% The flatness of S1 is the more surprising half of that, and it has a single
+% cause. What S1 puts on the fronthaul is $LM$ quantized sample streams, and $LM$
+% is held fixed across the sweep, so the traffic-dependent part of \eqref{eq:pnet}
+% does not depend on $L$ at all; splitting the array redistributes the same
+% aggregate fronthaul load over more links without increasing it. What S2 and S3
+% put on a link is instead independent of $M$, both the duplicated downlink
+% payload and the $K$ uplink partial sums of \eqref{eq:fh_ul}, so their aggregate
+% load grows in proportion to $L$. \Cref{fig:eval3} separates the two behaviours
+% and weighs those two terms against each other.
+
+% Power alone does not settle the comparison, because the delivered rate is not
+% constant along the sweep. The centralized rate climbs with $L$, from
+% \SI{41.6}{\giga\bit\per\second} at $L=2$ to \SI{69.7}{\giga\bit\per\second} at
+% $L=32$, and is flat thereafter, so the first four steps of the S1 curve buy
+% \SI{28}{\giga\bit\per\second} for \SI{61}{\watt} while the last two buy nothing
+% for \SI{285}{\watt}. The local rate instead peaks early, at
+% \SI{50.2}{\giga\bit\per\second} for $L=4$, and falls to
+% \SI{21.2}{\giga\bit\per\second} at $L=128$ as the per-\gls{ap} arrays lose the
+% spatial dimensions the local \gls{rzf} of \eqref{eq:local-rzf} needs. S3
+% therefore pays more and delivers less at every step past $L=4$, which is the
+% combination the energy efficiency of \Cref{ssec:eval_ee} has to resolve.
+
+\subsection{Evaluation 3: Where the Power Goes}
+\label{ssec:eval_breakdown}
+\todo{also recheck cfr previous results}
+\begin{figure*}[t]
+\centering
+\input{figs/eval3_breakdown_vs_aps.tex}
+\caption{The same sweep as \Cref{fig:eval2}, resolved into the blocks of
+\eqref{eq:pnet} and \eqref{eq:pap}. \emph{The three panels do not share a
+vertical scale}.}
+\label{fig:eval3}
+\end{figure*}
+
+\Cref{fig:eval3} breaks down the total network power of \Cref{fig:eval2} into the respective blocks.
+
+The \gls{pa} consumption under local processing (S3) is \SI{76.3}{\watt} at every $L$, exactly the co-located value: each \gls{ap} transmits $P_{T,l}/\rho_{\max}=1$ and the sizing convention of
+\Cref{rem:pa_sizing} makes the network amplifier consumption independent of how the
+array is cut. Under centralized precoding (S1, S2) it instead falls monotonically,
+from \SI{64.9}{\watt} at $L=2$ to \SI{28.5}{\watt} at $L=128$. The measured mean
+utilisation $P_{T,l}/\rho_{\max}$ falls from $0.78$ to $0.19$ over the same
+range, which accounts for it through \eqref{eq:pa_compact}: the per-\gls{ap}
+constraint of \eqref{eq:zf-precoder} binds at the most loaded \gls{ap} and
+scales the joint precoder for all of them, so the rest under-radiate, and the
+finer the array is cut the wider that spread becomes. Notably, under centralized processing, distributing the
+array reduces the amplifier consumption, however, the global consumption $P_{\mathrm{net}}$ still rises.
+
+\todo{clean up from here on out}
+The digital block confirms \Cref{rem:fpga}, and it separates relocating the
+processing from duplicating it. At $L=2$ the S1 network spends
+\SI{48.6}{\watt} at the \glspl{ap} and \SI{22.3}{\watt} at the central unit, so
+\SI{70.9}{\watt} in total against \SI{70.6}{\watt} for the co-located site:
+moving the precoder and combiner off the \glspl{ap} costs essentially nothing.
+The growth that follows is the loss of sharing. By $L=128$ the same two terms
+are \SI{274.8}{} and \SI{22.4}{\watt}, a factor $4.2$ over the baseline, while
+the central unit itself has not moved at all, since it runs $\lceil
+LM/32\rceil=4$ \glspl{fpga} whatever $L$ is. S2 and S3 make every \gls{ap} run
+its own precoder or combiner rather than only its baseband filter, and they pay
+for it: \SI{489}{\watt} of \gls{ap} digital at $L=128$, a factor $7.0$ including
+the central unit. The block grows more slowly than the \gls{fpga} count does,
+$2.4$-fold at $L=32$ against the eight-fold ratio \Cref{rem:fpga} quotes,
+because the per-chain arithmetic is untouched by the splitting and only the
+fixed part is duplicated.
+
+The fronthaul is the block that decides the figure, and it grows for two
+different reasons that the totals alone do not separate. Under S1 it is nearly
+flat, \SI{232}{\watt} at $L=2$ against \SI{362}{\watt} at $L=128$, and the
+traffic term does not move at all: it is \SI{230}{\watt} at both ends, since
+\eqref{eq:fh_s1} scales with $M$ and the network therefore carries $LM$ sample
+streams whatever $L$ is. The whole \SI{130}{\watt} of growth is the
+traffic-independent $P_{\mathrm{FH},0}/\eta_{\mathrm{FH,sc}}$ paid once per
+link, which the $126$ additional links account for exactly. Under S2 and S3 that
+same static term is a rounding error, \SI{132}{\watt} out of the \SI{3373}{} and
+\SI{1807}{\watt} they reach at $L=128$, where the fronthaul is
+\SI{85}{\percent} and \SI{74}{\percent} of everything the network consumes, and
+the growth is traffic.
+
+Two traffic terms carry it and both scale as $L$. The first is the duplicated
+downlink payload $L\,R_{\mathrm{DL}}$ of \Cref{rem:fh_ceiling}, worth
+\SI{2150}{\watt} for S2 and \SI{605}{\watt} for S3 at $L=128$. The second is the
+uplink partial sums of \eqref{eq:fh_ul}: an \gls{ap} forwards $K$ scalars
+whatever its $M$, so the network carries $LK$ of them where S1 carries $LM$
+samples, and at $K=20$ the term doubles with every halving of the array, from
+\SI{16.7}{\watt} at $L=2$ to \SI{1070}{\watt} at $L=128$. It is identical for
+the two splits by construction. Which of the two dominates is not a property of
+the sweep but of the split: the payload is \SI{64}{\percent} of the S2 fronthaul
+at $L=128$, whereas for S3 the partial sums overtake it near $L=32$ and reach
+\SI{59}{\percent}. Reading the growth of both splits as payload duplication
+alone would therefore misdescribe S3, where past $L=32$ it is the uplink that
+costs the most.
+
+What S2 is built to save does not appear at all. The precoding coefficients of
+\eqref{eq:fh_s2} scale with $M$, so their network total is pinned at $LM$
+exactly as the S1 samples are, and they cost \SI{17.3}{\watt} at every point of
+the sweep, under \SI{1}{\percent} of the S2 fronthaul at $L=128$. S2 pays the
+payload duplication in full and recovers nothing measurable for it, which is the
+conclusion \Cref{ssec:eval_rate_power} reached from the levels, now visible in
+the growth. The gap between S2 and S3 is not a difference in the efficiency of
+the two splits either: their partial-sum terms are equal, and the S2 fronthaul
+is the larger one only because the centralized precoder delivers a payload that
+keeps growing with $L$ while the local precoder delivers one that shrinks.
+
+The remaining two blocks are small enough to be dismissed, which is itself worth
+recording. Synchronization is exactly linear in $L$ at \SI{125}{\milli\watt} per
+\gls{ap} and reaches \SI{16}{\watt} at $L=128$, near \SI{2}{\percent} of the S1
+total there. The analog block grows by \SI{75}{\milli\watt} per additional
+\gls{ap}, its own local oscillator, so it moves only from \SI{40.6}{} to
+\SI{50.1}{\watt} across a sweep that multiplies the node count by $64$. Neither
+the reference distribution nor the loss of the shared oscillator is a reason not
+to distribute.
+
+Taken together the panels give one answer. The cost of distributing an array is
+transport and per-node fixed overhead, not radiated power: at $L=128$ under S1
+the fronthaul and the digital blocks add \SI{570}{\watt} to a \SI{188}{\watt}
+baseline while the amplifier bill falls by \SI{48}{\watt}. Every lever that
+matters is therefore a fronthaul or a static-power lever, and the transmit
+budget, which \Cref{fig:eval1} already showed to be close to a free parameter,
+is not one of them. Both dominant fronthaul terms are proportional to $L$
+through the number of \glspl{ap} that serve a given \gls{ue}, so restricting the
+serving cluster acts on the payload duplication and on the partial sums at once.
+That is the lever \Cref{rem:fh_ceiling} identifies, and it is the one this
+evaluation deliberately withholds by having all $L$ \glspl{ap} serve all $K$
+\glspl{ue} at every point of the sweep.
+
+\subsection{Energy Efficiency}
+\label{ssec:eval_ee}
+
+\begin{figure}[t]
+\centering
+\input{figs/eval4_ee_vs_aps.tex}
+\caption{Network energy efficiency \eqref{eq:ee_net} over the sweep of
+\Cref{fig:eval2}, at $P_{\mathrm{TX}}=\SI{12.8}{\watt}$, $LM=128$ antennas and
+$K=20$ \glspl{ue}. Both axes are logarithmic, which makes the ceiling
+$1/(\Pi_{\mathrm{FH}}L)$ of \Cref{rem:fh_ceiling} the straight dashed line. That
+ceiling bounds the data-sharing splits S2 and S3, whose fronthaul carries the
+payload duplicated to every \gls{ap}. It does not bound S1, which forwards
+samples and duplicates nothing, so S1 lying above it at large $L$ is not a
+violation. The co-located baseline is the marker at $L=1$, and it is the
+most efficient deployment anywhere in the figure.}
+\label{fig:eval4}
+\end{figure}
+
+\Cref{fig:eval4} reports the fourth evaluation and answers the question the
+previous two leave open. At these parameters distributing does not pay: the
+co-located baseline reaches \SI{237.0}{\mega\bit\per\joule} and no distributed
+configuration of any split at any $L$ comes within a fifth of it. The best
+distributed point of the whole sweep is S2 at $L=4$, at
+\SI{186.4}{\mega\bit\per\joule}, which is \SI{79}{\percent} of the baseline; S3
+at $L=4$ reaches \SI{175.8}{} and S1 at $L=16$ reaches
+\SI{156.0}{\mega\bit\per\joule}. The rate gain of \Cref{fig:eval1} is real, and
+it is bought at a price that exceeds it in every configuration tested.
+
+Every split has an interior optimum, and they do not sit at the same place. S2
+and S3 peak at $L=4$, S1 at $L=16$. The difference is not propagation, since all
+three see the same channel and two of them deliver the same rate; it is the
+shape of the power curve. S1's consumption is flat to $L=16$ while its rate is
+still climbing, so its optimum sits where the rate saturates. S2 and S3 start
+paying for $L$ immediately, so theirs sits where the rate is still rising
+steeply. Where to stop chopping the array is therefore a fronthaul question
+before it is a spatial one.
+
+The three curves cross, and past the crossing the efficiency ranking is exactly
+the inverse of the fronthaul ranking. S1 is the least efficient split for
+$L\leq 8$ and the most efficient from $L=16$ on, reaching
+\SI{92.7}{\mega\bit\per\joule} at $L=128$ against \SI{17.6}{} for S2 and
+\SI{8.7}{} for S3. For S1 and S2 the crossing is at the same $L$ as in
+\Cref{fig:eval2} and for the same reason, since the two deliver identical rates
+and their efficiencies are therefore in the exact inverse ratio of their powers.
+
+The ceiling of \Cref{rem:fh_ceiling} holds throughout and becomes informative
+only where it matters. S2 and S3 stay below $1/(\Pi_{\mathrm{FH}}L)$ at every
+point, but the bound is loose where the fronthaul is not yet dominant and
+tightens as it becomes so: S2 sits at \SI{9}{\percent} of the ceiling at $L=2$
+and at \SI{56}{\percent} at $L=128$. S3 instead saturates near
+\SI{29}{\percent} and stops approaching it, which the breakdown of
+\Cref{fig:eval3} explains: the ceiling counts only the duplicated payload,
+whereas the uplink partial sums of \eqref{eq:fh_ul} grow with $L$ as well and
+carry more than half of the S3 fronthaul past $L=32$. A split that pays a second
+$L$-proportional term cannot approach a bound derived from the first. S1 crosses
+the ceiling between $L=16$ and $L=32$ and ends at three times it, which the
+remark does not forbid, since S1 forwards samples rather than payload.
+
+The margin between the best distributed point and the baseline is the fronthaul
+traffic term and nothing else, which makes the sign of the comparison depend on
+a quantity \Cref{tab:params_dmimo} does not source. Removing that term entirely,
+$\Pi_{\mathrm{FH}}=0$, puts S1 at \SI{339}{\mega\bit\per\joule} at $L=8$ and
+$L=16$, a factor $1.43$ \emph{above} the co-located baseline, and leaves S2 and
+S3 above it as well over most of the sweep. The conclusion that distributing
+costs efficiency is therefore a statement about
+$\Pi_{\mathrm{FH}}=\SI{0.25}{\watt}$ per Gbit/s and about a network in which
+every \gls{ap} serves every \gls{ue}, not a property of \gls{dmimo} as such.
+\todo{this is the conclusion most exposed to \Cref{tab:params_dmimo}. Before the
+figure is final, either source $\Pi_{\mathrm{FH}}$ and $b_{\mathrm{FH}}$ against
+\cite{ngo2018total} or replace the point comparison with a sweep in
+$\Pi_{\mathrm{FH}}$ and report the value at which the two deployments break
+even. Adding \gls{ap} selection would move the same conclusion in the same
+direction, since it cuts both $L$-proportional fronthaul terms at once.}

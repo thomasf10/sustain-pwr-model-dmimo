@@ -129,8 +129,11 @@ def test_split_places_every_operation_exactly_once():
     """Precoder application appears once across the AP/CPU rows, in every split."""
     for split in (Split.S1, Split.S2, Split.S3):
         p = base_params(split=split)
-        # Application, 2*K*N per sample, summed over the nodes that do it.
-        applied = p.L * xi_ap(p, UL) + xi_cpu(p, UL)
+        # Application, 2*K*N per sample, summed over the nodes that do it. Under
+        # S3 the AP row also carries the local factorization, which is a
+        # different operation and is subtracted out here.
+        computation = p.L * xi_precoder_local(p) if split is Split.S3 else 0.0
+        applied = p.L * xi_ap(p, UL) + xi_cpu(p, UL) - computation
         assert np.isclose(applied, 2 * p.K * p.M_tot), \
             f"{split}: application count {applied} != {2 * p.K * p.M_tot}"
 
@@ -150,20 +153,34 @@ def test_s2_splits_computation_from_application():
     assert np.isclose(xi_ap(p2, DL), 2 * p2.K * p2.M)
     assert np.isclose(xi_ap(p2, UL), 2 * p2.K * p2.M)
 
-    # S2 computes the same centralized matrix as S1 and applies the same total
-    # work as S3 -- it is the crossover of the two, not a third scheme.
+    # S2 computes the same centralized matrix as S1 and applies the same amount
+    # at the AP as S3 -- it is the crossover of the two, not a third scheme. The
+    # AP rows differ only by the local factorization that S3 alone performs.
     p1, p3 = base_params(split=Split.S1), base_params(split=Split.S3)
     assert np.isclose(xi_cpu(p2, DL), xi_cpu(p1, DL) - 2 * p1.K * p1.M_tot)
-    assert np.isclose(xi_ap(p2, UL), xi_ap(p3, UL))
+    assert np.isclose(xi_ap(p3, UL) - xi_ap(p2, UL), xi_precoder_local(p3))
 
 
-def test_computation_charged_to_downlink_only():
-    """TDD reciprocity: the matrix is computed once and reused by the combiner."""
+def test_centralized_computation_charged_to_downlink_only():
+    """TDD reciprocity: the ZF matrix is computed once and reused by the combiner."""
     p1, p2 = base_params(split=Split.S1), base_params(split=Split.S2)
-    p3 = base_params(split=Split.S3)
     assert np.isclose(xi_cpu(p1, DL) - xi_cpu(p1, UL), xi_precoder_centralized(p1))
     assert np.isclose(xi_cpu(p2, DL) - xi_cpu(p2, UL), xi_precoder_centralized(p2))
-    assert np.isclose(xi_ap(p3, DL) - xi_ap(p3, UL), xi_precoder_local(p3))
+
+
+def test_local_computation_charged_in_both_directions():
+    """S3 shares no factorization between the directions (eq. gops_split, AP row).
+
+    The local downlink precoder inverts ``E_l E_l^H + lambda I`` while the local
+    uplink combiner inverts the power-weighted ``E_l P E_l^H + lambda I``. They
+    are different matrices, so reciprocity buys nothing and the AP pays the
+    Cholesky count twice, unlike the centralized pair.
+    """
+    p3 = base_params(split=Split.S3)
+    assert np.isclose(xi_ap(p3, DL), xi_ap(p3, UL))
+    for direction in (DL, UL):
+        assert np.isclose(xi_ap(p3, direction),
+                          2 * p3.K * p3.M + xi_precoder_local(p3))
 
 
 def test_centralized_precoding_costs_more_per_antenna():
@@ -214,11 +231,29 @@ def test_s3_downlink_prelog_is_not_applied_twice():
     assert p.tau_DL * (1 - p.tau_DLsig) < 1.0   # a second prelog would be visible
 
 
-def test_s1_moves_more_over_the_fronthaul_than_s3():
-    """Forwarding samples costs more transport than forwarding payload."""
-    r1 = fronthaul_rate(base_params(split=Split.S1), R_DL_ap=R_DL).total
-    r3 = fronthaul_rate(base_params(split=Split.S3), R_DL_ap=R_DL).total
+def test_s1_moves_more_over_the_fronthaul_than_s3_only_when_M_exceeds_K():
+    """The sample-forwarding split is not unconditionally the heavier one.
+
+    S1 carries ``M`` sample streams per link in both directions, while S2 and S3
+    carry ``K`` scalar partial sums in the uplink (eq. fh_ul). Forwarding partial
+    sums is therefore a saving only when an AP has more antennas than it serves
+    users. In the regime this paper evaluates, ``K = 20`` users over APs of
+    ``M <= 4`` antennas, it is the opposite: the uplink of the data-sharing
+    splits is the *heavier* one, by a factor of roughly ``K / M`` on that phase,
+    and S1's advantage of never carrying the payload does not make up for it.
+    """
+    def compare(K, M):
+        r1 = fronthaul_rate(base_params(split=Split.S1, K=K, M=M), R_DL_ap=R_DL)
+        r3 = fronthaul_rate(base_params(split=Split.S3, K=K, M=M), R_DL_ap=R_DL)
+        return r1.total, r3.total
+
+    # Wide APs, few users: samples dominate and S1 is the expensive split.
+    r1, r3 = compare(K=4, M=32)
     assert r1 > r3, (r1, r3)
+
+    # The evaluated regime: few antennas per AP, many users. S3 costs more.
+    r1, r3 = compare(K=20, M=4)
+    assert r3 > r1, (r1, r3)
 
 
 def test_s2_fronthaul_tracks_traffic_and_adds_coefficients():
@@ -317,32 +352,39 @@ def test_fixed_rating_floor_grows_with_antennas():
 # ======================================================================
 
 
-def test_frame_mapping_from_rate_config():
-    """The tau_c/tau_p/tau_u split maps onto the frame fractions exactly."""
+def test_frame_is_shared_with_the_rate_config():
+    """Both packages hold the same frame, so the join is a copy, not a mapping.
+
+    The prelog the rate model applies to the SE must be exactly the fraction of
+    the frame that the power model's averaging charges at the data power level;
+    otherwise the delivered rate and the consumption describe two different
+    frames.
+    """
     from config_dmimo import DMIMOConfig
 
-    cfg = DMIMOConfig(L=16, M=4, K=10, Q=16, tau_c=200, tau_p=20, tau_u=90)
+    cfg = DMIMOConfig(L=16, M=4, K=10, Q=16, tau_c=200,
+                      tau_DL=0.75, tau_DLsig=1 / 14, tau_ULsig=1 / 14)
     p = DMIMOPowerParams.from_rate_config(cfg)
 
     assert np.isclose(p.tau_DL + p.tau_UL, 1.0)
-    # Pilot share, uplink data share and downlink data share, in frame terms.
-    assert np.isclose(p.tau_UL * p.tau_ULsig, cfg.tau_p / cfg.tau_c)
-    assert np.isclose(p.tau_UL * (1 - p.tau_ULsig), cfg.ul_prelog)
-    assert np.isclose(p.tau_DL * (1 - p.tau_DLsig), cfg.dl_prelog)
-    # One coherence block governs both packages.
+    assert np.isclose(p.tau_DL * (1 - p.tau_DLsig) * cfg.xbar_DL, cfg.dl_prelog)
+    assert np.isclose(p.tau_UL * (1 - p.tau_ULsig) * cfg.xbar_UL, cfg.ul_prelog)
+    # One coherence block, and one effective bandwidth, govern both packages.
     assert np.isclose(p.upsilon_coh, cfg.tau_c)
-    assert (p.K, p.L, p.M, p.B) == (cfg.K, cfg.L, cfg.M, cfg.B)
+    assert np.isclose(p.B_tilde, cfg.B_tilde)
+    assert (p.K, p.L, p.M, p.B, p.f_c) == (cfg.K, cfg.L, cfg.M, cfg.B, cfg.f_c)
 
 
-def test_downlink_only_frame_recovers_the_documented_case():
-    """tau_u = 0 is the frame the integration README describes."""
+def test_downlink_only_frame_delivers_no_uplink_rate():
+    """tau_ULsig = 1 leaves the uplink phase carrying nothing but pilots."""
     from config_dmimo import DMIMOConfig
 
-    cfg = DMIMOConfig(L=16, M=4, K=10, Q=16, tau_c=200, tau_p=20, tau_u=0)
+    cfg = DMIMOConfig(L=16, M=4, K=10, Q=16, tau_c=200, tau_ULsig=1.0)
     p = DMIMOPowerParams.from_rate_config(cfg)
-    assert np.isclose(p.tau_ULsig, 1.0)          # uplink phase is nothing but pilots
-    assert np.isclose(p.tau_UL, 20 / 200)
-    assert np.isclose(p.tau_DL, 180 / 200)
+    assert np.isclose(cfg.ul_prelog, 0.0)
+    assert np.isclose(p.tau_ULsig, 1.0)
+    # The uplink phase still exists in the frame, so its hardware is still on.
+    assert np.isclose(p.tau_UL, 0.25)
 
 
 def _run_all():

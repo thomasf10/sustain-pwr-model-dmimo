@@ -48,7 +48,7 @@ DL, UL = "DL", "UL"
 
 
 def xi_precoder_centralized(p: DMIMOPowerParams) -> float:
-    """Ops/sample to compute the centralized precoder (eq. gops_cen).
+    """Ops/sample to compute the centralized precoder (Table tab:complexity).
 
     The CPU inverts the ``K x K`` Gram matrix of the collective channel
     ``H in C^{LM x K}``, so the co-located Cholesky count applies with the RF
@@ -61,7 +61,7 @@ def xi_precoder_centralized(p: DMIMOPowerParams) -> float:
 
 
 def xi_precoder_local(p: DMIMOPowerParams) -> float:
-    """Ops/sample for one AP to compute its local precoder (eq. gops_loc).
+    """Ops/sample for one AP to compute its local precoder (Table tab:complexity).
 
     AP ``l`` inverts the ``M x M`` matrix of the local regularized precoder,
     which is the same Cholesky accounting with the antenna and user dimensions
@@ -74,17 +74,21 @@ def xi_precoder_local(p: DMIMOPowerParams) -> float:
 def xi_ap(p: DMIMOPowerParams, direction: str) -> float:
     """Ops/sample of MIMO processing at one AP (eq. gops_split, AP row).
 
-    ``iota_{S2,S3} 2 K_l M + iota_{S3} iota_{DL} Xi_pre_loc``. Under S1 the AP
-    does none: the CPU applies the precoder and forwards samples. Under S2 and
-    S3 the AP applies the precoder or combiner to its ``K_l`` users over its
-    ``M`` chains, ``2 K_l M`` per sample. Only S3 also *computes* it, and only in
-    the downlink, since TDD reciprocity lets the same matrix serve the uplink
-    combiner.
+    ``iota_{S2,S3} 2 K_l M + iota_{S3} Xi_comp_loc``. Under S1 the AP does none:
+    the CPU applies the precoder and forwards samples. Under S2 and S3 the AP
+    applies the precoder or combiner to its ``K_l`` users over its ``M`` chains,
+    ``2 K_l M`` per sample. Only S3 also *computes* it, and unlike the
+    centralized pair it computes it **in both directions**: the local downlink
+    precoder of eq. local-rzf inverts ``E_l E_l^H + lambda I``, whereas the local
+    uplink combiner of eq. ul-local-mmse inverts the power-weighted
+    ``E_l P E_l^H + lambda I``. The two are different matrices, so no
+    factorization is shared and TDD reciprocity buys nothing here, which is
+    exactly the asymmetry with the centralized ZF pair in :func:`xi_cpu`.
     """
     if p.split is Split.S1:
         return 0.0
     apply_cost = 2 * p.K * p.M
-    if p.split is Split.S3 and direction == DL:
+    if p.split is Split.S3:
         return apply_cost + xi_precoder_local(p)
     return apply_cost
 
@@ -92,10 +96,15 @@ def xi_ap(p: DMIMOPowerParams, direction: str) -> float:
 def xi_cpu(p: DMIMOPowerParams, direction: str) -> float:
     """Ops/sample of MIMO processing at the CPU (eq. gops_split, CPU row).
 
-    ``iota_{S1} 2 K LM + iota_{S1,S2} iota_{DL} Xi_pre_cen``. Under S1 the CPU
+    ``iota_{S1} 2 K LM + iota_{S1,S2} iota_{DL} Xi_comp_cen``. Under S1 the CPU
     applies the precoder over all ``LM`` distributed antennas, ``2 K LM`` per
     sample, and computes it in the downlink. Under S2 it computes but does not
     apply, so only the downlink computation remains. Under S3 it does neither.
+
+    The factorization is charged to the downlink alone because the centralized
+    ZF combiner is the same matrix as the ZF precoder and TDD reciprocity lets
+    one factorization serve both directions. The local pair of :func:`xi_ap`
+    shares no such matrix and is therefore charged twice.
 
     Every operation appears exactly once across this row and :func:`xi_ap`, so no
     work is counted twice: under S2 in particular the AP is billed only for
@@ -312,10 +321,15 @@ def fronthaul(p: DMIMOPowerParams, R_DL_ap: float,
     A traffic-independent part covering the optical transceivers at both ends,
     charged once per link with a single duty cycle because the link is
     bidirectional and stays up across the whole frame, plus a part proportional
-    to the rate carried. Optical transceivers wake slowly and hold most of their
-    consumption while idle, so ``delta_FH_micro`` is close to one and the static
-    term is nearly a constant per active link: switching APs off, not duty
-    cycling, is the effective lever on it.
+    to the rate carried.
+
+    How much duty cycling actually saves turns entirely on ``delta_FH_micro``,
+    which is a placeholder: a transceiver that can be gated deeply between
+    bursts approaches the digital reduction factor, whereas one that must hold
+    its laser bias and clock recovery to stay linked sits close to one, and the
+    static term is then nearly a constant per active link, so switching APs off
+    rather than duty cycling is the only lever on it. Report anything that turns
+    on this term as a range.
     """
     theta = sum(
         (p.tau_DL if d == DL else p.tau_UL)

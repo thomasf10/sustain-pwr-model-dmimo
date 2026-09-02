@@ -43,8 +43,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmimo_power import manifest, plotting, unsourced_parameters  # noqa: E402
 from dmimo_power.scenarios import Deployment, Scenario, evaluate  # noqa: E402
 
-DEFAULT_BUDGETS = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0)   # total TX power [W]
-DEFAULT_AP_COUNTS = (2, 4, 8, 16, 32)                     # APs, at fixed L*M
+# Total TX power [W]. The nominal budget is P_TX = L*M*P_max = 12.8 W at the
+# 0.1 W FR3 amplifier rating, and the sweep re-sizes the amplifiers at every
+# point (PASizing.PER_AP_BUDGET), so each point is a deployment dimensioned for
+# the budget it is given rather than one deployment being dimmed.
+DEFAULT_BUDGETS = (0.8, 1.6, 3.2, 6.4, 12.8, 25.6)
+DEFAULT_AP_COUNTS = (2, 4, 8, 16, 32, 64, 128)            # APs, at fixed L*M
 OUT_DIR = Path(__file__).resolve().parent.parent
 FIG_DIR = OUT_DIR / "figures"
 RUN_DIR = OUT_DIR / "data" / "runs"
@@ -59,11 +63,11 @@ def parse_args() -> argparse.Namespace:
                     help="total transmit power budgets for the budget sweep [W]")
     ap.add_argument("--ap-counts", type=int, nargs="+", default=list(DEFAULT_AP_COUNTS),
                     help="AP counts for the fixed-power sweep (must divide L*M)")
-    ap.add_argument("--fixed-budget", type=float, default=8.0,
+    ap.add_argument("--fixed-budget", type=float, default=12.8,
                     help="total transmit power held fixed in the AP-count sweep [W]")
-    ap.add_argument("--L", type=int, default=16, help="APs in the budget sweep")
+    ap.add_argument("--L", type=int, default=32, help="APs in the budget sweep")
     ap.add_argument("--M", type=int, default=4, help="antennas per AP in the budget sweep")
-    ap.add_argument("--K", type=int, default=10, help="users")
+    ap.add_argument("--K", type=int, default=20, help="users")
     ap.add_argument("--realizations", type=int, default=20,
                     help="Monte Carlo drops per point")
     ap.add_argument("--no-cache", action="store_true",
@@ -143,8 +147,10 @@ def main() -> None:
     print(f"Deployments compared at equal total transmit power and equal antenna "
           f"count ({scenario.M_tot} antennas, K={scenario.K} users, "
           f"{scenario.area_size:.0f} m area, {scenario.n_realizations} drops/point)")
-    print(f"frame: tau_c = {scenario.tau_c} = {scenario.tau_p} pilot "
-          f"+ {scenario.tau_u} UL + {scenario.tau_c - scenario.tau_p - scenario.tau_u} DL")
+    print(f"frame: tau_DL = {scenario.tau_DL:.2f}, signalling "
+          f"{scenario.tau_DLsig:.3f} (DL) / {scenario.tau_ULsig:.3f} (UL), "
+          f"load {scenario.xbar_DL:.2f} / {scenario.xbar_UL:.2f}, "
+          f"coherence block {scenario.tau_c} samples")
     print()
     print(unsourced_parameters(
         scenario.power_params(Deployment.CENTRALIZED_S1, 1.0)))

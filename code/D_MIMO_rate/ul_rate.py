@@ -29,10 +29,10 @@ Three things differ structurally from :mod:`dl_rate`:
   instead of sharing a network one, so the powers are final as they leave
   :func:`mimo_helpers.uplink_power_control` and no counterpart of
   ``normalize_precoder`` exists. The SINR is invariant to the scale of ``v_k``.
-* **The uplink phase has to be given data samples.** With the default
-  ``cfg.tau_u = 0`` the uplink carries nothing but pilots, which is the
-  downlink-only evaluation of the manuscript, and ``cfg.ul_prelog`` is zero. Set
-  ``tau_u > 0`` to split the coherence block between the two data phases.
+* **The uplink phase has to carry data.** The uplink prelog is the data fraction
+  ``tau_UL (1 - tau_ULsig) xbar_UL`` of the frame, so ``tau_ULsig = 1`` (or a
+  zero load) leaves the uplink carrying nothing but pilots and every uplink SE
+  is zero by construction.
 
 The uplink transmit power is spent at the users and so never enters the network
 consumption ``P_net``, which counts the APs, the fronthaul, and the CPU only.
@@ -70,8 +70,12 @@ class UplinkResult:
 
     @property
     def sum_rate(self) -> float:
-        """Uplink ergodic sum rate [bit/s] = sum_se * B."""
-        return self.sum_se * self.cfg.B
+        """Uplink ergodic sum rate [bit/s], ``R_UL = B_tilde * sum_k SE_k``.
+
+        On the effective bandwidth ``B_tilde = 0.9 B`` of the system model, the
+        same convention the decoder model of the power package assumes.
+        """
+        return self.sum_se * self.cfg.B_tilde
 
     @property
     def se_5pct(self) -> float:
@@ -88,7 +92,8 @@ def simulate_uplink(cfg: DMIMOConfig,
                     rng: Optional[np.random.Generator] = None,
                     visualize: bool = False,
                     plot_cdf: bool = False,
-                    report_fronthaul: bool = False) -> UplinkResult:
+                    report_fronthaul: bool = False,
+                    progress: bool = True) -> UplinkResult:
     """Run the uplink SE evaluation for a configuration.
 
     The random generator is used for the AP/UE drop, exactly as in
@@ -105,6 +110,8 @@ def simulate_uplink(cfg: DMIMOConfig,
             :func:`mimo_helpers.plot_se_cdf` once the run finishes.
         report_fronthaul: If true, print the CPU-to-AP fronthaul length overview
             (:func:`mimo_helpers.fronthaul_summary`) for the first drop.
+        progress: Show the per-drop progress bar. Set false when this run is one
+            step of an outer sweep that draws its own bar.
 
     Returns:
         An :class:`UplinkResult` with the ergodic per-user SE, mean per-UE
@@ -115,9 +122,9 @@ def simulate_uplink(cfg: DMIMOConfig,
 
     if cfg.ul_prelog <= 0:
         warnings.warn(
-            f"tau_u={cfg.tau_u}: the uplink phase carries nothing but pilots, so "
-            "ul_prelog = 0 and every uplink SE is zero by construction. Set tau_u > 0 "
-            "to give the uplink data samples (tau_p + tau_u <= tau_c).",
+            f"tau_UL={cfg.tau_UL:.2f}, tau_ULsig={cfg.tau_ULsig:.2f}, "
+            f"xbar_UL={cfg.xbar_UL:.2f}: the uplink phase carries no data, so "
+            "ul_prelog = 0 and every uplink SE is zero by construction.",
             stacklevel=2,
         )
 
@@ -130,7 +137,8 @@ def simulate_uplink(cfg: DMIMOConfig,
     # backend is built for the downlink direction and H is used as it comes.
     channel = mh.build_channel(cfg)
 
-    for i in tqdm(range(cfg.n_realizations), desc="Channel realizations", unit="drop"):
+    for i in tqdm(range(cfg.n_realizations), desc="Channel realizations",
+                  unit="drop", disable=not progress):
         # --- Channel model (mimo_helpers) --------------------------------
         ap_pos, ue_pos = mh.draw_positions(cfg, rng)
         if i == 0:
@@ -167,10 +175,7 @@ def simulate_uplink(cfg: DMIMOConfig,
 
 
 def main() -> None:
-    # tau_u = 0 is the downlink-only frame of the manuscript, which leaves the
-    # uplink rate at zero, so the demo splits the data phase evenly between the
-    # two directions: tau_c = 200 = 20 pilot + 90 UL + 90 DL.
-    cfg = DMIMOConfig(tau_u=90)
+    cfg = DMIMOConfig()
     print(cfg.summary())
     print()
     result = simulate_uplink(cfg, visualize=True, plot_cdf=True, report_fronthaul=True)

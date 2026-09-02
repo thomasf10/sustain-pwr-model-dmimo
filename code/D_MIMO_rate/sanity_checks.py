@@ -99,21 +99,27 @@ def check_config(chk: Checks) -> None:
     chk("noise_power_sc = noise_power when Q = 1",
         np.isclose(DMIMOConfig(L=6, M=4, K=4, Q=1).noise_power_sc,
                    DMIMOConfig(L=6, M=4, K=4, Q=1).noise_power))
-    chk("dl_prelog = (tau_c - tau_p)/tau_c",
-        np.isclose(cfg.dl_prelog, (cfg.tau_c - cfg.tau_p) / cfg.tau_c))
     chk("rzf_regularization defaults to sigma^2",
         np.isclose(cfg.rzf_regularization, cfg.noise_power))
 
-    # Uplink bookkeeping: tau_c splits into pilots, uplink data, downlink data,
-    # and the default tau_u = 0 is the downlink-only frame of the manuscript.
-    chk("default tau_u = 0 leaves the DL prelog untouched",
-        cfg.tau_u == 0 and np.isclose(cfg.dl_prelog, (cfg.tau_c - cfg.tau_p) / cfg.tau_c))
-    chk("default ul_prelog = 0 (uplink carries pilots only)", cfg.ul_prelog == 0.0)
-    cfg_ul = DMIMOConfig(L=6, M=4, K=4, Q=8, tau_c=200, tau_p=20, tau_u=90)
-    chk("tau_d = tau_c - tau_p - tau_u", cfg_ul.tau_d == 90)
-    chk("prelogs sum to (tau_c - tau_p)/tau_c",
-        np.isclose(cfg_ul.ul_prelog + cfg_ul.dl_prelog,
-                   (cfg_ul.tau_c - cfg_ul.tau_p) / cfg_ul.tau_c))
+    # Frame bookkeeping: the prelog of each direction is the data fraction of
+    # the frame, tau_i (1 - tau_i,sig) xbar_i, which is what the power model's
+    # frame averaging charges at the data power level.
+    chk("dl_prelog = tau_DL (1 - tau_DLsig) xbar_DL",
+        np.isclose(cfg.dl_prelog, cfg.tau_DL * (1 - cfg.tau_DLsig) * cfg.xbar_DL))
+    chk("ul_prelog = tau_UL (1 - tau_ULsig) xbar_UL",
+        np.isclose(cfg.ul_prelog, cfg.tau_UL * (1 - cfg.tau_ULsig) * cfg.xbar_UL))
+    chk("tau_DL + tau_UL = 1", np.isclose(cfg.tau_DL + cfg.tau_UL, 1.0))
+    chk("both directions carry data by default",
+        cfg.dl_prelog > 0 and cfg.ul_prelog > 0)
+    chk("tau_ULsig = 1 is the downlink-only frame",
+        DMIMOConfig(L=6, M=4, K=4, Q=8, tau_ULsig=1.0).ul_prelog == 0.0)
+    chk("a deactivated direction delivers no rate",
+        DMIMOConfig(L=6, M=4, K=4, Q=8, xbar_UL=0.0).ul_prelog == 0.0)
+    chk("signalling samples per block = (tau_DL tau_DLsig + tau_UL tau_ULsig) tau_c",
+        np.isclose(cfg.tau_p, (cfg.tau_DL * cfg.tau_DLsig
+                               + cfg.tau_UL * cfg.tau_ULsig) * cfg.tau_c))
+    chk("B_tilde = 0.9 B", np.isclose(cfg.B_tilde, 0.9 * cfg.B))
     chk("ul_rzf_regularization defaults to sigma^2 / p_max",
         np.isclose(cfg.ul_rzf_regularization, cfg.noise_power / cfg.p_max))
     chk("combining defaults to the dual of the precoder",
@@ -123,7 +129,7 @@ def check_config(chk: Checks) -> None:
 
     # Configurations the model does not admit.
     for kwargs, why in (
-        (dict(tau_u=190), "tau_p + tau_u > tau_c"),
+        (dict(tau_DL=1.5), "frame fraction outside [0, 1]"),
         (dict(combining="MR"), "local combiner with centralized operation"),
         (dict(fusion="lsfd"), "LSFD fusion with centralized operation"),
         (dict(p_max=0.0), "non-positive p_max"),
@@ -459,7 +465,7 @@ def check_channel_and_e2e(chk: Checks) -> None:
     chk("simulate_downlink mean AP power within budget",
         np.all(res.ap_power <= cfg_run.rho_max * (1 + 1e-9)),
         f"max {res.ap_power.max():.4f} W")
-    chk("sum_rate = sum_se * B", np.isclose(res.sum_rate, res.sum_se * cfg_run.B))
+    chk("sum_rate = sum_se * B_tilde", np.isclose(res.sum_rate, res.sum_se * cfg_run.B_tilde))
     chk("se_samples shape (n, K)",
         res.se_samples.shape == (cfg_run.n_realizations, cfg_run.K))
     chk("ergodic SE = mean of se_samples",
@@ -469,7 +475,7 @@ def check_channel_and_e2e(chk: Checks) -> None:
 
 def check_uplink(chk: Checks) -> None:
     chk.section("Uplink combining, power control and SINR")
-    cfg = DMIMOConfig(L=6, M=4, K=4, Q=8, tau_u=90)
+    cfg = DMIMOConfig(L=6, M=4, K=4, Q=8)
     L, M, K, Q = cfg.L, cfg.M, cfg.K, cfg.Q
     sigma2 = cfg.noise_power
     H = synthetic_channel(cfg)
@@ -485,16 +491,16 @@ def check_uplink(chk: Checks) -> None:
     # Each user owns its budget, so the constraint holds for either sign of v.
     chk("per-user budget p_k <= p_max for any v_ul",
         all(np.all(mh.uplink_power_control(
-            DMIMOConfig(L=L, M=M, K=K, Q=Q, v_ul=v, tau_u=90), beta) <= cfg.p_max + 1e-15)
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, v_ul=v), beta) <= cfg.p_max + 1e-15)
             for v in (-1.0, -0.5, 0.0, 0.5, 1.0)))
     chk("strongest user is at p_max", np.isclose(p.max(), cfg.p_max))
     chk("EQUAL is full power p_k = p_max",
         np.allclose(mh.uplink_power_control(
-            DMIMOConfig(L=L, M=M, K=K, Q=Q, ul_power_alloc="equal", tau_u=90), beta),
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, ul_power_alloc="equal"), beta),
             cfg.p_max))
     chk("v_ul = -1 equalizes the arriving power p_k beta_k",
         np.allclose(np.diff(mh.uplink_power_control(
-            DMIMOConfig(L=L, M=M, K=K, Q=Q, v_ul=-1.0, tau_u=90), beta) * beta_k), 0))
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, v_ul=-1.0), beta) * beta_k), 0))
 
     # --- Centralized combiners -----------------------------------------
     V = mh.combining_directions(cfg, H, p)        # ZF by default
@@ -506,7 +512,7 @@ def check_uplink(chk: Checks) -> None:
     chk("ZF effective channel is unity", np.allclose(np.diagonal(G, axis1=1, axis2=2), 1.0))
 
     # MMSE, eq. ul-centralized-rzf: the loading is the diagonal sigma^2 P^{-1}.
-    cfg_mmse = DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="MMSE", tau_u=90)
+    cfg_mmse = DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="MMSE")
     V_mmse = mh.combining_directions(cfg_mmse, H, p)
     chk("MMSE combiner = H (H^H H + sigma^2 P^-1)^-1",
         np.allclose(V_mmse, np.stack([E[q] @ np.linalg.inv(np.conj(H[q]) @ E[q]
@@ -528,12 +534,12 @@ def check_uplink(chk: Checks) -> None:
         np.allclose(mh.combining_directions(cfg_mmse, H_phys, p), V_full * p))
     chk("RZF = MMSE when every user transmits at p_max",
         np.allclose(mh.combining_directions(
-            DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="RZF", tau_u=90), H, np.full(K, cfg.p_max)),
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="RZF"), H, np.full(K, cfg.p_max)),
             mh.combining_directions(
-                DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="MMSE", tau_u=90), H, np.full(K, cfg.p_max))))
+                DMIMOConfig(L=L, M=M, K=K, Q=Q, combining="MMSE"), H, np.full(K, cfg.p_max))))
 
     # --- Local combiners ------------------------------------------------
-    local = dict(precoding="L-RZF", operation="distributed", tau_u=90)
+    local = dict(precoding="L-RZF", operation="distributed")
     for name in ("L-MMSE", "L-RZF"):
         c_loc = DMIMOConfig(L=L, M=M, K=K, Q=Q, combining=name, **local)
         V_loc = mh.combining_directions(c_loc, H, p)
@@ -609,12 +615,12 @@ def check_uplink(chk: Checks) -> None:
     se = mh.uplink_spectral_efficiency(cfg, G, v_norm2, p)
     chk("UL SE = ul_prelog * mean_q log2(1 + SINR)",
         np.allclose(se, cfg.ul_prelog * np.log2(1 + sinr).mean(axis=0)))
-    chk("tau_u = 0 delivers zero uplink SE",
+    chk("an uplink phase of pilots only delivers zero SE",
         np.allclose(mh.uplink_spectral_efficiency(
-            DMIMOConfig(L=L, M=M, K=K, Q=Q), G, v_norm2, p), 0.0))
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, tau_ULsig=1.0), G, v_norm2, p), 0.0))
     chk("UatF SE path returns one value per user",
         mh.uplink_spectral_efficiency(
-            DMIMOConfig(L=L, M=M, K=K, Q=Q, ul_se_bound="uatf", tau_u=90),
+            DMIMOConfig(L=L, M=M, K=K, Q=Q, ul_se_bound="uatf"),
             G, v_norm2, p).shape == (K,))
 
 
@@ -623,7 +629,7 @@ def check_uplink_e2e(chk: Checks) -> None:
     from ul_rate import simulate_uplink
 
     cfg = DMIMOConfig(L=6, M=4, K=4, Q=8, channel_model="sionna-umi",
-                      tau_u=90, n_realizations=3)
+                      n_realizations=3)
     try:
         res = simulate_uplink(cfg)
     except ModuleNotFoundError as exc:
@@ -637,7 +643,7 @@ def check_uplink_e2e(chk: Checks) -> None:
     chk("simulate_uplink mean UE power within budget",
         np.all(res.ue_power <= cfg.p_max * (1 + 1e-9)),
         f"max {res.ue_power.max()*1e3:.1f} mW")
-    chk("sum_rate = sum_se * B", np.isclose(res.sum_rate, res.sum_se * cfg.B))
+    chk("sum_rate = sum_se * B_tilde", np.isclose(res.sum_rate, res.sum_se * cfg.B_tilde))
     chk("se_samples shape (n, K)", res.se_samples.shape == (cfg.n_realizations, cfg.K))
     chk("ergodic SE = mean of se_samples",
         np.allclose(res.se_per_user, res.se_samples.mean(axis=0)))
@@ -646,12 +652,15 @@ def check_uplink_e2e(chk: Checks) -> None:
     # Cooperation ordering: centralized > local L-MMSE > MR, the uplink
     # counterpart of Section 6.6 of the monograph. It is checked on a network
     # that is interference-limited rather than noise-limited, since only there is
-    # local interference suppression worth its degrees of freedom: at M = K a
-    # local combiner spends every DoF on nulling and keeps no array gain, so on a
-    # small noise-limited drop MR legitimately beats L-MMSE.
+    # local interference suppression worth its degrees of freedom: at few users
+    # per AP a local combiner spends its degrees of freedom on nulling and keeps
+    # no array gain, so on a noise-limited drop MR legitimately beats L-MMSE.
+    # K = 12 over L = 10 APs of M = 4 antennas keeps the margin clear at the
+    # 10 GHz carrier; at K = 6 the two are within Monte Carlo noise of each other
+    # and the ordering is not a meaningful check.
     def sum_se(**kw):
-        return simulate_uplink(DMIMOConfig(L=10, M=4, K=6, Q=8, channel_model="sionna-umi",
-                                           tau_u=90, n_realizations=5, **kw)).sum_se
+        return simulate_uplink(DMIMOConfig(L=10, M=4, K=12, Q=8, channel_model="sionna-umi",
+                                           n_realizations=5, **kw)).sum_se
     local = dict(precoding="L-RZF", operation="distributed")
     se_cen = sum_se()
     se_loc = sum_se(combining="L-MMSE", **local)

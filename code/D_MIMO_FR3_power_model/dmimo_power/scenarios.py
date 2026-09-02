@@ -110,20 +110,36 @@ class Scenario:
         K: Users.
         Q: OFDM subcarriers evaluated.
         area_size: Coverage-area side [m].
-        tau_c, tau_p, tau_u: Coherence-block split [samples]. ``tau_u > 0`` is
-            required for a non-zero uplink rate.
+        tau_c: Coherence block length [samples]; the frame spans one block, so
+            this is also the precoder amortisation ``upsilon_coh``.
+        tau_DL, tau_DLsig, tau_ULsig: Frame fractions of the system model. The
+            defaults are the frame of the parameter table; a direction whose
+            signalling fraction reaches one carries no data and delivers no rate.
         n_realizations: Monte Carlo drops per point.
         seed: RNG seed; shared by all deployments so they see the same UE drops.
+
+    The topology defaults are the headline deployment of the manuscript,
+    ``L * M = 128`` antennas serving ``K = 20`` users. ``Q`` and
+    ``n_realizations`` are runtime cost knobs rather than physical parameters
+    and are set well below the ``Q = 3000``, ``100`` drops the parameter table
+    quotes; raise them for the final figures.
     """
 
-    L: int = 16
+    L: int = 32
     M: int = 4
-    K: int = 10
+    K: int = 20
     Q: int = 16
     area_size: float = 200.0
     tau_c: int = 200
-    tau_p: int = 20
-    tau_u: int = 90
+    tau_DL: float = 0.75
+    tau_DLsig: float = 1 / 14
+    tau_ULsig: float = 1 / 14
+    # Physical resource load. One load serves both packages: it is the prelog
+    # factor of the delivered rate and the data-versus-micro-sleep weight of the
+    # frame averaging, so setting it here cannot put the rate and the power at
+    # two different loads. The evaluation of the manuscript is fully loaded.
+    xbar_DL: float = 1.0
+    xbar_UL: float = 1.0
     n_realizations: int = 20
     seed: int = 0
 
@@ -155,7 +171,9 @@ class Scenario:
         which is what lets S1 and S2 share one Monte Carlo run.
         """
         common = dict(K=self.K, Q=self.Q, area_size=self.area_size,
-                      tau_c=self.tau_c, tau_p=self.tau_p, tau_u=self.tau_u,
+                      tau_c=self.tau_c, tau_DL=self.tau_DL,
+                      tau_DLsig=self.tau_DLsig, tau_ULsig=self.tau_ULsig,
+                      xbar_DL=self.xbar_DL, xbar_UL=self.xbar_UL,
                       n_realizations=self.n_realizations, seed=self.seed)
         family = deployment.rate_family
 
@@ -209,14 +227,17 @@ class RatePoint:
 def _cache_key(scenario: Scenario, deployment: Deployment, P_budget: float) -> str:
     """Stable key over everything that changes the Monte Carlo outcome.
 
-    Keyed on the *rate family* rather than the deployment, so S1 and S2 (which
-    realize the same centralized precoder and therefore deliver the same rate)
-    share a single cached run instead of computing it twice.
+    Keyed on the *rate configuration itself* rather than on the scenario, so any
+    two points that ask for the same simulation share one cached run whatever
+    route they came by. Two cases matter in practice: S1 and S2 realize the same
+    centralized precoder and deliver the same rate, and the co-located baseline
+    is one site of ``L * M`` antennas whatever the ``L`` of the scenario it is
+    being compared against, so a three-panel sweep over ``L`` computes it once
+    instead of three times.
     """
-    payload = json.dumps({"scenario": asdict(scenario),
-                          "rate_family": deployment.rate_family.value,
-                          "P_budget": round(float(P_budget), 12)},
-                         sort_keys=True)
+    cfg = scenario.rate_config(deployment, P_budget)
+    payload = json.dumps({k: (round(v, 12) if isinstance(v, float) else str(v))
+                          for k, v in asdict(cfg).items()}, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()[:24]
 
 
@@ -234,7 +255,8 @@ def _save_cache(cache: Dict[str, dict]) -> None:
 
 
 def rates_for(scenario: Scenario, deployment: Deployment, P_budget: float,
-              use_cache: bool = True, verbose: bool = True) -> RatePoint:
+              use_cache: bool = True, verbose: bool = True,
+              progress: bool = True) -> RatePoint:
     """Delivered rates and per-AP powers for one deployment at one budget.
 
     Runs the downlink and uplink Monte Carlo of ``../D_MIMO_rate`` on the
@@ -243,8 +265,9 @@ def rates_for(scenario: Scenario, deployment: Deployment, P_budget: float,
     rather than two.
 
     The returned rates are *delivered*: the rate model has already applied the
-    ``tau_d / tau_c`` and ``tau_u / tau_c`` prelogs, so nothing downstream may
-    apply a prelog again.
+    data-fraction prelogs ``tau_i (1 - tau_i,sig) xbar_i`` of eq. se and the
+    effective bandwidth ``B_tilde = 0.9 B``, so nothing downstream may apply a
+    prelog again.
     """
     key = _cache_key(scenario, deployment, P_budget)
     cache = _load_cache() if use_cache else {}
@@ -261,8 +284,8 @@ def rates_for(scenario: Scenario, deployment: Deployment, P_budget: float,
         print(f"  simulating {deployment.rate_family.value} rates at "
               f"P_budget = {P_budget:.2f} W "
               f"(L={cfg.L}, M={cfg.M}, rho_max={cfg.rho_max:.4f} W)")
-    dl = simulate_downlink(cfg)
-    ul = simulate_uplink(cfg)
+    dl = simulate_downlink(cfg, progress=progress)
+    ul = simulate_uplink(cfg, progress=progress)
 
     point = RatePoint(R_DL=dl.sum_rate, R_UL=ul.sum_rate,
                       ap_power=dl.ap_power, rho_max=cfg.rho_max,
@@ -272,7 +295,7 @@ def rates_for(scenario: Scenario, deployment: Deployment, P_budget: float,
                       "ap_power": point.ap_power.tolist(), "rho_max": point.rho_max,
                       "se_dl_median": point.se_dl_median,
                       "se_ul_median": point.se_ul_median,
-                      "_scenario": asdict(scenario),
+                      "_rate_config": {k: str(v) for k, v in asdict(cfg).items()},
                       "_rate_family": deployment.rate_family.value,
                       "_P_budget": P_budget}
         _save_cache(cache)
@@ -312,19 +335,20 @@ class OperatingResult:
 
 def evaluate(scenario: Scenario, deployment: Deployment, P_budget: float,
              use_cache: bool = True, verbose: bool = True,
-             **param_overrides) -> OperatingResult:
+             progress: bool = True, **param_overrides) -> OperatingResult:
     """Full rate-and-power evaluation of one deployment at one transmit budget."""
     from .network import compute_colocated, compute_network
 
-    rates = rates_for(scenario, deployment, P_budget, use_cache, verbose)
+    rates = rates_for(scenario, deployment, P_budget, use_cache, verbose, progress)
     p = scenario.power_params(deployment, P_budget, **param_overrides)
 
+    load = dict(xbar_DL=scenario.xbar_DL, xbar_UL=scenario.xbar_UL)
     if not deployment.is_distributed:
         # One site: the co-located model of ../FR3_power_model, unchanged.
-        breakdown = compute_colocated(p, P_budget, rates.R_DL, rates.R_UL)
+        breakdown = compute_colocated(p, P_budget, rates.R_DL, rates.R_UL, **load)
     else:
         breakdown = compute_network(p, rates.ap_power, rates.rho_max,
-                                    rates.R_DL, rates.R_UL)
+                                    rates.R_DL, rates.R_UL, **load)
     return OperatingResult(deployment=deployment, P_budget=P_budget, rates=rates,
                            power=breakdown.total, scenario=scenario,
                            breakdown=breakdown)

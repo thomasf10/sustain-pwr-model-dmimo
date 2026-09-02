@@ -169,9 +169,16 @@ def book_config(scenario: str = "B",
         shadow_std_dB=BOOK_SHADOW_STD_DB,
         ref_distance=1.0,
         min_ap_ue_distance=BOOK_HEIGHT_DIFF,   # the height difference is the floor
-        # --- Coherence bookkeeping -----------------------------------------
+        # --- Frame ----------------------------------------------------------
+        # The book's block is tau_c samples of which tau_p are pilots and the
+        # rest is downlink data, with no uplink data phase. In the frame
+        # fractions of DMIMOConfig that is a wholly downlink frame whose
+        # signalling share is the pilot share, giving the book's prelog
+        # (tau_c - tau_p) / tau_c exactly.
         tau_c=BOOK_TAU_C,
-        tau_p=tau_p,
+        tau_DL=1.0,
+        tau_DLsig=tau_p / BOOK_TAU_C,
+        tau_ULsig=1.0,
         # --- Monte Carlo ----------------------------------------------------
         n_realizations=n_realizations,
         seed=seed,
@@ -377,8 +384,8 @@ def parameter_table(cfg: DMIMOConfig, extras: BookExtras) -> str:
         ("Max UL power per UE", "100 mW", f"{extras.p_ul_max*1e3:.0f} mW"),
         ("Max DL power per AP", "200 mW", f"{cfg.rho_max*1e3:.0f} mW"),
         ("Coherence block tau_c", "200", f"{cfg.tau_c}"),
-        ("Pilot length tau_p", "10", f"{cfg.tau_p}"),
-        ("DL prelog tau_d/tau_c", "190/200 = 0.95", f"{cfg.dl_prelog:.3f}"),
+        ("Pilot length tau_p", "10", f"{cfg.tau_p:.0f}"),
+        ("DL prelog (tau_c-tau_p)/tau_c", "190/200 = 0.95", f"{cfg.dl_prelog:.3f}"),
         ("Channel gain at 1 km", "-140.6 dB",
          f"{-float(cfg.path_loss_dB(1000.0)):.1f} dB"),
         ("Pathloss exponent alpha", "3.67", f"{cfg.pathloss_exponent:.2f}"),
