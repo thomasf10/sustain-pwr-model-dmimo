@@ -204,7 +204,6 @@ infrastructure of the central unit, together with the shared reference clock of
 \label{ssec:fh}
 
 \subsubsection{Fronthaul}
-\todo{check the rate speed math}
 Following the cell-free power model of \cite{ngo2018total}, the link serving
 \gls{ap} $l$ consumes a traffic-independent part covering the optical
 transceivers at both ends and a part proportional to the rate it carries,
@@ -287,7 +286,7 @@ mechanism that reduces the fronthaul load.
 
 \begin{remark}[Fronthaul ceiling on energy efficiency]
 \label{rem:fh_ceiling}
-Under a data-sharing split the same payload is duplicated to every \gls{ap}, so
+Under a data-sharing split (S2,S3) the same payload is duplicated to every \gls{ap}, so
 the network fronthaul load is $L\,R_{\mathrm{DL}}$. Keeping only this term in
 \eqref{eq:pnet} bounds the downlink energy efficiency by
 $1/(\Pi_{\mathrm{FH}}L)$, independently of the bandwidth, the transmit power and

@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex main"] 1788355970.90635 "main.aux" "main.bbl" "main" 1788355981.38726 0
+["bibtex main"] 1788440393.58239 "main.aux" "main.bbl" "main" 1788440403.92887 0
   "./mybib.bib" 1787218173 67112 1df408dc584b9a47bacab713b60c6285 ""
   "C:/Users/Thomas/AppData/Local/Programs/MiKTeX/bibtex/bib/ieeetran/IEEEabrv.bib" 1440617548 20898 a5d2167c380db7dfff810b085c77ed63 ""
   "C:/Users/Thomas/AppData/Local/Programs/MiKTeX/bibtex/bst/ieeetran/IEEEtran.bst" 1440622569 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "main.aux" 1788355978 42527 e3d2e1c3e912694c5c829a4a240abb08 "pdflatex"
+  "main.aux" 1788440401 42167 ce86e27ae770493f1c9f530abb50d1bc "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1788355971.49463 "c:/Users/Thomas/Documents/sustain-pwr-model-dmimo/sustain-dmimo-pwr-model-paper/main.tex" "main.pdf" "main" 1788355981.38867 0
+["pdflatex"] 1788440394.25825 "c:/Users/Thomas/Documents/sustain-pwr-model-dmimo/sustain-dmimo-pwr-model-paper/main.tex" "main.pdf" "main" 1788440403.93033 0
   "C:/Users/Thomas/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1782819617 320866 f38090857e4bb8b0a474a2ebeeef19d9 ""
   "C:/Users/Thomas/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1778676632 13350797 63c24b55f03e99b7f51b81a5c44d90c7 ""
   "C:/Users/Thomas/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc" 1458477487 4993 80dc9bab7f31fb78a000ccfed0e27cab ""
@@ -319,14 +319,14 @@
   "figs/eval2_power_vs_aps.tex" 1788252728 1804 68d313af7d813244afb1b513a0ce91c9 ""
   "figs/eval3_breakdown_vs_aps.tex" 1788252728 4501 4dd78704d14e449cfa111fe328400871 ""
   "figs/eval4_ee_vs_aps.tex" 1788255319 2049 c8d7037cf0f7078575d9946532dc8f86 ""
-  "main.aux" 1788355978 42527 e3d2e1c3e912694c5c829a4a240abb08 "pdflatex"
-  "main.bbl" 1788355971 2396 ece84763a7e29ba1184186b19a974f67 "bibtex main"
-  "main.out" 1788355978 6183 948b7c73aacf3fdfdffc62488f6ef260 "pdflatex"
+  "main.aux" 1788440401 42167 ce86e27ae770493f1c9f530abb50d1bc "pdflatex"
+  "main.bbl" 1788440394 2396 ece84763a7e29ba1184186b19a974f67 "bibtex main"
+  "main.out" 1788440401 6183 948b7c73aacf3fdfdffc62488f6ef260 "pdflatex"
   "main.tex" 1788265923 6921 aef542234d5f250cf552119272fdffb3 ""
-  "sections/conclusion.tex" 1788250802 999 9fe816d6256323b15e253b89f331ac02 ""
+  "sections/conclusion.tex" 1788440124 1232 a50a04406c2bd2c778f6c69a0b31a3fd ""
   "sections/introduction.tex" 1786967233 1208 3203ad5e8b16e460c03e35366ed44c6e ""
-  "sections/numerical_eval.tex" 1788355949 28142 788de975b825bac4cea4ee1281d3a6a5 ""
-  "sections/pwr_model.tex" 1788337496 27397 192aae9f6c00496f3332277d34347e5b ""
+  "sections/numerical_eval.tex" 1788440257 22146 c6e13c0d10978cbfa6bb10f98fd832b4 ""
+  "sections/pwr_model.tex" 1788440365 27372 489c33dc65bd2c588f0733874e3272a2 ""
   "sections/sysmodel.tex" 1788252505 13637 db922a635e92ceffd71afe7f63761cc5 ""
   (generated)
   "main.aux"

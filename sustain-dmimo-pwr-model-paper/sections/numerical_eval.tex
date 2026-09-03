@@ -138,10 +138,7 @@ $\delta^{\mu}_{\mathrm{PA}},\delta^{0}_{\mathrm{PA}}$   & Amplifier & $0.5$, $0.
 
 \begin{table}[t]
 \centering
-\caption{Parameters specific to the distributed network. 
-\todo{Check
-$P_{\mathrm{FH},0}$ and $\Pi_{\mathrm{FH}}$ against \cite{ngo2018total} before
-quoting them.}}
+\caption{Parameters specific to the distributed network.}
 \label{tab:params_dmimo}
 \ra{1.15}
 \begin{tabular}{@{}llrl@{}}
@@ -282,7 +279,6 @@ the entire difference is the cost of separating them, i.e., fronthaul and proces
 
 \subsection{Evaluation 3: Where the Power Goes}
 \label{ssec:eval_breakdown}
-\todo{also recheck cfr previous results}
 \begin{figure*}[t]
 \centering
 \input{figs/eval3_breakdown_vs_aps.tex}
@@ -305,7 +301,6 @@ scales the joint precoder for all of them, so the rest under-radiate, and the
 finer the array is cut the wider that spread becomes. Notably, under centralized processing, distributing the
 array reduces the amplifier consumption, however, the global consumption $P_{\mathrm{net}}$ still rises.
 
-\todo{clean up from here on out}
 The digital block confirms \Cref{rem:fpga}, and it separates relocating the
 processing from duplicating it. At $L=2$ the S1 network spends
 \SI{48.6}{\watt} at the \glspl{ap} and \SI{22.3}{\watt} at the central unit, so
@@ -315,72 +310,23 @@ The growth that follows is the loss of sharing. By $L=128$ the same two terms
 are \SI{274.8}{} and \SI{22.4}{\watt}, a factor $4.2$ over the baseline, while
 the central unit itself has not moved at all, since it runs $\lceil
 LM/32\rceil=4$ \glspl{fpga} whatever $L$ is. S2 and S3 make every \gls{ap} run
-its own precoder or combiner rather than only its baseband filter, and they pay
-for it: \SI{489}{\watt} of \gls{ap} digital at $L=128$, a factor $7.0$ including
-the central unit. The block grows more slowly than the \gls{fpga} count does,
-$2.4$-fold at $L=32$ against the eight-fold ratio \Cref{rem:fpga} quotes,
-because the per-chain arithmetic is untouched by the splitting and only the
-fixed part is duplicated.
+its own precoder or combiner rather than only its baseband filter, this results in an increased consumption: \SI{489}{\watt} of \gls{ap} digital at $L=128$, a factor $7.0$ including
+the central unit.
 
-The fronthaul is the block that decides the figure, and it grows for two
-different reasons that the totals alone do not separate. Under S1 it is nearly
-flat, \SI{232}{\watt} at $L=2$ against \SI{362}{\watt} at $L=128$, and the
-traffic term does not move at all: it is \SI{230}{\watt} at both ends, since
-\eqref{eq:fh_s1} scales with $M$ and the network therefore carries $LM$ sample
-streams whatever $L$ is. The whole \SI{130}{\watt} of growth is the
+The fronthaul has the biggest impact. It grows for two
+different reasons. Under S1 it is nearly stable when $L$ varies, i.e., \SI{232}{\watt} at $L=2$ against \SI{362}{\watt} at $L=128$, and the traffic dependent term does not increase at all: it is \SI{230}{\watt} for both values of $L$. The \SI{130}{\watt} of growth is the
 traffic-independent $P_{\mathrm{FH},0}/\eta_{\mathrm{FH,sc}}$ paid once per
-link, which the $126$ additional links account for exactly. Under S2 and S3 that
-same static term is a rounding error, \SI{132}{\watt} out of the \SI{3373}{} and
-\SI{1807}{\watt} they reach at $L=128$, where the fronthaul is
-\SI{85}{\percent} and \SI{74}{\percent} of everything the network consumes, and
-the growth is traffic.
+link, which the $126$ additional links account for. Under S2 and S3 that
+same static term is small compared to the traffic dependent consumption, \SI{132}{\watt} out of the \SI{3373}{} and \SI{1807}{\watt} they reach at $L=128$, where the fronthaul is
+\SI{85}{\percent} and \SI{74}{\percent} of everything the network consumes.
 
-Two traffic terms carry it and both scale as $L$. The first is the duplicated
-downlink payload $L\,R_{\mathrm{DL}}$ of \Cref{rem:fh_ceiling}, worth
-\SI{2150}{\watt} for S2 and \SI{605}{\watt} for S3 at $L=128$. The second is the
-uplink partial sums of \eqref{eq:fh_ul}: an \gls{ap} forwards $K$ scalars
-whatever its $M$, so the network carries $LK$ of them where S1 carries $LM$
-samples, and at $K=20$ the term doubles with every halving of the array, from
-\SI{16.7}{\watt} at $L=2$ to \SI{1070}{\watt} at $L=128$. It is identical for
-the two splits by construction. Which of the two dominates is not a property of
-the sweep but of the split: the payload is \SI{64}{\percent} of the S2 fronthaul
-at $L=128$, whereas for S3 the partial sums overtake it near $L=32$ and reach
-\SI{59}{\percent}. Reading the growth of both splits as payload duplication
-alone would therefore misdescribe S3, where past $L=32$ it is the uplink that
-costs the most.
+The remaining two blocks are small enough to be dismissed. Synchronization is exactly linear in $L$ and reaches \SI{16}{\watt} at $L=128$. The analog block grows by \SI{75}{\milli\watt} per additional \gls{ap}, its own local oscillator, so it moves only from \SI{40.6}{} to
+\SI{50.1}{\watt}. Neither the reference distribution nor the loss of the shared oscillator is a reason not to distribute.
 
-What S2 is built to save does not appear at all. The precoding coefficients of
-\eqref{eq:fh_s2} scale with $M$, so their network total is pinned at $LM$
-exactly as the S1 samples are, and they cost \SI{17.3}{\watt} at every point of
-the sweep, under \SI{1}{\percent} of the S2 fronthaul at $L=128$. S2 pays the
-payload duplication in full and recovers nothing measurable for it, which is the
-conclusion \Cref{ssec:eval_rate_power} reached from the levels, now visible in
-the growth. The gap between S2 and S3 is not a difference in the efficiency of
-the two splits either: their partial-sum terms are equal, and the S2 fronthaul
-is the larger one only because the centralized precoder delivers a payload that
-keeps growing with $L$ while the local precoder delivers one that shrinks.
-
-The remaining two blocks are small enough to be dismissed, which is itself worth
-recording. Synchronization is exactly linear in $L$ at \SI{125}{\milli\watt} per
-\gls{ap} and reaches \SI{16}{\watt} at $L=128$, near \SI{2}{\percent} of the S1
-total there. The analog block grows by \SI{75}{\milli\watt} per additional
-\gls{ap}, its own local oscillator, so it moves only from \SI{40.6}{} to
-\SI{50.1}{\watt} across a sweep that multiplies the node count by $64$. Neither
-the reference distribution nor the loss of the shared oscillator is a reason not
-to distribute.
-
-Taken together the panels give one answer. The cost of distributing an array is
+In conclusion, the cost of distributing an array is
 transport and per-node fixed overhead, not radiated power: at $L=128$ under S1
 the fronthaul and the digital blocks add \SI{570}{\watt} to a \SI{188}{\watt}
-baseline while the amplifier bill falls by \SI{48}{\watt}. Every lever that
-matters is therefore a fronthaul or a static-power lever, and the transmit
-budget, which \Cref{fig:eval1} already showed to be close to a free parameter,
-is not one of them. Both dominant fronthaul terms are proportional to $L$
-through the number of \glspl{ap} that serve a given \gls{ue}, so restricting the
-serving cluster acts on the payload duplication and on the partial sums at once.
-That is the lever \Cref{rem:fh_ceiling} identifies, and it is the one this
-evaluation deliberately withholds by having all $L$ \glspl{ap} serve all $K$
-\glspl{ue} at every point of the sweep.
+baseline.
 
 \subsection{Energy Efficiency}
 \label{ssec:eval_ee}
@@ -400,58 +346,17 @@ most efficient deployment anywhere in the figure.}
 \label{fig:eval4}
 \end{figure}
 
-\Cref{fig:eval4} reports the fourth evaluation and answers the question the
-previous two leave open. At these parameters distributing does not pay: the
+\Cref{fig:eval4} reports the energy efficiency against the number of \glspl{ap}. For the considered network distributing is not beneficial: the
 co-located baseline reaches \SI{237.0}{\mega\bit\per\joule} and no distributed
 configuration of any split at any $L$ comes within a fifth of it. The best
 distributed point of the whole sweep is S2 at $L=4$, at
 \SI{186.4}{\mega\bit\per\joule}, which is \SI{79}{\percent} of the baseline; S3
 at $L=4$ reaches \SI{175.8}{} and S1 at $L=16$ reaches
-\SI{156.0}{\mega\bit\per\joule}. The rate gain of \Cref{fig:eval1} is real, and
-it is bought at a price that exceeds it in every configuration tested.
-
-Every split has an interior optimum, and they do not sit at the same place. S2
-and S3 peak at $L=4$, S1 at $L=16$. The difference is not propagation, since all
-three see the same channel and two of them deliver the same rate; it is the
-shape of the power curve. S1's consumption is flat to $L=16$ while its rate is
-still climbing, so its optimum sits where the rate saturates. S2 and S3 start
-paying for $L$ immediately, so theirs sits where the rate is still rising
-steeply. Where to stop chopping the array is therefore a fronthaul question
-before it is a spatial one.
-
-The three curves cross, and past the crossing the efficiency ranking is exactly
-the inverse of the fronthaul ranking. S1 is the least efficient split for
-$L\leq 8$ and the most efficient from $L=16$ on, reaching
-\SI{92.7}{\mega\bit\per\joule} at $L=128$ against \SI{17.6}{} for S2 and
-\SI{8.7}{} for S3. For S1 and S2 the crossing is at the same $L$ as in
-\Cref{fig:eval2} and for the same reason, since the two deliver identical rates
-and their efficiencies are therefore in the exact inverse ratio of their powers.
+\SI{156.0}{\mega\bit\per\joule}. 
 
 The ceiling of \Cref{rem:fh_ceiling} holds throughout and becomes informative
 only where it matters. S2 and S3 stay below $1/(\Pi_{\mathrm{FH}}L)$ at every
 point, but the bound is loose where the fronthaul is not yet dominant and
 tightens as it becomes so: S2 sits at \SI{9}{\percent} of the ceiling at $L=2$
-and at \SI{56}{\percent} at $L=128$. S3 instead saturates near
-\SI{29}{\percent} and stops approaching it, which the breakdown of
-\Cref{fig:eval3} explains: the ceiling counts only the duplicated payload,
-whereas the uplink partial sums of \eqref{eq:fh_ul} grow with $L$ as well and
-carry more than half of the S3 fronthaul past $L=32$. A split that pays a second
-$L$-proportional term cannot approach a bound derived from the first. S1 crosses
-the ceiling between $L=16$ and $L=32$ and ends at three times it, which the
-remark does not forbid, since S1 forwards samples rather than payload.
+and at \SI{56}{\percent} at $L=128$. 
 
-The margin between the best distributed point and the baseline is the fronthaul
-traffic term and nothing else, which makes the sign of the comparison depend on
-a quantity \Cref{tab:params_dmimo} does not source. Removing that term entirely,
-$\Pi_{\mathrm{FH}}=0$, puts S1 at \SI{339}{\mega\bit\per\joule} at $L=8$ and
-$L=16$, a factor $1.43$ \emph{above} the co-located baseline, and leaves S2 and
-S3 above it as well over most of the sweep. The conclusion that distributing
-costs efficiency is therefore a statement about
-$\Pi_{\mathrm{FH}}=\SI{0.25}{\watt}$ per Gbit/s and about a network in which
-every \gls{ap} serves every \gls{ue}, not a property of \gls{dmimo} as such.
-\todo{this is the conclusion most exposed to \Cref{tab:params_dmimo}. Before the
-figure is final, either source $\Pi_{\mathrm{FH}}$ and $b_{\mathrm{FH}}$ against
-\cite{ngo2018total} or replace the point comparison with a sweep in
-$\Pi_{\mathrm{FH}}$ and report the value at which the two deployments break
-even. Adding \gls{ap} selection would move the same conclusion in the same
-direction, since it cuts both $L$-proportional fronthaul terms at once.}

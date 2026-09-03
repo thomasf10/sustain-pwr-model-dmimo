@@ -2,7 +2,7 @@
 \todo{future work:
 \begin{itemize}
 \item{include channel estimation error in rate calculation}
-\item {include channel estimation power consumption in power model}
+\item {include channel estimation power consumption in power model, and fronthaul consumption of sending pilots to cpu}
 \item{include pilot contamination in rate calculation}
 \item {no AP selection, all APs are active, investigate the impact on energy efficiency}
 \item {make some parameters more realistic e.g. fronthaul power consumption, synchronization power consumption, etc.}
@@ -10,5 +10,6 @@
 \item {accurately characterize all parameters based on the size of the BS/APs.}
 \item {note that fronthaul consumption is dependent on how it is implemented, this should be further explored. for instance there is the work on serial/daisy chained fronhaul, reference it.}
 \item {clearly mention that results depend on current assumptions so they may change, however code is open source and modular so can be used to assess different configurations}
+\item no energy saving techniques are considered or even AP selection, every AP servers every UE currently, investigate the impact of energy saving techniques on energy efficiency
 \end{itemize}
 }
